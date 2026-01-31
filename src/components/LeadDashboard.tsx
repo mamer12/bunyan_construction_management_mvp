@@ -18,16 +18,21 @@ import {
     FileText,
     Map,
     BarChart3,
-    Wallet
+    Wallet,
+    Building2
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { PayoutsTab } from "./PayoutsTab";
+import { FinanceOverview } from "./FinanceOverview";
+import { ManagementDashboard } from "./ManagementDashboard";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { ProjectsView } from "./ProjectsView";
 import { TeamsView } from "./TeamsView";
+import { StockView } from "./StockView";
+import { SettingsView } from "./SettingsView";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -40,6 +45,7 @@ import {
     StaggerContainer,
     StaggerItem
 } from "./ui/motion";
+import { Modal } from "./ui/modal";
 
 export function LeadDashboard() {
     const { t, language } = useLanguage();
@@ -105,18 +111,51 @@ export function LeadDashboard() {
                                     {/* CARD 4: Quick Actions */}
                                     <MotionCard className="span-2" delay={0.3}>
                                         <div className="card-header">
-                                            <h3 className="card-title">Quick Actions</h3>
+                                            <h3 className="card-title">{language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}</h3>
                                         </div>
                                         <div className="card-body">
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                 {[
-                                                    { icon: Wallet, label: "Add Fund", color: "#059669", bg: "#ECFDF5" },
-                                                    { icon: CheckCircle2, label: "Approve Task", color: "#3B82F6", bg: "#EFF6FF" },
-                                                    { icon: Map, label: "View Map", color: "#8B5CF6", bg: "#F5F3FF" },
-                                                    { icon: BarChart3, label: "Reports", color: "#F59E0B", bg: "#FFFBEB" },
+                                                    {
+                                                        icon: Plus,
+                                                        label: language === 'ar' ? 'مهمة جديدة' : 'New Task',
+                                                        color: "#059669",
+                                                        bg: "#ECFDF5",
+                                                        onClick: () => setShowCreateModal(true)
+                                                    },
+                                                    {
+                                                        icon: CheckCircle2,
+                                                        label: language === 'ar' ? 'مراجعة المهام' : 'Review Tasks',
+                                                        color: "#3B82F6",
+                                                        bg: "#EFF6FF",
+                                                        badge: tasksForReview.length,
+                                                        onClick: () => {
+                                                            // Scroll to tasks section or select first task
+                                                            if (tasksForReview.length > 0) {
+                                                                setSelectedTask(tasksForReview[0]);
+                                                            } else {
+                                                                toast.info(language === 'ar' ? 'لا توجد مهام للمراجعة' : 'No tasks to review');
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        icon: Building2,
+                                                        label: t('projects'),
+                                                        color: "#8B5CF6",
+                                                        bg: "#F5F3FF",
+                                                        onClick: () => setActiveTab('projects')
+                                                    },
+                                                    {
+                                                        icon: Users,
+                                                        label: t('team'),
+                                                        color: "#F59E0B",
+                                                        bg: "#FFFBEB",
+                                                        onClick: () => setActiveTab('team')
+                                                    },
                                                 ].map((action, index) => (
                                                     <motion.button
                                                         key={action.label}
+                                                        onClick={action.onClick}
                                                         initial={{ opacity: 0, y: 10 }}
                                                         animate={{ opacity: 1, y: 0 }}
                                                         transition={{ delay: 0.4 + index * 0.05 }}
@@ -130,7 +169,8 @@ export function LeadDashboard() {
                                                             border: "none",
                                                             borderRadius: "1.25rem",
                                                             cursor: "pointer",
-                                                            transition: "all 0.2s"
+                                                            transition: "all 0.2s",
+                                                            position: "relative"
                                                         }}
                                                         whileHover={{
                                                             scale: 1.05,
@@ -138,6 +178,26 @@ export function LeadDashboard() {
                                                         }}
                                                         whileTap={{ scale: 0.95 }}
                                                     >
+                                                        {/* Badge for pending count */}
+                                                        {action.badge && action.badge > 0 && (
+                                                            <span style={{
+                                                                position: "absolute",
+                                                                top: 8,
+                                                                right: 8,
+                                                                minWidth: 20,
+                                                                height: 20,
+                                                                borderRadius: "50%",
+                                                                background: "#EF4444",
+                                                                color: "white",
+                                                                fontSize: "0.7rem",
+                                                                fontWeight: 700,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center"
+                                                            }}>
+                                                                {action.badge}
+                                                            </span>
+                                                        )}
                                                         <div style={{
                                                             width: 48,
                                                             height: 48,
@@ -362,7 +422,9 @@ export function LeadDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.3 }}
+                                className="flex flex-col gap-6"
                             >
+                                <FinanceOverview />
                                 <PayoutsTab />
                             </motion.div>
                         )}
@@ -379,6 +441,18 @@ export function LeadDashboard() {
                             </motion.div>
                         )}
 
+                        {activeTab === "management" && (
+                            <motion.div
+                                key="management"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ManagementDashboard />
+                            </motion.div>
+                        )}
+
                         {activeTab === "team" && (
                             <motion.div
                                 key="team"
@@ -388,6 +462,30 @@ export function LeadDashboard() {
                                 transition={{ duration: 0.3 }}
                             >
                                 <TeamsView />
+                            </motion.div>
+                        )}
+
+                        {activeTab === "stock" && (
+                            <motion.div
+                                key="stock"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <StockView />
+                            </motion.div>
+                        )}
+
+                        {activeTab === "settings" && (
+                            <motion.div
+                                key="settings"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <SettingsView />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -433,50 +531,23 @@ function TaskReviewModal({ task, onClose, onReview }: {
     };
 
     return (
-        <motion.div
-            className="modal-overlay"
-            onClick={onClose}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-        >
-            <motion.div
-                className="modal"
-                onClick={(e) => e.stopPropagation()}
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.2 }}
-                style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    maxWidth: 1000,
-                    height: "auto",
-                    maxHeight: "85vh"
-                }}
-            >
+        <Modal isOpen={true} onClose={onClose} title="Review Task" maxWidth="2xl">
+            <div style={{
+                display: "flex",
+                flexDirection: "row",
+                height: "auto",
+                maxHeight: "85vh",
+                gap: "2rem"
+            }}>
                 {/* Left: Details */}
                 <div style={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    padding: "2rem",
-                    borderRight: "1px solid var(--border)",
                     overflowY: "auto"
                 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
                         <div>
-                            <span style={{
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                                color: "var(--text-secondary)",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.1em",
-                                marginBottom: "0.5rem",
-                                display: "block"
-                            }}>
-                                Review Task
-                            </span>
                             <h2 style={{
                                 fontSize: "1.5rem",
                                 fontWeight: 700,
@@ -605,25 +676,66 @@ function TaskReviewModal({ task, onClose, onReview }: {
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-                        <MotionButton
-                            className="btn-danger"
-                            onClick={() => handleAction("reject")}
-                            disabled={loading}
-                            style={{ flex: 1 }}
-                        >
-                            <X size={18} /> Reject
-                        </MotionButton>
-                        <MotionButton
-                            className="btn-success"
-                            onClick={() => handleAction("approve")}
-                            disabled={loading}
-                            style={{ flex: 1 }}
-                        >
-                            <CheckCircle2 size={18} /> Approve
-                        </MotionButton>
-                    </div>
+                    {/* Action Buttons - Only show for SUBMITTED tasks */}
+                    {task.status === "SUBMITTED" ? (
+                        <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                            <MotionButton
+                                className="btn-danger"
+                                onClick={() => handleAction("reject")}
+                                disabled={loading}
+                                style={{ flex: 1 }}
+                            >
+                                <X size={18} /> Reject
+                            </MotionButton>
+                            <MotionButton
+                                className="btn-success"
+                                onClick={() => handleAction("approve")}
+                                disabled={loading}
+                                style={{ flex: 1 }}
+                            >
+                                <CheckCircle2 size={18} /> Approve
+                            </MotionButton>
+                        </div>
+                    ) : (
+                        <div style={{
+                            marginTop: "1.5rem",
+                            padding: "1rem",
+                            borderRadius: "0.75rem",
+                            background: task.status === "APPROVED"
+                                ? "rgba(16, 185, 129, 0.1)"
+                                : task.status === "REJECTED"
+                                    ? "rgba(239, 68, 68, 0.1)"
+                                    : "rgba(59, 130, 246, 0.1)",
+                            border: `1px solid ${task.status === "APPROVED"
+                                ? "rgba(16, 185, 129, 0.3)"
+                                : task.status === "REJECTED"
+                                    ? "rgba(239, 68, 68, 0.3)"
+                                    : "rgba(59, 130, 246, 0.3)"}`,
+                            textAlign: "center"
+                        }}>
+                            <div style={{
+                                fontSize: "0.875rem",
+                                fontWeight: 600,
+                                color: task.status === "APPROVED"
+                                    ? "#10B981"
+                                    : task.status === "REJECTED"
+                                        ? "#EF4444"
+                                        : "#3B82F6"
+                            }}>
+                                {task.status === "APPROVED" && "✓ This task has been approved"}
+                                {task.status === "REJECTED" && "✗ This task has been rejected"}
+                                {task.status === "PENDING" && "⏳ Waiting for engineer to start"}
+                                {task.status === "IN_PROGRESS" && "🔄 Engineer is working on this task"}
+                            </div>
+                            <div style={{
+                                fontSize: "0.75rem",
+                                color: "var(--text-secondary)",
+                                marginTop: "0.25rem"
+                            }}>
+                                Status cannot be changed after approval or rejection
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right: Photo Preview */}
@@ -635,30 +747,9 @@ function TaskReviewModal({ task, onClose, onReview }: {
                     alignItems: "center",
                     justifyContent: "center",
                     padding: "2rem",
-                    position: "relative"
+                    borderRadius: "1rem",
+                    border: "1px solid var(--border)"
                 }}>
-                    {/* Close Button */}
-                    <motion.button
-                        onClick={onClose}
-                        style={{
-                            position: "absolute",
-                            top: "1rem",
-                            right: "1rem",
-                            background: "white",
-                            border: "1px solid var(--border)",
-                            borderRadius: "0.75rem",
-                            padding: "0.5rem",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                        whileHover={{ scale: 1.05, background: "var(--bg-mint)" }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <X size={20} />
-                    </motion.button>
-
                     {task.photoUrl ? (
                         <div style={{ width: "100%", textAlign: "center" }}>
                             <h4 style={{
@@ -692,7 +783,7 @@ function TaskReviewModal({ task, onClose, onReview }: {
                         </div>
                     )}
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </Modal>
     );
 }

@@ -4,9 +4,14 @@ import {
     Banknote,
     Users,
     LogOut,
-    Sparkles
+    Sparkles,
+    Package,
+    Settings,
+    Briefcase
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useIsMobile } from "../hooks/use-mobile";
@@ -18,17 +23,51 @@ interface SidebarProps {
     onClose?: () => void;
 }
 
+// Role to display name mapping
+const ROLE_DISPLAY_NAMES: Record<string, string> = {
+    admin: "Administrator",
+    acting_manager: "Acting Manager",
+    lead: "Lead Engineer",
+    engineer: "Site Engineer",
+    finance: "Finance Officer",
+    stock: "Stock Manager",
+    guest: "Guest",
+};
+
+// Define which menu items each role can see
+const ROLE_MENU_ACCESS: Record<string, string[]> = {
+    admin: ["dashboard", "management", "projects", "finance", "team", "stock", "settings"],
+    acting_manager: ["dashboard", "management", "projects", "finance", "team"],
+    lead: ["dashboard", "projects", "finance", "team"],
+    engineer: ["dashboard", "projects"],
+    finance: ["dashboard", "finance"],
+    stock: ["dashboard", "stock"],
+    guest: ["dashboard"],
+};
+
 export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: SidebarProps) {
     const { signOut } = useAuthActions();
     const { t } = useLanguage();
     const isMobile = useIsMobile();
 
-    const menuItems = [
+    // Fetch actual user data
+    const role = useQuery(api.roles.getMyRole);
+    const users = useQuery(api.users.getUsers);
+    const currentUser = users?.find((u: any) => u.role === role);
+
+    const allMenuItems = [
         { id: "dashboard", label: t("dashboard"), icon: LayoutDashboard },
+        { id: "management", label: t("management"), icon: Briefcase },
         { id: "projects", label: t("projects"), icon: Building2 },
         { id: "finance", label: t("finance"), icon: Banknote },
         { id: "team", label: t("team"), icon: Users },
+        { id: "stock", label: t("stock"), icon: Package },
+        { id: "settings", label: t("settings"), icon: Settings },
     ];
+
+    // Filter menu items based on role
+    const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
+    const menuItems = allMenuItems.filter(item => allowedMenuIds.includes(item.id));
 
     const sidebarVariants = {
         hidden: { x: -280, opacity: 0 },
@@ -282,13 +321,13 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                                 overflow: "hidden",
                                 textOverflow: "ellipsis"
                             }}>
-                                Ahmed Al-Rahim
+                                {currentUser?.name || "User"}
                             </div>
                             <div style={{
                                 fontSize: "0.75rem",
                                 opacity: 0.6
                             }}>
-                                Lead Engineer
+                                {ROLE_DISPLAY_NAMES[role || "guest"] || role || "Guest"}
                             </div>
                         </div>
                     </motion.div>

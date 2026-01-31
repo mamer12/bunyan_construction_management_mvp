@@ -14,12 +14,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setStateLanguage] = useState<Language>('en');
+    const [language, setStateLanguage] = useState<Language>('ar');
 
     useEffect(() => {
         const savedLang = localStorage.getItem('app-language') as Language;
         if (savedLang) {
             setStateLanguage(savedLang);
+        } else {
+            // Default to Arabic
+            document.documentElement.dir = 'rtl';
+            document.documentElement.lang = 'ar';
         }
     }, []);
 

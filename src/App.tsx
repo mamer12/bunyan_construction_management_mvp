@@ -1,32 +1,50 @@
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { Authenticated, Unauthenticated, useQuery, useMutation } from "convex/react";
+import React, { useEffect } from "react";
+import { Toaster } from "sonner";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
-import { Toaster } from "sonner";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { EngineerDashboard } from "./components/EngineerDashboard";
-import { ContractorMobile } from "./components/ContractorMobile";
-import React from "react";
-
-import { LanguageProvider } from "./contexts/LanguageContext";
-
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { StockDashboard } from "./components/StockDashboard";
+import { FinanceDashboard } from "./components/FinanceDashboard";
 
 export default function App() {
+  const { user: authUser } = useAuth();
+  const ensureUser = useMutation(api.users.ensureUser);
+
+  // Sync user to DB on load
+  useEffect(() => {
+    if (authUser) {
+      ensureUser({
+        email: authUser.email || "",
+        name: authUser.name || authUser.email || "User"
+      }).catch(err => console.error("Failed to sync user:", err));
+    }
+  }, [authUser, ensureUser]);
+
   return (
     <ErrorBoundary>
-      <LanguageProvider>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "var(--bg-card)",
-              border: "1px solid var(--border)",
-              color: "var(--text-primary)",
-            }
-          }}
-        />
-        <Content />
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <NotificationProvider>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text-primary)",
+                }
+              }}
+            />
+            <Content />
+          </NotificationProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
@@ -55,13 +73,8 @@ function Content() {
 }
 
 function MainApp() {
-  // 1. Get the Role from the backend
   const role = useQuery(api.roles.getMyRole);
 
-  // 2. Mobile Detection Service
-  const isMobile = useIsMobile();
-
-  // Loading state while role fetch is pending
   if (role === undefined) {
     return (
       <div className="loading-screen">
@@ -70,21 +83,24 @@ function MainApp() {
     );
   }
 
-  const isEngineer = role === "engineer";
-
-  // 3. Routing Logic
-  if (isEngineer) {
-    // If engineer is on mobile, show the optimized mobile view
-    if (isMobile) {
-      return <ContractorMobile />;
-    }
-    // Otherwise show the desktop dashboard
+  // Routing Logic
+  if (role === "engineer") {
     return <EngineerDashboard />;
   }
 
-  // Default to Lead Dashboard for non-engineers (Leads/Admins)
+  if (role === "stock") {
+    return <StockDashboard />;
+  }
+
+  if (role === "finance") {
+    return <FinanceDashboard />;
+  }
+
+  // Admin, Acting Manager, Lead all see the LeadDashboard for now
   return <LeadDashboard />;
 }
 
-// Simple hook for mobile detection
-import { useIsMobile } from "./hooks/use-mobile";
+function useAuth() {
+  const user = useQuery(api.auth.loggedInUser);
+  return { user };
+}

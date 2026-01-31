@@ -16,18 +16,20 @@ import {
     AlertTriangle,
     Sparkles,
     Wallet,
+    Package, // New Import
     TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { MaterialRequestModal } from "./MaterialRequestModal"; // New Import
 import { WalletCard } from "./WalletCard";
 import { PayoutModal } from "./PayoutModal";
 import { TransactionHistory } from "./TransactionHistory";
 import { useLanguage } from "../contexts/LanguageContext";
-import { 
-    MotionCard, 
-    MotionGradientCard, 
-    AnimatedCounter, 
+import {
+    MotionCard,
+    MotionGradientCard,
+    AnimatedCounter,
     MotionButton,
     MotionListItem
 } from "./ui/motion";
@@ -37,6 +39,7 @@ export function EngineerDashboard() {
     const tasks = useQuery(api.tasks.getMyTasks) || [];
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [showPayoutModal, setShowPayoutModal] = useState(false);
+    const [showMaterialModal, setShowMaterialModal] = useState(false); // New State
     const { t, language } = useLanguage();
 
     const pendingTasks = tasks.filter((t: any) => t.status === "PENDING");
@@ -48,7 +51,7 @@ export function EngineerDashboard() {
     return (
         <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
             {/* Animated Header */}
-            <motion.header 
+            <motion.header
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -70,15 +73,15 @@ export function EngineerDashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
                 >
-                    <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
                         gap: "0.5rem",
                         marginBottom: "0.25rem"
                     }}>
                         <Sparkles size={14} style={{ opacity: 0.8 }} />
-                        <span style={{ 
-                            fontSize: "0.7rem", 
+                        <span style={{
+                            fontSize: "0.7rem",
                             textTransform: "uppercase",
                             letterSpacing: "0.15em",
                             opacity: 0.8
@@ -86,24 +89,24 @@ export function EngineerDashboard() {
                             Engineer Portal
                         </span>
                     </div>
-                    <h1 style={{ 
-                        fontSize: "1.5rem", 
-                        fontWeight: 700, 
-                        margin: 0 
+                    <h1 style={{
+                        fontSize: "1.5rem",
+                        fontWeight: 700,
+                        margin: 0
                     }}>
                         {t('welcome')}
                     </h1>
-                    <p style={{ 
-                        fontSize: "0.875rem", 
-                        opacity: 0.9, 
+                    <p style={{
+                        fontSize: "0.875rem",
+                        opacity: 0.9,
                         margin: 0,
                         marginTop: "0.25rem"
                     }}>
                         Bunyan Construction
                     </p>
                 </motion.div>
-                <motion.button 
-                    className="btn" 
+                <motion.button
+                    className="btn"
                     onClick={() => void signOut()}
                     style={{
                         background: "rgba(255,255,255,0.15)",
@@ -112,7 +115,7 @@ export function EngineerDashboard() {
                         color: "white",
                         padding: "0.75rem"
                     }}
-                    whileHover={{ 
+                    whileHover={{
                         background: "rgba(255,255,255,0.25)",
                         scale: 1.05
                     }}
@@ -124,8 +127,8 @@ export function EngineerDashboard() {
 
             {/* Wallet Section */}
             <div style={{ padding: "1rem" }}>
-                <motion.div 
-                    className="bento-grid" 
+                <motion.div
+                    className="bento-grid"
                     style={{ padding: 0, gap: "1rem" }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -136,12 +139,22 @@ export function EngineerDashboard() {
                 </motion.div>
             </div>
 
+            {/* Actions Row */}
+            <div style={{ padding: "0 1rem", marginBottom: "1rem", display: "flex", justifyContent: "flex-end" }}>
+                <MotionButton
+                    className="btn-primary"
+                    onClick={() => setShowMaterialModal(true)}
+                >
+                    <Package size={18} /> Request Materials
+                </MotionButton>
+            </div>
+
             {/* Stats Row */}
-            <motion.div 
-                style={{ 
-                    display: "flex", 
-                    gap: "0.75rem", 
-                    padding: "0 1rem 1rem", 
+            <motion.div
+                style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    padding: "0 1rem 1rem",
                     overflowX: "auto",
                     scrollbarWidth: "none",
                     msOverflowStyle: "none"
@@ -150,26 +163,26 @@ export function EngineerDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
             >
-                <StatCard 
-                    icon={Clock} 
-                    value={pendingTasks.length} 
-                    label={t('pending')} 
+                <StatCard
+                    icon={Clock}
+                    value={pendingTasks.length}
+                    label={t('pending')}
                     color="#F59E0B"
                     bg="#FFFBEB"
                     delay={0.35}
                 />
-                <StatCard 
-                    icon={Play} 
-                    value={inProgressTasks.length} 
-                    label={t('inProgress')} 
+                <StatCard
+                    icon={Play}
+                    value={inProgressTasks.length}
+                    label={t('inProgress')}
                     color="#3B82F6"
                     bg="#EFF6FF"
                     delay={0.4}
                 />
-                <StatCard 
-                    icon={CheckCircle2} 
-                    value={completedTasks.length} 
-                    label={t('completed')} 
+                <StatCard
+                    icon={CheckCircle2}
+                    value={completedTasks.length}
+                    label={t('completed')}
                     color="#059669"
                     bg="#ECFDF5"
                     delay={0.45}
@@ -178,11 +191,11 @@ export function EngineerDashboard() {
 
             {/* Task List */}
             <div style={{ padding: "0 1rem 1rem" }}>
-                <motion.h2 
-                    style={{ 
-                        fontSize: "1.125rem", 
-                        fontWeight: 700, 
-                        marginBottom: "1rem", 
+                <motion.h2
+                    style={{
+                        fontSize: "1.125rem",
+                        fontWeight: 700,
+                        marginBottom: "1rem",
                         color: "var(--text-primary)",
                         display: "flex",
                         alignItems: "center",
@@ -200,12 +213,12 @@ export function EngineerDashboard() {
                     <MotionCard delay={0.5}>
                         <div className="empty-state">
                             <motion.div
-                                animate={{ 
+                                animate={{
                                     y: [0, -5, 0],
                                     opacity: [0.5, 0.8, 0.5]
                                 }}
-                                transition={{ 
-                                    duration: 2, 
+                                transition={{
+                                    duration: 2,
                                     repeat: Infinity,
                                     ease: "easeInOut"
                                 }}
@@ -278,33 +291,53 @@ export function EngineerDashboard() {
                     <PayoutModal onClose={() => setShowPayoutModal(false)} />
                 )}
             </AnimatePresence>
-        </div>
+
+            {/* Material Request Modal */}
+            <AnimatePresence>
+                {showMaterialModal && (
+                    <MaterialRequestModal
+                        projectId="TODO_PROJECT_ID" // TODO: Properly Select Project
+                        onClose={() => setShowMaterialModal(false)}
+                    />
+                )}
+            </AnimatePresence>
+            {/* MODALS */}
+            <AnimatePresence>
+                {showMaterialModal && (
+                    <MaterialRequestModal
+                        projectId="TODO_PROJECT_ID" // Engineer usually works on assigned tasks, need to pick project
+                        // Probably need to select project INSIDE the modal or infer from tasks
+                        onClose={() => setShowMaterialModal(false)}
+                    />
+                )}
+            </AnimatePresence>
+        </div >
     );
 }
 
-function StatCard({ 
-    icon: Icon, 
-    value, 
-    label, 
-    color, 
-    bg, 
-    delay 
-}: { 
-    icon: any; 
-    value: number; 
-    label: string; 
-    color: string; 
+function StatCard({
+    icon: Icon,
+    value,
+    label,
+    color,
+    bg,
+    delay
+}: {
+    icon: any;
+    value: number;
+    label: string;
+    color: string;
     bg: string;
     delay: number;
 }) {
     return (
-        <motion.div 
+        <motion.div
             className="bento-card stat-card"
             style={{ minWidth: 110, flex: 1 }}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            whileHover={{ 
+            whileHover={{
                 y: -4,
                 boxShadow: `0 12px 24px ${color}20`,
                 transition: { duration: 0.2 }
@@ -321,14 +354,14 @@ function StatCard({
     );
 }
 
-function TaskCard({ 
-    task, 
-    onClick, 
+function TaskCard({
+    task,
+    onClick,
     highlight,
-    index = 0 
-}: { 
-    task: any; 
-    onClick: () => void; 
+    index = 0
+}: {
+    task: any;
+    onClick: () => void;
     highlight?: string;
     index?: number;
 }) {
@@ -340,10 +373,10 @@ function TaskCard({
             APPROVED: { className: "badge-approved", icon: CheckCircle2, label: "Approved" },
             REJECTED: { className: "badge-rejected", icon: AlertTriangle, label: "Rejected" },
         };
-        
+
         const badge = badges[status];
         if (!badge) return null;
-        
+
         return (
             <span className={`badge ${badge.className}`}>
                 <badge.icon size={12} /> {badge.label}
@@ -357,12 +390,12 @@ function TaskCard({
             onClick={onClick}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ 
+            transition={{
                 delay: 0.5 + index * 0.05,
                 duration: 0.4,
                 ease: [0.25, 0.46, 0.45, 0.94]
             }}
-            whileHover={{ 
+            whileHover={{
                 y: -4,
                 boxShadow: "0 12px 24px rgba(5, 150, 105, 0.12)",
                 borderColor: highlight === "danger" ? "var(--danger)" : "rgba(5, 150, 105, 0.3)"
@@ -374,11 +407,11 @@ function TaskCard({
                 borderWidth: highlight === "danger" ? 2 : 1
             }}
         >
-            <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "start", 
-                marginBottom: "0.75rem" 
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "start",
+                marginBottom: "0.75rem"
             }}>
                 <div className="task-title">{task.title}</div>
                 {getStatusBadge(task.status)}
@@ -404,17 +437,17 @@ function TaskCard({
                 </p>
             )}
 
-            <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center" 
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
             }}>
                 <span className="task-amount">${task.amount.toLocaleString()}</span>
                 <ChevronRight size={18} style={{ color: "var(--text-muted)" }} />
             </div>
 
             {task.status === "REJECTED" && task.rejectionReason && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     style={{
@@ -500,21 +533,25 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
         }
     };
 
-    const canStart = task.status === "PENDING";
-    const canSubmit = task.status === "IN_PROGRESS" || task.status === "REJECTED";
+    // REJECTED tasks can be restarted (start again)
+    // PENDING tasks can be started
+    const canStart = task.status === "PENDING" || task.status === "REJECTED";
+    // Only IN_PROGRESS tasks can be submitted (after starting)
+    const canSubmit = task.status === "IN_PROGRESS";
     const isCompleted = task.status === "APPROVED";
     const isSubmitted = task.status === "SUBMITTED";
+    const isRejected = task.status === "REJECTED";
 
     return (
-        <motion.div 
-            className="modal-overlay" 
+        <motion.div
+            className="modal-overlay"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
         >
-            <motion.div 
-                className="modal" 
+            <motion.div
+                className="modal"
                 onClick={(e) => e.stopPropagation()}
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -524,8 +561,8 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
             >
                 <div className="modal-header">
                     <div className="modal-title">Task Details</div>
-                    <motion.button 
-                        className="btn btn-ghost btn-icon" 
+                    <motion.button
+                        className="btn btn-ghost btn-icon"
                         onClick={onClose}
                         whileHover={{ background: "var(--bg-mint)" }}
                         whileTap={{ scale: 0.95 }}
@@ -537,9 +574,9 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                 <div className="modal-body" style={{ padding: "1.5rem" }}>
                     {/* Task Info */}
                     <div style={{ marginBottom: "1.5rem" }}>
-                        <h3 style={{ 
-                            fontSize: "1.25rem", 
-                            fontWeight: 700, 
+                        <h3 style={{
+                            fontSize: "1.25rem",
+                            fontWeight: 700,
                             marginBottom: "0.5rem",
                             color: "var(--text-primary)"
                         }}>
@@ -550,19 +587,19 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             <span>{task.project} - {task.unit}</span>
                         </div>
                         {task.description && (
-                            <p style={{ 
-                                fontSize: "0.9rem", 
-                                color: "var(--text-secondary)", 
+                            <p style={{
+                                fontSize: "0.9rem",
+                                color: "var(--text-secondary)",
                                 marginBottom: "1rem",
                                 lineHeight: 1.6
                             }}>
                                 {task.description}
                             </p>
                         )}
-                        <div style={{ 
-                            fontSize: "1.75rem", 
-                            fontWeight: 800, 
-                            color: "var(--brand-primary)" 
+                        <div style={{
+                            fontSize: "1.75rem",
+                            fontWeight: 800,
+                            color: "var(--brand-primary)"
                         }}>
                             ${task.amount.toLocaleString()}
                         </div>
@@ -574,8 +611,8 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             <label className="label">Reference Images from Lead</label>
                             <div className="image-grid">
                                 {task.attachmentUrls.map((url: string, i: number) => (
-                                    <motion.div 
-                                        key={i} 
+                                    <motion.div
+                                        key={i}
                                         className="image-thumb"
                                         whileHover={{ scale: 1.05 }}
                                     >
@@ -616,9 +653,9 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                                         <motion.button
                                             className="btn btn-ghost btn-icon"
                                             onClick={() => setSelectedFile(null)}
-                                            style={{ 
-                                                position: "absolute", 
-                                                top: 8, 
+                                            style={{
+                                                position: "absolute",
+                                                top: 8,
                                                 right: 8,
                                                 background: "white",
                                                 boxShadow: "var(--shadow-md)"
@@ -643,7 +680,7 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                                     className="upload-area"
                                     onClick={() => fileInputRef.current?.click()}
                                     style={{ marginBottom: "1rem" }}
-                                    whileHover={{ 
+                                    whileHover={{
                                         borderColor: "var(--brand-primary)",
                                         background: "var(--bg-mint)"
                                     }}
@@ -656,16 +693,16 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             )}
 
                             {!gpsLocation ? (
-                                <MotionButton 
-                                    className="btn-ghost" 
-                                    onClick={getLocation} 
+                                <MotionButton
+                                    className="btn-ghost"
+                                    onClick={getLocation}
                                     style={{ width: "100%", marginBottom: "1rem" }}
                                 >
                                     <MapPin size={18} />
                                     Capture Location (Optional)
                                 </MotionButton>
                             ) : (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     style={{
@@ -708,8 +745,8 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                 </div>
 
                 {/* Action Footer */}
-                <div style={{ 
-                    padding: "1rem 1.5rem", 
+                <div style={{
+                    padding: "1rem 1.5rem",
                     borderTop: "1px solid var(--border)",
                     background: "var(--bg-primary)"
                 }}>
@@ -720,7 +757,7 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             style={{ width: "100%" }}
                         >
                             <Play size={18} />
-                            Start Task
+                            {isRejected ? "Restart Task" : "Start Task"}
                         </MotionButton>
                     )}
 
@@ -756,8 +793,8 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                     )}
 
                     {isSubmitted && (
-                        <div style={{ 
-                            textAlign: "center", 
+                        <div style={{
+                            textAlign: "center",
                             color: "var(--text-secondary)",
                             padding: "0.5rem",
                             background: "#FEF3C7",
@@ -770,8 +807,8 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                     )}
 
                     {isCompleted && (
-                        <div style={{ 
-                            textAlign: "center", 
+                        <div style={{
+                            textAlign: "center",
                             color: "var(--brand-primary)",
                             padding: "0.5rem",
                             background: "var(--bg-mint)",

@@ -87,6 +87,8 @@ export function TeamsView() {
     );
 }
 
+import { Modal } from "./ui/modal";
+
 function AddEngineerModal({ onClose }: { onClose: () => void }) {
     const addEngineer = useMutation(api.tasks.addEngineer);
     const [loading, setLoading] = useState(false);
@@ -110,42 +112,36 @@ function AddEngineerModal({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal max-w-sm w-full" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-slate-900">Add New Engineer</h2>
-                    <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+        <Modal isOpen={true} onClose={onClose} title="Add New Engineer" maxWidth="sm">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="label">Full Name</label>
+                    <input
+                        required
+                        className="input-field"
+                        placeholder="Ali Ahmed"
+                        value={formData.name}
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    />
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="label">Full Name</label>
-                        <input
-                            required
-                            className="input-field"
-                            placeholder="Ali Ahmed"
-                            value={formData.name}
-                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="label">Email Address</label>
-                        <input
-                            required
-                            type="email"
-                            className="input-field"
-                            placeholder="ali@bunyan.com"
-                            value={formData.email}
-                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        />
-                    </div>
-                    <button
-                        disabled={loading}
-                        className="btn btn-primary w-full py-2.5 mt-2"
-                    >
-                        {loading ? "Adding..." : "Add Engineer"}
-                    </button>
-                </form>
-            </div>
-        </div>
+                <div>
+                    <label className="label">Email Address</label>
+                    <input
+                        required
+                        type="email"
+                        className="input-field"
+                        placeholder="ali@bunyan.com"
+                        value={formData.email}
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    />
+                </div>
+                <button
+                    disabled={loading}
+                    className="btn btn-primary w-full py-2.5 mt-2"
+                >
+                    {loading ? "Adding..." : "Add Engineer"}
+                </button>
+            </form>
+        </Modal>
     );
 }

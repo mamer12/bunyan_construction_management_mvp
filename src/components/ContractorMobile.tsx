@@ -8,8 +8,10 @@ import { Badge } from "./ui/badge";
 import { Camera, MapPin, DollarSign, Clock, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ProofUploadModal } from "./ProofUploadModal";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export function ContractorMobile() {
+  const { t, language } = useLanguage();
   const tasks = useQuery(api.tasks.getMyTasks) || [];
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
@@ -44,13 +46,13 @@ export function ContractorMobile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Mobile Header */}
       <header className="bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">My Tasks</h1>
-            <p className="text-slate-300 text-sm">Bunyan Construction</p>
+            <h1 className="text-xl font-bold">{language === 'ar' ? 'مهامي' : 'My Tasks'}</h1>
+            <p className="text-slate-300 text-sm">{language === 'ar' ? 'بنيان للمقاولات' : 'Bunyan Construction'}</p>
           </div>
           <SignOutButton />
         </div>

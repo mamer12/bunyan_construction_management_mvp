@@ -9,6 +9,8 @@ interface CreateProjectModalProps {
     onClose: () => void;
 }
 
+import { Modal } from "./ui/modal";
+
 export function CreateProjectModal({ onClose }: CreateProjectModalProps) {
     const { t, language } = useLanguage();
     const createProject = useMutation(api.tasks.createProject);
@@ -41,72 +43,63 @@ export function CreateProjectModal({ onClose }: CreateProjectModalProps) {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-slate-900">Add New Project</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-                        <X size={24} />
-                    </button>
+        <Modal isOpen={true} onClose={onClose} title="Add New Project" maxWidth="md">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
+                    <input
+                        type="text"
+                        required
+                        className="input-field"
+                        placeholder="e.g. Al-Mansour Complex"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
-                        <input
-                            type="text"
-                            required
-                            className="input-field"
-                            placeholder="e.g. Al-Mansour Complex"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+                    <input
+                        type="text"
+                        required
+                        className="input-field"
+                        placeholder="e.g. Baghdad, Karrada"
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    />
+                </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
-                        <input
-                            type="text"
-                            required
-                            className="input-field"
-                            placeholder="e.g. Baghdad, Karrada"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Total Budget (IQD)</label>
+                    <input
+                        type="number"
+                        required
+                        min="0"
+                        className="input-field"
+                        placeholder="0.00"
+                        value={formData.totalBudget}
+                        onChange={(e) => setFormData({ ...formData, totalBudget: e.target.value })}
+                    />
+                </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Total Budget (IQD)</label>
-                        <input
-                            type="number"
-                            required
-                            min="0"
-                            className="input-field"
-                            placeholder="0.00"
-                            value={formData.totalBudget}
-                            onChange={(e) => setFormData({ ...formData, totalBudget: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="pt-4 flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="btn btn-secondary flex-1"
-                            disabled={loading}
-                        >
-                            {t('cancel')}
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn btn-primary flex-1"
-                            disabled={loading}
-                        >
-                            {loading ? t('loading') : "Create Project"}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <div className="pt-4 flex gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="btn btn-secondary flex-1"
+                        disabled={loading}
+                    >
+                        {t('cancel')}
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-primary flex-1"
+                        disabled={loading}
+                    >
+                        {loading ? t('loading') : "Create Project"}
+                    </button>
+                </div>
+            </form>
+        </Modal>
     );
 }

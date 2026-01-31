@@ -13,7 +13,9 @@ import type * as http from "../http.js";
 import type * as roles from "../roles.js";
 import type * as router from "../router.js";
 import type * as seed from "../seed.js";
+import type * as stock from "../stock.js";
 import type * as tasks from "../tasks.js";
+import type * as users from "../users.js";
 import type * as wallet from "../wallet.js";
 
 import type {
@@ -28,7 +30,9 @@ declare const fullApi: ApiFromModules<{
   roles: typeof roles;
   router: typeof router;
   seed: typeof seed;
+  stock: typeof stock;
   tasks: typeof tasks;
+  users: typeof users;
   wallet: typeof wallet;
 }>;
 

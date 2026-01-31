@@ -77,13 +77,36 @@ export const createTask = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    // Find engineer by email
+    // First, check if there's a user with this email (registered user)
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.assignedTo))
+      .first();
+
+    if (user && user.userId) {
+      // User already registered, use their Auth ID
+      return await ctx.db.insert("tasks", {
+        unitId: args.unitId,
+        title: args.title,
+        description: args.description,
+        amount: args.amount,
+        status: "PENDING",
+        assignedTo: user.userId,
+        assignedBy: userId,
+        attachments: args.attachments,
+      });
+    }
+
+    // Check engineers table
     const engineer = await ctx.db
       .query("engineers")
       .filter((q) => q.eq(q.field("email"), args.assignedTo))
       .first();
 
-    const assigneeId = engineer?.userId || args.assignedTo;
+    // Use engineer's userId only if it's not empty, otherwise use email
+    const assigneeId = (engineer?.userId && engineer.userId.length > 0)
+      ? engineer.userId
+      : args.assignedTo;
 
     return await ctx.db.insert("tasks", {
       unitId: args.unitId,
@@ -110,6 +133,16 @@ export const reviewTask = mutation({
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
+
+    // Prevent reviewing already finalized tasks
+    if (task.status === "APPROVED" || task.status === "REJECTED") {
+      throw new Error(`Task has already been ${task.status.toLowerCase()}. Cannot change status.`);
+    }
+
+    // Only allow reviewing SUBMITTED tasks
+    if (task.status !== "SUBMITTED") {
+      throw new Error("Task must be submitted before it can be reviewed");
+    }
 
     const user = await ctx.db.get(userId);
     const authorName = user?.email || "Lead";
@@ -211,6 +244,116 @@ export const addComment = mutation({
   },
 });
 
+// Update task (Lead/Admin only, only PENDING tasks)
+export const updateTask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    amount: v.optional(v.number()),
+    assignedTo: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+
+    // Check if user is admin or lead
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!user || !["admin", "lead", "acting_manager"].includes(user.role || "")) {
+      throw new Error("Only leads and admins can edit tasks");
+    }
+
+    // Only PENDING tasks can be edited
+    if (task.status !== "PENDING") {
+      throw new Error("Only pending tasks can be edited. This task is " + task.status.toLowerCase());
+    }
+
+    // Build update object
+    const updates: any = {};
+    if (args.title) updates.title = args.title;
+    if (args.description !== undefined) updates.description = args.description;
+    if (args.amount) updates.amount = args.amount;
+
+    // Handle reassignment
+    if (args.assignedTo) {
+      // Check if new assignee is a registered user
+      const newUser = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", args.assignedTo))
+        .first();
+
+      if (newUser && newUser.userId) {
+        updates.assignedTo = newUser.userId;
+      } else {
+        // Check engineers table
+        const engineer = await ctx.db
+          .query("engineers")
+          .filter((q) => q.eq(q.field("email"), args.assignedTo))
+          .first();
+
+        if (engineer?.userId) {
+          updates.assignedTo = engineer.userId;
+        } else {
+          updates.assignedTo = args.assignedTo; // Store email for now
+        }
+      }
+    }
+
+    await ctx.db.patch(args.taskId, updates);
+    return { success: true };
+  },
+});
+
+// Delete task (Lead/Admin only, only PENDING tasks)
+export const deleteTask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+
+    // Check if user is admin or lead
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!user || !["admin", "lead", "acting_manager"].includes(user.role || "")) {
+      throw new Error("Only leads and admins can delete tasks");
+    }
+
+    // Only PENDING tasks can be deleted
+    if (task.status !== "PENDING") {
+      throw new Error("Only pending tasks can be deleted. This task is " + task.status.toLowerCase());
+    }
+
+    // Delete any uploaded attachments
+    if (task.attachments && task.attachments.length > 0) {
+      for (const storageId of task.attachments) {
+        try {
+          await ctx.storage.delete(storageId);
+        } catch (e) {
+          // Ignore storage deletion errors
+        }
+      }
+    }
+
+    await ctx.db.delete(args.taskId);
+    return { success: true };
+  },
+});
+
 // ============================================
 // TASK MANAGEMENT - ENGINEER ACTIONS
 // ============================================
@@ -225,11 +368,40 @@ export const startTask = mutation({
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
-    if (task.assignedTo !== userId) throw new Error("Not authorized");
 
-    await ctx.db.patch(args.taskId, {
-      status: "IN_PROGRESS",
-    });
+    // Get user's email for authorization check
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    // Check authorization: either by Auth ID or by email
+    const isAuthorized =
+      task.assignedTo === userId ||
+      (user?.email && task.assignedTo === user.email);
+
+    if (!isAuthorized) throw new Error("Not authorized");
+
+    // Status validation: Only PENDING or REJECTED tasks can be started
+    if (task.status !== "PENDING" && task.status !== "REJECTED") {
+      if (task.status === "APPROVED") {
+        throw new Error("This task has already been approved and cannot be restarted");
+      } else if (task.status === "SUBMITTED") {
+        throw new Error("This task is already submitted and waiting for review");
+      } else if (task.status === "IN_PROGRESS") {
+        throw new Error("This task is already in progress");
+      } else {
+        throw new Error(`Cannot start task with status: ${task.status}`);
+      }
+    }
+
+    // Update task - also update assignedTo to use Auth ID if it was email
+    const updates: any = { status: "IN_PROGRESS" };
+    if (task.assignedTo !== userId && user?.email && task.assignedTo === user.email) {
+      updates.assignedTo = userId; // Migrate from email to Auth ID
+    }
+
+    await ctx.db.patch(args.taskId, updates);
 
     return { success: true };
   },
@@ -247,14 +419,47 @@ export const submitTask = mutation({
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
-    if (task.assignedTo !== userId) throw new Error("Not authorized");
 
-    await ctx.db.patch(args.taskId, {
+    // Get user's email for authorization check
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    // Check authorization: either by Auth ID or by email
+    const isAuthorized =
+      task.assignedTo === userId ||
+      (user?.email && task.assignedTo === user.email);
+
+    if (!isAuthorized) throw new Error("Not authorized");
+
+    // Status validation: Only IN_PROGRESS tasks can be submitted
+    if (task.status !== "IN_PROGRESS") {
+      if (task.status === "PENDING") {
+        throw new Error("Task must be started before it can be submitted");
+      } else if (task.status === "REJECTED") {
+        throw new Error("Task was rejected. Please restart the task first");
+      } else if (task.status === "SUBMITTED") {
+        throw new Error("Task has already been submitted");
+      } else if (task.status === "APPROVED") {
+        throw new Error("Task has already been approved");
+      } else {
+        throw new Error(`Cannot submit task with status: ${task.status}`);
+      }
+    }
+
+    // Update task - also migrate assignedTo to Auth ID if needed
+    const updates: any = {
       proofPhotoId: args.storageId,
       proofGps: args.gps,
       submittedAt: Date.now(),
       status: "SUBMITTED",
-    });
+    };
+    if (task.assignedTo !== userId && user?.email && task.assignedTo === user.email) {
+      updates.assignedTo = userId;
+    }
+
+    await ctx.db.patch(args.taskId, updates);
 
     return { success: true };
   },
@@ -270,10 +475,44 @@ export const getMyTasks = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    const tasks = await ctx.db
+    // Get user's email for fallback search
+    // Need to filter for entries with email since Auth creates minimal entries
+    const users = await ctx.db
+      .query("users")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    // Find the user entry with an email (not the Auth-created one)
+    const user = users.find(u => u.email && u.role);
+
+    // Also check engineers table for email
+    const engineer = await ctx.db
+      .query("engineers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    // Query tasks by Auth ID
+    let tasks = await ctx.db
       .query("tasks")
       .withIndex("by_assignee", (q) => q.eq("assignedTo", userId))
       .collect();
+
+    // Also always try searching by email (in case tasks were assigned by email)
+    const email = user?.email || engineer?.email;
+    if (email) {
+      const tasksByEmail = await ctx.db
+        .query("tasks")
+        .filter((q) => q.eq(q.field("assignedTo"), email))
+        .collect();
+
+      // Merge tasks, avoiding duplicates
+      const existingIds = new Set(tasks.map(t => t._id));
+      for (const task of tasksByEmail) {
+        if (!existingIds.has(task._id)) {
+          tasks.push(task);
+        }
+      }
+    }
 
     const tasksWithDetails = await Promise.all(
       tasks.map(async (task) => {
@@ -337,11 +576,41 @@ export const getTasksForReview = query({
           (task.attachments || []).map((id) => ctx.storage.getUrl(id))
         );
 
-        // Get engineer info
-        const engineer = await ctx.db
-          .query("engineers")
-          .filter((q) => q.eq(q.field("userId"), task.assignedTo))
+        // Get engineer info - check users table first, then engineers table
+        let engineerName = "Unknown";
+
+        // First, try to find in users table by userId
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_user", (q) => q.eq("userId", task.assignedTo))
           .first();
+
+        if (user?.name) {
+          engineerName = user.name;
+        } else {
+          // Try engineers table
+          const engineer = await ctx.db
+            .query("engineers")
+            .filter((q) => q.eq(q.field("userId"), task.assignedTo))
+            .first();
+
+          if (engineer?.name) {
+            engineerName = engineer.name;
+          } else {
+            // Try to find by email (if assignedTo is an email)
+            const userByEmail = await ctx.db
+              .query("users")
+              .withIndex("by_email", (q) => q.eq("email", task.assignedTo))
+              .first();
+
+            if (userByEmail?.name) {
+              engineerName = userByEmail.name;
+            } else if (task.assignedTo && task.assignedTo.includes("@")) {
+              // If it's an email, show the email
+              engineerName = task.assignedTo;
+            }
+          }
+        }
 
         return {
           ...task,
@@ -350,7 +619,7 @@ export const getTasksForReview = query({
           location: project.location,
           photoUrl,
           attachmentUrls: attachmentUrls.filter(Boolean),
-          engineerName: engineer?.name || "Unknown",
+          engineerName,
         };
       })
     );
@@ -384,10 +653,41 @@ export const getAllTasks = query({
           (task.attachments || []).map((id) => ctx.storage.getUrl(id))
         );
 
-        const engineer = await ctx.db
-          .query("engineers")
-          .filter((q) => q.eq(q.field("userId"), task.assignedTo))
+        // Get engineer info - check users table first, then engineers table
+        let engineerName = "Unknown";
+
+        // First, try to find in users table by userId
+        const user = await ctx.db
+          .query("users")
+          .withIndex("by_user", (q) => q.eq("userId", task.assignedTo))
           .first();
+
+        if (user?.name) {
+          engineerName = user.name;
+        } else {
+          // Try engineers table
+          const engineer = await ctx.db
+            .query("engineers")
+            .filter((q) => q.eq(q.field("userId"), task.assignedTo))
+            .first();
+
+          if (engineer?.name) {
+            engineerName = engineer.name;
+          } else {
+            // Try to find by email (if assignedTo is an email)
+            const userByEmail = await ctx.db
+              .query("users")
+              .withIndex("by_email", (q) => q.eq("email", task.assignedTo))
+              .first();
+
+            if (userByEmail?.name) {
+              engineerName = userByEmail.name;
+            } else if (task.assignedTo && task.assignedTo.includes("@")) {
+              // If it's an email, show the email
+              engineerName = task.assignedTo;
+            }
+          }
+        }
 
         return {
           ...task,
@@ -396,7 +696,7 @@ export const getAllTasks = query({
           location: project.location,
           photoUrl,
           attachmentUrls: attachmentUrls.filter(Boolean),
-          engineerName: engineer?.name || task.assignedTo,
+          engineerName,
         };
       })
     );

@@ -1,137 +1,231 @@
-import { mutation } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { internalMutation, mutation } from "./_generated/server";
+import { v } from "convex/values";
 
-// Seed sample data for testing
-export const seedData = mutation({
+// ============================================
+// CLEAR ALL DATA (Admin Only - Use with caution!)
+// ============================================
+
+export const clearAllData = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    const leadId = userId || "demo_lead";
+    // Clear all application tables
+    const appTables = [
+      "tasks",
+      "units",
+      "projects",
+      "engineers",
+      "wallets",
+      "payouts",
+      "transactions",
+      "users",
+      "materials",
+      "material_requests",
+    ] as const;
 
-    // Create a sample project
+    for (const tableName of appTables) {
+      const docs = await ctx.db.query(tableName as any).collect();
+      for (const doc of docs) {
+        await ctx.db.delete(doc._id);
+      }
+    }
+
+    // Clear auth tables (Convex Auth system tables)
+    const authTables = [
+      "authAccounts",
+      "authSessions",
+      "authRefreshTokens",
+      "authRateLimits",
+      "authVerificationCodes",
+      "authVerifiers",
+    ] as const;
+
+    for (const tableName of authTables) {
+      try {
+        const docs = await ctx.db.query(tableName as any).collect();
+        for (const doc of docs) {
+          await ctx.db.delete(doc._id);
+        }
+      } catch (e) {
+        // Table might not exist, ignore
+      }
+    }
+
+    console.log("All application and auth data cleared.");
+  },
+});
+
+// ============================================
+// SEED TEST USERS
+// ============================================
+
+interface TestUser {
+  email: string;
+  name: string;
+  role: string;
+}
+
+const TEST_USERS: TestUser[] = [
+  { email: "admin@bunyan.test", name: "Admin User", role: "admin" },
+  { email: "manager@bunyan.test", name: "Acting Manager", role: "acting_manager" },
+  { email: "lead@bunyan.test", name: "Lead Engineer", role: "lead" },
+  { email: "engineer@bunyan.test", name: "Site Engineer", role: "engineer" },
+  { email: "finance@bunyan.test", name: "Finance Officer", role: "finance" },
+  { email: "stock@bunyan.test", name: "Stock Manager", role: "stock" },
+];
+
+export const seedTestUsers = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    for (const user of TEST_USERS) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("users", {
+          userId: `test_${user.role}_${Date.now()}`,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: "active",
+          joinedAt: Date.now(),
+        });
+        console.log(`Created user: ${user.email} with role ${user.role}`);
+      }
+    }
+  },
+});
+
+// ============================================
+// SEED MATERIALS
+// ============================================
+
+export const seedMaterials = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const materials = [
+      { name: "Cement", unit: "bags", currentStock: 100, minimumStock: 20, pricePerUnit: 5 },
+      { name: "Sand", unit: "m3", currentStock: 50, minimumStock: 10, pricePerUnit: 15 },
+      { name: "Gravel", unit: "m3", currentStock: 40, minimumStock: 10, pricePerUnit: 18 },
+      { name: "Bricks", unit: "pcs", currentStock: 5000, minimumStock: 1000, pricePerUnit: 0.5 },
+      { name: "Steel Bars (12mm)", unit: "pcs", currentStock: 200, minimumStock: 50, pricePerUnit: 12 },
+      { name: "Steel Bars (16mm)", unit: "pcs", currentStock: 150, minimumStock: 40, pricePerUnit: 18 },
+      { name: "Plywood", unit: "pcs", currentStock: 80, minimumStock: 20, pricePerUnit: 25 },
+      { name: "Paint (White)", unit: "liters", currentStock: 100, minimumStock: 30, pricePerUnit: 8 },
+      { name: "PVC Pipes (4 inch)", unit: "m", currentStock: 200, minimumStock: 50, pricePerUnit: 4 },
+      { name: "Electrical Wire", unit: "m", currentStock: 500, minimumStock: 100, pricePerUnit: 2 },
+    ];
+
+    for (const mat of materials) {
+      const existing = await ctx.db
+        .query("materials")
+        .withIndex("by_name", (q) => q.eq("name", mat.name))
+        .first();
+
+      if (!existing) {
+        await ctx.db.insert("materials", {
+          ...mat,
+          lastUpdated: Date.now(),
+        });
+        console.log(`Created material: ${mat.name}`);
+      }
+    }
+  },
+});
+
+// ============================================
+// SEED SAMPLE PROJECT
+// ============================================
+
+export const seedSampleProject = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Check if any project exists
+    const existingProject = await ctx.db.query("projects").first();
+    if (existingProject) {
+      console.log("Sample project already exists.");
+      return;
+    }
+
+    // Create sample project
     const projectId = await ctx.db.insert("projects", {
-      name: "Al-Mansour Residential Complex",
-      location: "Baghdad, Al-Mansour",
+      name: "Al-Rashid Residential Complex",
+      location: "Baghdad, Iraq",
       totalBudget: 500000,
       status: "ACTIVE",
-      leadId,
     });
 
     // Create sample units
-    const unit1Id = await ctx.db.insert("units", {
-      projectId,
-      name: "Villa 101",
-      status: "UNDER_CONSTRUCTION",
-    });
+    const units = [
+      { name: "Villa 101", status: "UNDER_CONSTRUCTION" },
+      { name: "Villa 102", status: "UNDER_CONSTRUCTION" },
+      { name: "Villa 103", status: "UNDER_CONSTRUCTION" },
+      { name: "Apartment Block A", status: "UNDER_CONSTRUCTION" },
+    ];
 
-    const unit2Id = await ctx.db.insert("units", {
-      projectId,
-      name: "Villa 102",
-      status: "UNDER_CONSTRUCTION",
-    });
+    for (const unit of units) {
+      await ctx.db.insert("units", {
+        projectId,
+        name: unit.name,
+        status: unit.status,
+      });
+    }
 
-    // Create sample engineers
-    await ctx.db.insert("engineers", {
-      userId: "eng_1",
-      name: "Ahmed Hassan",
-      email: "ahmed@bunyan.io",
-      leadId,
-    });
-
-    await ctx.db.insert("engineers", {
-      userId: "eng_2",
-      name: "Sara Ali",
-      email: "sara@bunyan.io",
-      leadId,
-    });
-
-    // Create sample tasks
-    await ctx.db.insert("tasks", {
-      unitId: unit1Id,
-      title: "Install Electrical Wiring",
-      description: "Install main electrical panel and wiring for ground floor",
-      amount: 15000,
-      status: "PENDING",
-      assignedTo: "eng_1",
-      assignedBy: leadId,
-    });
-
-    await ctx.db.insert("tasks", {
-      unitId: unit1Id,
-      title: "Plumbing Installation",
-      description: "Install water pipes and fixtures for bathrooms",
-      amount: 12000,
-      status: "SUBMITTED",
-      assignedTo: "eng_1",
-      assignedBy: leadId,
-      submittedAt: Date.now() - 86400000,
-    });
-
-    await ctx.db.insert("tasks", {
-      unitId: unit2Id,
-      title: "Foundation Inspection",
-      description: "Inspect and document foundation quality",
-      amount: 8000,
-      status: "IN_PROGRESS",
-      assignedTo: "eng_2",
-      assignedBy: leadId,
-    });
-
-    await ctx.db.insert("tasks", {
-      unitId: unit2Id,
-      title: "Roof Waterproofing",
-      description: "Apply waterproof coating to roof surface",
-      amount: 20000,
-      status: "APPROVED",
-      assignedTo: "eng_2",
-      assignedBy: leadId,
-      submittedAt: Date.now() - 172800000,
-      reviewedAt: Date.now() - 86400000,
-    });
-
-    return { success: true, message: "Sample data created" };
+    console.log(`Created sample project with ${units.length} units.`);
   },
 });
 
-// Assign all tasks to the current user (for testing as engineer)
-export const assignTasksToMe = mutation({
+// ============================================
+// FULL SEED - Run all seeders
+// ============================================
+
+export const seedAll = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // This function orchestrates all seeding
+    console.log("Starting full seed...");
 
-    const tasks = await ctx.db.query("tasks").collect();
-
-    for (const task of tasks) {
-      await ctx.db.patch(task._id, { assignedTo: userId });
-    }
-
-    // Also update any engineer record
-    const engineers = await ctx.db.query("engineers").collect();
-    if (engineers.length > 0) {
-      await ctx.db.patch(engineers[0]._id, { userId });
-    }
-
-    return { success: true, message: `Assigned ${tasks.length} tasks to you` };
+    // Note: We can't call other mutations from here, 
+    // so we need to run them separately via dashboard
+    console.log("To complete seeding, run these in order from Convex Dashboard:");
+    console.log("1. seed:clearAllData");
+    console.log("2. seed:seedTestUsers");
+    console.log("3. seed:seedMaterials");
+    console.log("4. seed:seedSampleProject");
   },
 });
 
-// Clear all data (for testing)
-export const clearData = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const tasks = await ctx.db.query("tasks").collect();
-    for (const task of tasks) await ctx.db.delete(task._id);
+// ============================================
+// Create User via API (for testing without Auth)
+// ============================================
 
-    const units = await ctx.db.query("units").collect();
-    for (const unit of units) await ctx.db.delete(unit._id);
+export const createTestUser = mutation({
+  args: {
+    email: v.string(),
+    name: v.string(),
+    role: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Check if user with email exists
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
 
-    const projects = await ctx.db.query("projects").collect();
-    for (const project of projects) await ctx.db.delete(project._id);
+    if (existing) {
+      throw new Error(`User with email ${args.email} already exists`);
+    }
 
-    const engineers = await ctx.db.query("engineers").collect();
-    for (const engineer of engineers) await ctx.db.delete(engineer._id);
+    const userId = await ctx.db.insert("users", {
+      userId: `manual_${args.role}_${Date.now()}`,
+      email: args.email,
+      name: args.name,
+      role: args.role,
+      status: "active",
+      joinedAt: Date.now(),
+    });
 
-    return { success: true, message: "All data cleared" };
+    return userId;
   },
 });

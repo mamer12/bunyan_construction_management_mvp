@@ -7,8 +7,8 @@ import { ReactNode, useEffect, useState } from "react";
 
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }
   }
@@ -16,7 +16,7 @@ export const fadeInUp: Variants = {
 
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
     transition: { duration: 0.4, ease: "easeOut" }
   }
@@ -24,8 +24,8 @@ export const fadeIn: Variants = {
 
 export const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
   }
@@ -33,8 +33,8 @@ export const scaleIn: Variants = {
 
 export const slideInLeft: Variants = {
   hidden: { opacity: 0, x: -30 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
   }
@@ -42,8 +42,8 @@ export const slideInLeft: Variants = {
 
 export const slideInRight: Variants = {
   hidden: { opacity: 0, x: 30 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
   }
@@ -63,8 +63,8 @@ export const staggerContainer: Variants = {
 
 export const staggerItem: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
   }
@@ -88,13 +88,13 @@ export function MotionCard({ children, className = "", delay = 0, onClick, style
       className={`bento-card ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
-        delay, 
-        ease: [0.25, 0.46, 0.45, 0.94] 
+      transition={{
+        duration: 0.5,
+        delay,
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
-        y: -5, 
+      whileHover={{
+        y: -5,
         boxShadow: "0 20px 25px -5px rgb(5 150 105 / 0.15), 0 8px 10px -6px rgb(5 150 105 / 0.15)",
         transition: { duration: 0.2 }
       }}
@@ -113,12 +113,12 @@ export function MotionGradientCard({ children, className = "", delay = 0, style 
       className={`bento-card gradient-card ${className}`}
       initial={{ opacity: 0, y: 30, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ 
-        duration: 0.6, 
-        delay, 
-        ease: [0.25, 0.46, 0.45, 0.94] 
+      transition={{
+        duration: 0.6,
+        delay,
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
+      whileHover={{
         scale: 1.02,
         boxShadow: "0 25px 50px -12px rgb(5 150 105 / 0.3)",
         transition: { duration: 0.3 }
@@ -143,9 +143,9 @@ interface AnimatedCounterProps {
   formatNumber?: boolean;
 }
 
-export function AnimatedCounter({ 
-  value, 
-  duration = 2, 
+export function AnimatedCounter({
+  value,
+  duration = 2,
   className = "",
   prefix = "",
   suffix = "",
@@ -160,12 +160,12 @@ export function AnimatedCounter({
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
-      
+
       // Easing function for smooth deceleration
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      
+
       setCount(Math.floor(easeOutQuart * value));
-      
+
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
       } else {
@@ -174,7 +174,7 @@ export function AnimatedCounter({
     };
 
     animationFrame = requestAnimationFrame(animate);
-    
+
     return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
 
@@ -201,9 +201,9 @@ interface AnimatedDonutProps {
   children?: ReactNode;
 }
 
-export function AnimatedDonut({ 
-  percentage, 
-  size = 160, 
+export function AnimatedDonut({
+  percentage,
+  size = 160,
   strokeWidth = 12,
   className = "",
   color = "#059669",
@@ -263,16 +263,16 @@ export function AnimatedDonut({
 interface MotionButtonProps {
   children: ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   style?: React.CSSProperties;
 }
 
-export function MotionButton({ 
-  children, 
-  className = "", 
-  onClick, 
+export function MotionButton({
+  children,
+  className = "",
+  onClick,
   disabled = false,
   type = "button",
   style
@@ -377,12 +377,12 @@ export function MotionListItem({ children, className = "", index = 0, onClick }:
       className={className}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ 
-        duration: 0.3, 
+      transition={{
+        duration: 0.3,
         delay: index * 0.05,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
+      whileHover={{
         x: 4,
         backgroundColor: "rgba(5, 150, 105, 0.05)",
         transition: { duration: 0.15 }

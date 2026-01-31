@@ -6,13 +6,24 @@ import { useLanguage } from "../contexts/LanguageContext";
 
 import { useState } from "react";
 import { CreateProjectModal } from "./CreateProjectModal";
+import { ProjectDetailsView } from "./ProjectDetailsView";
 
 export function ProjectsView() {
     const projects = useQuery(api.tasks.getProjects) || [];
     const { t } = useLanguage();
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [selectedProjectId, setSelectedProjectId] = useState<any>(null);
 
     const COLORS = ['#10B981', '#3B82F6', '#E5E7EB']; // Emerald, Blue, Gray
+
+    if (selectedProjectId) {
+        return (
+            <ProjectDetailsView
+                projectId={selectedProjectId}
+                onBack={() => setSelectedProjectId(null)}
+            />
+        );
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -39,7 +50,11 @@ export function ProjectsView() {
                     ];
 
                     return (
-                        <div key={project._id} className="bento-card group hover:border-blue-200 transition-colors">
+                        <div
+                            key={project._id}
+                            onClick={() => setSelectedProjectId(project._id)}
+                            className="bento-card group hover:border-blue-200 transition-colors cursor-pointer"
+                        >
                             {/* Header */}
                             <div className="flex justify-between items-start mb-6">
                                 <div className="flex items-center gap-3">
@@ -47,7 +62,9 @@ export function ProjectsView() {
                                         <Building2 size={24} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-slate-900 leading-tight">{project.name}</h3>
+                                        <h3 className="font-bold text-lg text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                            {project.name}
+                                        </h3>
                                         <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
                                             <MapPin size={12} /> {project.location}
                                         </div>

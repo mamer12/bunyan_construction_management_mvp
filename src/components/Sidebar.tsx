@@ -9,6 +9,7 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useIsMobile } from "../hooks/use-mobile";
 
 interface SidebarProps {
     activeTab: string;
@@ -20,6 +21,7 @@ interface SidebarProps {
 export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: SidebarProps) {
     const { signOut } = useAuthActions();
     const { t } = useLanguage();
+    const isMobile = useIsMobile();
 
     const menuItems = [
         { id: "dashboard", label: t("dashboard"), icon: LayoutDashboard },
@@ -30,17 +32,17 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
 
     const sidebarVariants = {
         hidden: { x: -280, opacity: 0 },
-        visible: { 
-            x: 0, 
+        visible: {
+            x: 0,
             opacity: 1,
-            transition: { 
-                type: "spring", 
-                stiffness: 300, 
-                damping: 30 
+            transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 30
             }
         },
-        exit: { 
-            x: -280, 
+        exit: {
+            x: -280,
             opacity: 0,
             transition: { duration: 0.2 }
         }
@@ -61,10 +63,10 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
 
     const logoVariants = {
         hidden: { opacity: 0, scale: 0.8 },
-        visible: { 
-            opacity: 1, 
+        visible: {
+            opacity: 1,
             scale: 1,
-            transition: { 
+            transition: {
                 delay: 0.1,
                 duration: 0.4,
                 ease: [0.25, 0.46, 0.45, 0.94]
@@ -72,12 +74,14 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
         }
     };
 
+    const shouldBeOpen = isMobile ? isOpen : true;
+
     return (
         <>
             {/* Mobile Overlay */}
             <AnimatePresence>
-                {isOpen && (
-                    <motion.div 
+                {isMobile && isOpen && (
+                    <motion.div
                         className="sidebar-overlay md:hidden"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -89,26 +93,26 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
             </AnimatePresence>
 
             {/* Sidebar */}
-            <motion.aside 
-                className={`sidebar ${isOpen ? 'open' : ''}`}
+            <motion.aside
+                className={`sidebar ${shouldBeOpen ? 'open' : ''}`}
                 variants={sidebarVariants}
-                initial="visible"
-                animate="visible"
+                initial={false}
+                animate={shouldBeOpen ? "visible" : "hidden"}
             >
                 {/* Logo Section */}
-                <motion.div 
+                <motion.div
                     variants={logoVariants}
                     initial="hidden"
                     animate="visible"
-                    style={{ 
-                        padding: "2rem 1.5rem", 
-                        display: "flex", 
-                        alignItems: "center", 
+                    style={{
+                        padding: "2rem 1.5rem",
+                        display: "flex",
+                        alignItems: "center",
                         gap: "1rem",
                         borderBottom: "1px solid rgba(255,255,255,0.1)"
                     }}
                 >
-                    <motion.div 
+                    <motion.div
                         style={{
                             width: 48,
                             height: 48,
@@ -122,7 +126,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             fontSize: "1.5rem",
                             boxShadow: "0 4px 12px rgba(52, 211, 153, 0.3)"
                         }}
-                        whileHover={{ 
+                        whileHover={{
                             scale: 1.05,
                             rotate: 5,
                             transition: { duration: 0.2 }
@@ -131,24 +135,24 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                         B
                     </motion.div>
                     <div>
-                        <h1 style={{ 
-                            fontSize: "1.5rem", 
-                            fontWeight: "800", 
+                        <h1 style={{
+                            fontSize: "1.5rem",
+                            fontWeight: "800",
                             lineHeight: 1,
                             margin: 0,
                             letterSpacing: "-0.02em"
                         }}>
                             Bunyan
                         </h1>
-                        <div style={{ 
-                            display: "flex", 
-                            alignItems: "center", 
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
                             gap: "0.375rem",
                             marginTop: "0.25rem"
                         }}>
                             <Sparkles size={12} style={{ opacity: 0.7 }} />
-                            <span style={{ 
-                                fontSize: "0.75rem", 
+                            <span style={{
+                                fontSize: "0.75rem",
                                 opacity: 0.7,
                                 textTransform: "uppercase",
                                 letterSpacing: "0.1em",
@@ -162,8 +166,8 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
 
                 {/* Navigation */}
                 <nav style={{ flex: 1, padding: "1.5rem 0" }}>
-                    <div style={{ 
-                        padding: "0 1.5rem", 
+                    <div style={{
+                        padding: "0 1.5rem",
                         marginBottom: "0.75rem",
                         fontSize: "0.7rem",
                         textTransform: "uppercase",
@@ -185,16 +189,16 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                                 if (window.innerWidth < 768) onClose?.();
                             }}
                             className={`sidebar-link ${activeTab === item.id ? "active" : ""}`}
-                            style={{ 
-                                width: "calc(100% - 1.5rem)", 
-                                background: "none", 
-                                border: "none", 
+                            style={{
+                                width: "calc(100% - 1.5rem)",
+                                background: "none",
+                                border: "none",
                                 cursor: "pointer",
                                 textAlign: "left",
                                 margin: "0 0.75rem",
                                 position: "relative",
                             }}
-                            whileHover={activeTab !== item.id ? { 
+                            whileHover={activeTab !== item.id ? {
                                 x: 4,
                                 transition: { duration: 0.15 }
                             } : {}}
@@ -214,7 +218,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                                     {item.label}
                                 </span>
                             </motion.div>
-                            
+
                             {/* Active indicator pill */}
                             {activeTab === item.id && (
                                 <motion.div
@@ -226,10 +230,10 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                                         borderRadius: "1rem",
                                         zIndex: 0
                                     }}
-                                    transition={{ 
-                                        type: "spring", 
-                                        stiffness: 400, 
-                                        damping: 30 
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 400,
+                                        damping: 30
                                     }}
                                 />
                             )}
@@ -238,9 +242,9 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                 </nav>
 
                 {/* Bottom Section */}
-                <div style={{ 
-                    padding: "1.5rem", 
-                    borderTop: "1px solid rgba(255,255,255,0.1)" 
+                <div style={{
+                    padding: "1.5rem",
+                    borderTop: "1px solid rgba(255,255,255,0.1)"
                 }}>
                     {/* User Info */}
                     <motion.div
@@ -271,8 +275,8 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             AA
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ 
-                                fontSize: "0.875rem", 
+                            <div style={{
+                                fontSize: "0.875rem",
                                 fontWeight: 600,
                                 whiteSpace: "nowrap",
                                 overflow: "hidden",
@@ -280,9 +284,9 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             }}>
                                 Ahmed Al-Rahim
                             </div>
-                            <div style={{ 
-                                fontSize: "0.75rem", 
-                                opacity: 0.6 
+                            <div style={{
+                                fontSize: "0.75rem",
+                                opacity: 0.6
                             }}>
                                 Lead Engineer
                             </div>
@@ -293,7 +297,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                     <motion.button
                         className="sidebar-link"
                         onClick={() => void signOut()}
-                        style={{ 
+                        style={{
                             width: "100%",
                             background: "rgba(239, 68, 68, 0.1)",
                             border: "1px solid rgba(239, 68, 68, 0.2)",
@@ -301,7 +305,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             borderRadius: "1rem",
                             justifyContent: "center"
                         }}
-                        whileHover={{ 
+                        whileHover={{
                             background: "rgba(239, 68, 68, 0.2)",
                             scale: 1.02,
                             transition: { duration: 0.15 }

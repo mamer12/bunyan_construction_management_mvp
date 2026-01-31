@@ -4,6 +4,8 @@ import { SignInForm } from "./SignInForm";
 import { Toaster } from "sonner";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { EngineerDashboard } from "./components/EngineerDashboard";
+import { ContractorMobile } from "./components/ContractorMobile";
+import React from "react";
 
 import { LanguageProvider } from "./contexts/LanguageContext";
 
@@ -53,16 +55,36 @@ function Content() {
 }
 
 function MainApp() {
-  const loggedInUser = useQuery(api.auth.loggedInUser);
+  // 1. Get the Role from the backend
+  const role = useQuery(api.roles.getMyRole);
 
-  // Role determination: "lead" in email = Lead Dashboard, otherwise Engineer
-  const isLead = loggedInUser?.email?.toLowerCase().includes("lead") ||
-    loggedInUser?.email?.toLowerCase().includes("admin") ||
-    loggedInUser?.email?.toLowerCase().includes("manager");
+  // 2. Mobile Detection Service
+  const isMobile = useIsMobile();
 
-  if (isLead) {
-    return <LeadDashboard />;
-  } else {
+  // Loading state while role fetch is pending
+  if (role === undefined) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" style={{ width: 32, height: 32 }} />
+      </div>
+    );
+  }
+
+  const isEngineer = role === "engineer";
+
+  // 3. Routing Logic
+  if (isEngineer) {
+    // If engineer is on mobile, show the optimized mobile view
+    if (isMobile) {
+      return <ContractorMobile />;
+    }
+    // Otherwise show the desktop dashboard
     return <EngineerDashboard />;
   }
+
+  // Default to Lead Dashboard for non-engineers (Leads/Admins)
+  return <LeadDashboard />;
 }
+
+// Simple hook for mobile detection
+import { useIsMobile } from "./hooks/use-mobile";

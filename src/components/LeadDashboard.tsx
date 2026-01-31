@@ -14,9 +14,14 @@ import {
     TrendingUp,
     MoreHorizontal,
     X,
-    Banknote
+    Banknote,
+    FileText,
+    Map,
+    BarChart3,
+    Wallet
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { CreateTaskModal } from "./CreateTaskModal";
 import { PayoutsTab } from "./PayoutsTab";
 import { Sidebar } from "./Sidebar";
@@ -25,6 +30,16 @@ import { ProjectsView } from "./ProjectsView";
 import { TeamsView } from "./TeamsView";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../contexts/LanguageContext";
+import { 
+    MotionCard, 
+    MotionGradientCard, 
+    AnimatedCounter, 
+    AnimatedDonut,
+    MotionButton,
+    MotionListItem,
+    StaggerContainer,
+    StaggerItem
+} from "./ui/motion";
 
 export function LeadDashboard() {
     const { t, language } = useLanguage();
@@ -52,6 +67,11 @@ export function LeadDashboard() {
         }
     };
 
+    // Calculate completion percentage
+    const completedTasks = allTasks.filter((t: any) => t.status === "APPROVED").length;
+    const totalTasks = allTasks.length;
+    const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
@@ -67,209 +87,551 @@ export function LeadDashboard() {
                     onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
                 />
 
-                <div className="p-8">
-                    {activeTab === "dashboard" && (
-                        <div className="flex flex-col gap-6">
-                            {/* BENTO GRID HERO */}
-                            <div className="bento-grid" style={{ padding: 0 }}>
-                                {/* CARD A: Project Health */}
-                                <div className="bento-card span-2 relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1590486803833-1c5dc8ddd4c8?q=80&w=1000&auto=format&fit=crop')" }}>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
-                                    </div>
-                                    <div className="relative z-10 h-full flex flex-col justify-end p-6 text-white">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 backdrop-blur-md">
-                                                {t('onTrack')}
-                                            </span>
-                                            <span className="text-sm opacity-80">Unit 4B Phase 2</span>
-                                        </div>
-                                        <h3 className="text-2xl font-bold mb-4 font-cairo">Al-Mansour Complex</h3>
-                                        <div className="w-full bg-white/10 rounded-full h-2 mb-2 backdrop-blur-sm">
-                                            <div className="bg-amber-500 h-2 rounded-full" style={{ width: "65%" }} />
-                                        </div>
-                                        <div className="flex justify-between text-sm opacity-80">
-                                            <span>Progress</span>
-                                            <span className="text-amber-400 font-bold">65%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* CARD B: Financials */}
-                                <div className="bento-card relative overflow-hidden">
-                                    <div className="card-body flex flex-col justify-between h-full">
-                                        <div className="flex justify-between items-start">
-                                            <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
-                                                <Banknote size={24} />
-                                            </div>
-                                            <span className="text-xs font-semibold text-emerald-600 flex items-center bg-emerald-50 px-2 py-1 rounded-full">
-                                                <TrendingUp size={12} className="mr-1" /> +12%
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <div className="text-sm text-slate-500 font-medium mb-1">{t('totalDisbursed')}</div>
-                                            <div className="text-2xl font-bold text-slate-900 font-cairo">450M <span className="text-sm text-slate-400 font-normal">IQD</span></div>
-                                        </div>
-                                    </div>
-                                    {/* Decorative Chart Line */}
-                                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-amber-50 to-transparent" />
-                                    <svg className="absolute bottom-0 left-0 right-0 text-amber-500 opacity-20" height="40" width="100%" preserveAspectRatio="none">
-                                        <path d="M0,40 L0,20 C50,20 50,10 100,10 C150,10 150,30 200,30 C250,30 250,0 300,0 L300,40 Z" fill="currentColor" />
-                                    </svg>
-                                </div>
-
-                                {/* CARD C: Action Items */}
-                                <div className="bento-card bg-slate-900 text-white border-none">
-                                    <div className="card-body flex flex-col justify-between h-full">
-                                        <div className="flex justify-between items-start">
-                                            <div className="text-slate-400">{t('pendingReviews')}</div>
-                                            <AlertCircle className="text-amber-500" size={24} />
-                                        </div>
-                                        <div className="flex items-end gap-2 mb-4">
-                                            <span className="text-5xl font-bold font-cairo">{tasksForReview.length}</span>
-                                            <span className="text-sm text-slate-400 mb-2">{t('tasksAwaiting')}</span>
-                                        </div>
-                                        <button
-                                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-                                            onClick={() => {
-                                                if (tasksForReview.length > 0) {
-                                                    setSelectedTask(tasksForReview[0]);
-                                                }
-                                            }}
-                                        >
-                                            {t('reviewTask')} <ArrowUpRight size={18} className="rtl:rotate-180" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* CARD D: Team Activity */}
-                                <div className="bento-card span-4 lg:span-2">
-                                    <div className="card-header flex justify-between items-center">
-                                        <h3 className="card-title">{t('recentActivity')}</h3>
-                                        <button className="text-slate-400 hover:text-slate-600"><MoreHorizontal size={20} /></button>
-                                    </div>
-                                    <div className="p-0">
-                                        {tasksForReview.length > 0 ? (
-                                            tasksForReview.slice(0, 3).map((task: any, i: number) => (
-                                                <div key={task._id} className="flex items-center gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
-                                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
-                                                        {task.engineerName?.charAt(0) || "U"}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="text-sm font-medium text-slate-900">
-                                                            <span className="font-bold">{task.engineerName}</span> submitted proof for <span className="text-blue-600">{task.unit}</span>
-                                                        </div>
-                                                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                                                            <Clock size={12} /> {new Date(task.submittedAt || Date.now()).toLocaleTimeString()}
-                                                        </div>
-                                                    </div>
-                                                    <ChevronRight size={16} className="text-slate-300 rtl:rotate-180" />
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="p-8 text-center text-slate-400 flex flex-col items-center">
-                                                <CheckCircle2 size={32} className="mb-2 opacity-50" />
-                                                <p>All caught up! No recent activity.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* TASKS TABLE SECTION */}
-                            <div className="bento-card">
-                                <div className="card-header flex justify-between items-center">
-                                    <h3 className="card-title">All Tasks</h3>
-                                    <button
-                                        className="btn btn-primary text-sm px-4 py-2 h-auto"
-                                        onClick={() => setShowCreateModal(true)}
+                <div style={{ padding: "1.5rem" }}>
+                    <AnimatePresence mode="wait">
+                        {activeTab === "dashboard" && (
+                            <motion.div 
+                                key="dashboard"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+                            >
+                                {/* BENTO GRID HERO */}
+                                <div className="bento-grid" style={{ padding: 0 }}>
+                                    {/* CARD 1: Total Investment - Large Gradient Card */}
+                                    <MotionGradientCard 
+                                        className="span-2" 
+                                        delay={0}
+                                        style={{
+                                            background: "linear-gradient(135deg, #059669 0%, #047857 50%, #064E3B 100%)",
+                                            minHeight: 200,
+                                            position: "relative",
+                                            overflow: "hidden"
+                                        }}
                                     >
-                                        <Plus size={16} /> New Task
-                                    </button>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wider">
-                                                <th className="p-4 font-semibold">Task Title</th>
-                                                <th className="p-4 font-semibold">Location</th>
-                                                <th className="p-4 font-semibold">Assigned To</th>
-                                                <th className="p-4 font-semibold">Amount</th>
-                                                <th className="p-4 font-semibold">Status</th>
-                                                <th className="p-4 font-semibold"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {allTasks.map((task: any) => (
-                                                <tr key={task._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                                                    <td className="p-4 font-medium text-slate-900">{task.title}</td>
-                                                    <td className="p-4 text-slate-500 flex items-center gap-1">
-                                                        <MapPin size={14} /> {task.unit}
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600 font-bold">
-                                                                {task.engineerName?.charAt(0)}
-                                                            </div>
-                                                            <span className="text-sm text-slate-600">{task.engineerName}</span>
+                                        {/* Decorative elements */}
+                                        <div style={{
+                                            position: "absolute",
+                                            top: -50,
+                                            right: -50,
+                                            width: 200,
+                                            height: 200,
+                                            borderRadius: "50%",
+                                            background: "rgba(255,255,255,0.05)"
+                                        }} />
+                                        <div style={{
+                                            position: "absolute",
+                                            bottom: -30,
+                                            left: -30,
+                                            width: 120,
+                                            height: 120,
+                                            borderRadius: "50%",
+                                            background: "rgba(255,255,255,0.03)"
+                                        }} />
+                                        
+                                        <div className="card-body" style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                                                <div>
+                                                    <div style={{ 
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "0.5rem",
+                                                        padding: "0.375rem 0.875rem",
+                                                        background: "rgba(255,255,255,0.15)",
+                                                        borderRadius: "9999px",
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        color: "white",
+                                                        backdropFilter: "blur(10px)",
+                                                        marginBottom: "1rem"
+                                                    }}>
+                                                        <Wallet size={14} />
+                                                        {t('totalDisbursed')}
+                                                    </div>
+                                                </div>
+                                                <div style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "0.375rem",
+                                                    padding: "0.375rem 0.75rem",
+                                                    background: "rgba(52, 211, 153, 0.3)",
+                                                    borderRadius: "9999px",
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    color: "#A7F3D0"
+                                                }}>
+                                                    <TrendingUp size={14} />
+                                                    +12.5%
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style={{ 
+                                                    fontSize: "3rem", 
+                                                    fontWeight: 800, 
+                                                    color: "white",
+                                                    lineHeight: 1,
+                                                    marginBottom: "0.5rem"
+                                                }}>
+                                                    <AnimatedCounter 
+                                                        value={450000000} 
+                                                        duration={2.5}
+                                                        formatNumber={true}
+                                                    />
+                                                </div>
+                                                <div style={{ 
+                                                    fontSize: "1rem", 
+                                                    color: "rgba(255,255,255,0.7)",
+                                                    fontWeight: 500
+                                                }}>
+                                                    Iraqi Dinar (IQD)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </MotionGradientCard>
+
+                                    {/* CARD 2: Project Status - Donut Chart */}
+                                    <MotionCard delay={0.1}>
+                                        <div className="card-body" style={{ 
+                                            display: "flex", 
+                                            flexDirection: "column", 
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            height: "100%",
+                                            minHeight: 200
+                                        }}>
+                                            <div style={{ 
+                                                fontSize: "0.75rem", 
+                                                color: "var(--text-secondary)",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                marginBottom: "1rem"
+                                            }}>
+                                                Project Progress
+                                            </div>
+                                            <AnimatedDonut 
+                                                percentage={completionPercentage || 75}
+                                                size={140}
+                                                strokeWidth={14}
+                                                color="#059669"
+                                                bgColor="#E2E8F0"
+                                            >
+                                                <div style={{ textAlign: "center" }}>
+                                                    <div style={{ 
+                                                        fontSize: "1.75rem", 
+                                                        fontWeight: 800,
+                                                        color: "var(--brand-primary)"
+                                                    }}>
+                                                        {completionPercentage || 75}%
+                                                    </div>
+                                                    <div style={{ 
+                                                        fontSize: "0.7rem", 
+                                                        color: "var(--text-secondary)",
+                                                        fontWeight: 500
+                                                    }}>
+                                                        Completed
+                                                    </div>
+                                                </div>
+                                            </AnimatedDonut>
+                                        </div>
+                                    </MotionCard>
+
+                                    {/* CARD 3: Pending Reviews - Action Card */}
+                                    <MotionCard 
+                                        delay={0.2}
+                                        style={{
+                                            background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
+                                            border: "none"
+                                        }}
+                                    >
+                                        <div className="card-body" style={{ 
+                                            display: "flex", 
+                                            flexDirection: "column", 
+                                            justifyContent: "space-between",
+                                            height: "100%",
+                                            minHeight: 200
+                                        }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                                                <span style={{ 
+                                                    color: "#94A3B8", 
+                                                    fontSize: "0.875rem",
+                                                    fontWeight: 500
+                                                }}>
+                                                    {t('pendingReviews')}
+                                                </span>
+                                                <motion.div
+                                                    animate={{ 
+                                                        scale: [1, 1.1, 1],
+                                                        opacity: [0.7, 1, 0.7]
+                                                    }}
+                                                    transition={{ 
+                                                        duration: 2, 
+                                                        repeat: Infinity,
+                                                        ease: "easeInOut"
+                                                    }}
+                                                >
+                                                    <AlertCircle size={24} color="#F59E0B" />
+                                                </motion.div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style={{ 
+                                                    display: "flex", 
+                                                    alignItems: "baseline", 
+                                                    gap: "0.5rem",
+                                                    marginBottom: "0.5rem"
+                                                }}>
+                                                    <span style={{ 
+                                                        fontSize: "3.5rem", 
+                                                        fontWeight: 800, 
+                                                        color: "white",
+                                                        lineHeight: 1
+                                                    }}>
+                                                        <AnimatedCounter value={tasksForReview.length} duration={1} />
+                                                    </span>
+                                                    <span style={{ 
+                                                        color: "#64748B", 
+                                                        fontSize: "0.875rem" 
+                                                    }}>
+                                                        {t('tasksAwaiting')}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <MotionButton
+                                                className="btn-primary"
+                                                onClick={() => {
+                                                    if (tasksForReview.length > 0) {
+                                                        setSelectedTask(tasksForReview[0]);
+                                                    }
+                                                }}
+                                                style={{ width: "100%" }}
+                                            >
+                                                {t('reviewTask')} 
+                                                <ArrowUpRight size={18} className="rtl:rotate-180" />
+                                            </MotionButton>
+                                        </div>
+                                    </MotionCard>
+
+                                    {/* CARD 4: Quick Actions */}
+                                    <MotionCard className="span-2" delay={0.3}>
+                                        <div className="card-header">
+                                            <h3 className="card-title">Quick Actions</h3>
+                                        </div>
+                                        <div className="card-body">
+                                            <div style={{ 
+                                                display: "grid", 
+                                                gridTemplateColumns: "repeat(4, 1fr)", 
+                                                gap: "1rem" 
+                                            }}>
+                                                {[
+                                                    { icon: Wallet, label: "Add Fund", color: "#059669", bg: "#ECFDF5" },
+                                                    { icon: CheckCircle2, label: "Approve Task", color: "#3B82F6", bg: "#EFF6FF" },
+                                                    { icon: Map, label: "View Map", color: "#8B5CF6", bg: "#F5F3FF" },
+                                                    { icon: BarChart3, label: "Reports", color: "#F59E0B", bg: "#FFFBEB" },
+                                                ].map((action, index) => (
+                                                    <motion.button
+                                                        key={action.label}
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.4 + index * 0.05 }}
+                                                        style={{
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            alignItems: "center",
+                                                            gap: "0.75rem",
+                                                            padding: "1.25rem",
+                                                            background: action.bg,
+                                                            border: "none",
+                                                            borderRadius: "1.25rem",
+                                                            cursor: "pointer",
+                                                            transition: "all 0.2s"
+                                                        }}
+                                                        whileHover={{ 
+                                                            scale: 1.05,
+                                                            boxShadow: `0 8px 20px ${action.color}20`
+                                                        }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        <div style={{
+                                                            width: 48,
+                                                            height: 48,
+                                                            borderRadius: "1rem",
+                                                            background: "white",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            color: action.color,
+                                                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+                                                        }}>
+                                                            <action.icon size={24} />
                                                         </div>
-                                                    </td>
-                                                    <td className="p-4 font-cairo font-semibold text-slate-900">${task.amount.toLocaleString()}</td>
-                                                    <td className="p-4">
-                                                        <span className={cn(
-                                                            "badge",
-                                                            task.status === "APPROVED" ? "badge-success" :
-                                                                task.status === "REJECTED" ? "badge-danger" :
-                                                                    task.status === "SUBMITTED" ? "badge-warning" : "badge-neutral"
-                                                        )}>
-                                                            {task.status.replace("_", " ")}
+                                                        <span style={{ 
+                                                            fontSize: "0.8rem", 
+                                                            fontWeight: 600,
+                                                            color: "var(--text-primary)"
+                                                        }}>
+                                                            {action.label}
                                                         </span>
-                                                    </td>
-                                                    <td className="p-4 text-right">
-                                                        <button className="text-slate-300 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all">
-                                                            Review
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </MotionCard>
+
+                                    {/* CARD 5: Live Updates / Recent Activity */}
+                                    <MotionCard className="span-2" delay={0.35}>
+                                        <div className="card-header" style={{ 
+                                            display: "flex", 
+                                            justifyContent: "space-between", 
+                                            alignItems: "center" 
+                                        }}>
+                                            <h3 className="card-title">{t('recentActivity')}</h3>
+                                            <motion.button 
+                                                style={{ 
+                                                    background: "none", 
+                                                    border: "none",
+                                                    color: "var(--text-secondary)",
+                                                    cursor: "pointer",
+                                                    padding: "0.5rem",
+                                                    borderRadius: "0.5rem"
+                                                }}
+                                                whileHover={{ background: "var(--bg-mint)" }}
+                                            >
+                                                <MoreHorizontal size={20} />
+                                            </motion.button>
+                                        </div>
+                                        <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                                            {tasksForReview.length > 0 ? (
+                                                tasksForReview.slice(0, 5).map((task: any, i: number) => (
+                                                    <MotionListItem 
+                                                        key={task._id} 
+                                                        index={i}
+                                                        onClick={() => setSelectedTask(task)}
+                                                        className=""
+                                                    >
+                                                        <div style={{ 
+                                                            display: "flex", 
+                                                            alignItems: "center", 
+                                                            gap: "1rem", 
+                                                            padding: "1rem 1.5rem",
+                                                            borderBottom: "1px solid var(--border-light)"
+                                                        }}>
+                                                            <div style={{
+                                                                width: 44,
+                                                                height: 44,
+                                                                borderRadius: "14px",
+                                                                background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                color: "white",
+                                                                fontWeight: 700,
+                                                                fontSize: "0.9rem"
+                                                            }}>
+                                                                {task.engineerName?.charAt(0) || "U"}
+                                                            </div>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ 
+                                                                    fontSize: "0.9rem", 
+                                                                    fontWeight: 500, 
+                                                                    color: "var(--text-primary)",
+                                                                    marginBottom: "0.25rem"
+                                                                }}>
+                                                                    <span style={{ fontWeight: 700 }}>{task.engineerName}</span> submitted proof for{" "}
+                                                                    <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>{task.unit}</span>
+                                                                </div>
+                                                                <div style={{ 
+                                                                    display: "flex", 
+                                                                    alignItems: "center", 
+                                                                    gap: "0.375rem",
+                                                                    fontSize: "0.75rem", 
+                                                                    color: "var(--text-secondary)" 
+                                                                }}>
+                                                                    <Clock size={12} /> 
+                                                                    {new Date(task.submittedAt || Date.now()).toLocaleTimeString()}
+                                                                </div>
+                                                            </div>
+                                                            <ChevronRight size={18} style={{ color: "var(--text-muted)" }} className="rtl:rotate-180" />
+                                                        </div>
+                                                    </MotionListItem>
+                                                ))
+                                            ) : (
+                                                <div className="empty-state" style={{ padding: "2rem" }}>
+                                                    <CheckCircle2 size={40} style={{ color: "var(--brand-primary)", opacity: 0.5, marginBottom: "0.75rem" }} />
+                                                    <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
+                                                        All caught up! No recent activity.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </MotionCard>
                                 </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {activeTab === "finance" && (
-                        <PayoutsTab />
-                    )}
+                                {/* ALL TASKS TABLE */}
+                                <MotionCard delay={0.4}>
+                                    <div className="card-header" style={{ 
+                                        display: "flex", 
+                                        justifyContent: "space-between", 
+                                        alignItems: "center" 
+                                    }}>
+                                        <h3 className="card-title">All Tasks</h3>
+                                        <MotionButton
+                                            className="btn-primary"
+                                            onClick={() => setShowCreateModal(true)}
+                                            style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}
+                                        >
+                                            <Plus size={16} /> New Task
+                                        </MotionButton>
+                                    </div>
+                                    <div style={{ overflowX: "auto" }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Task Title</th>
+                                                    <th>Location</th>
+                                                    <th>Assigned To</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {allTasks.map((task: any, index: number) => (
+                                                    <motion.tr 
+                                                        key={task._id}
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.5 + index * 0.03 }}
+                                                        style={{ cursor: "pointer" }}
+                                                        onClick={() => setSelectedTask(task)}
+                                                    >
+                                                        <td style={{ fontWeight: 600 }}>{task.title}</td>
+                                                        <td>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", color: "var(--text-secondary)" }}>
+                                                                <MapPin size={14} /> {task.unit}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                <div style={{
+                                                                    width: 28,
+                                                                    height: 28,
+                                                                    borderRadius: "8px",
+                                                                    background: "var(--bg-mint)",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    color: "var(--brand-primary)",
+                                                                    fontWeight: 700,
+                                                                    fontSize: "0.75rem"
+                                                                }}>
+                                                                    {task.engineerName?.charAt(0)}
+                                                                </div>
+                                                                <span style={{ fontSize: "0.875rem" }}>{task.engineerName}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ fontWeight: 700, color: "var(--brand-primary)" }}>
+                                                            ${task.amount.toLocaleString()}
+                                                        </td>
+                                                        <td>
+                                                            <span className={cn(
+                                                                "badge",
+                                                                task.status === "APPROVED" ? "badge-success" :
+                                                                task.status === "REJECTED" ? "badge-danger" :
+                                                                task.status === "SUBMITTED" ? "badge-warning" : "badge-neutral"
+                                                            )}>
+                                                                {task.status.replace("_", " ")}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <motion.button
+                                                                style={{
+                                                                    background: "none",
+                                                                    border: "none",
+                                                                    color: "var(--brand-primary)",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.8rem",
+                                                                    fontWeight: 600,
+                                                                    padding: "0.375rem 0.75rem",
+                                                                    borderRadius: "0.5rem"
+                                                                }}
+                                                                whileHover={{ background: "var(--bg-mint)" }}
+                                                            >
+                                                                View
+                                                            </motion.button>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </MotionCard>
+                            </motion.div>
+                        )}
 
-                    {activeTab === "projects" && (
-                        <ProjectsView />
-                    )}
+                        {activeTab === "finance" && (
+                            <motion.div
+                                key="finance"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <PayoutsTab />
+                            </motion.div>
+                        )}
 
-                    {activeTab === "team" && (
-                        <TeamsView />
-                    )}
+                        {activeTab === "projects" && (
+                            <motion.div
+                                key="projects"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ProjectsView />
+                            </motion.div>
+                        )}
+
+                        {activeTab === "team" && (
+                            <motion.div
+                                key="team"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <TeamsView />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </main>
 
             {/* MODALS */}
-            {showCreateModal && (
-                <CreateTaskModal
-                    units={units}
-                    engineers={engineers}
-                    onClose={() => setShowCreateModal(false)}
-                />
-            )}
+            <AnimatePresence>
+                {showCreateModal && (
+                    <CreateTaskModal
+                        units={units}
+                        engineers={engineers}
+                        onClose={() => setShowCreateModal(false)}
+                    />
+                )}
+            </AnimatePresence>
 
-            {selectedTask && (
-                <TaskReviewModal
-                    task={selectedTask}
-                    onClose={() => setSelectedTask(null)}
-                    onReview={handleReview}
-                />
-            )}
+            <AnimatePresence>
+                {selectedTask && (
+                    <TaskReviewModal
+                        task={selectedTask}
+                        onClose={() => setSelectedTask(null)}
+                        onReview={handleReview}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -289,96 +651,266 @@ function TaskReviewModal({ task, onClose, onReview }: {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal flex-row overflow-hidden max-w-[1000px] h-[600px]" onClick={(e) => e.stopPropagation()}>
+        <motion.div 
+            className="modal-overlay" 
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
+            <motion.div 
+                className="modal" 
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.2 }}
+                style={{ 
+                    display: "flex", 
+                    flexDirection: "row", 
+                    maxWidth: 1000, 
+                    height: "auto",
+                    maxHeight: "85vh"
+                }}
+            >
                 {/* Left: Details */}
-                <div className="flex-1 flex flex-col p-8 border-r border-slate-100 bg-white overflow-y-auto">
-                    <div className="flex justify-between items-start mb-6">
+                <div style={{ 
+                    flex: 1, 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    padding: "2rem", 
+                    borderRight: "1px solid var(--border)",
+                    overflowY: "auto"
+                }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
                         <div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">Review Task</span>
-                            <h2 className="text-2xl font-bold text-slate-900 leading-tight">{task.title}</h2>
+                            <span style={{ 
+                                fontSize: "0.7rem", 
+                                fontWeight: 600, 
+                                color: "var(--text-secondary)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.1em",
+                                marginBottom: "0.5rem",
+                                display: "block"
+                            }}>
+                                Review Task
+                            </span>
+                            <h2 style={{ 
+                                fontSize: "1.5rem", 
+                                fontWeight: 700, 
+                                color: "var(--text-primary)",
+                                margin: 0
+                            }}>
+                                {task.title}
+                            </h2>
                         </div>
-                        <div className="text-right">
-                            <div className="text-2xl font-bold font-cairo text-navy">${task.amount.toLocaleString()}</div>
-                            <div className="text-xs text-slate-400">Payout Amount</div>
+                        <div style={{ textAlign: "right" }}>
+                            <div style={{ 
+                                fontSize: "1.75rem", 
+                                fontWeight: 800, 
+                                color: "var(--brand-primary)"
+                            }}>
+                                ${task.amount.toLocaleString()}
+                            </div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                                Payout Amount
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-6 flex-1">
-                        <div className="bg-slate-50 p-4 rounded-xl">
-                            <h4 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
-                                <Users size={16} className="text-slate-400" /> Engineer
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", flex: 1 }}>
+                        {/* Engineer Info */}
+                        <div style={{ 
+                            padding: "1.25rem", 
+                            background: "var(--bg-mint)", 
+                            borderRadius: "1rem" 
+                        }}>
+                            <h4 style={{ 
+                                fontSize: "0.8rem", 
+                                fontWeight: 600, 
+                                color: "var(--text-secondary)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: "0.75rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem"
+                            }}>
+                                <Users size={14} /> Engineer
                             </h4>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                <div style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: "12px",
+                                    background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "white",
+                                    fontWeight: 700
+                                }}>
                                     {task.engineerName?.charAt(0)}
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-slate-900">{task.engineerName}</div>
-                                    <div className="text-xs text-slate-500">Submitted {new Date(task.submittedAt || Date.now()).toLocaleDateString()}</div>
+                                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{task.engineerName}</div>
+                                    <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                                        Submitted {new Date(task.submittedAt || Date.now()).toLocaleDateString()}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <h4 className="text-sm font-bold text-slate-900 mb-2">Description</h4>
-                            <p className="text-slate-600 leading-relaxed text-sm">
-                                {task.description || "No description provided."}
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-bold text-slate-900 mb-2 block">Feedback (Optional)</label>
-                            <textarea
-                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Add notes for the engineer..."
-                                rows={3}
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right: Proof & Actions */}
-                <div className="flex-1 bg-slate-50 flex flex-col relative">
-                    <button className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors" onClick={onClose}>
-                        <X size={18} />
-                    </button>
-
-                    <div className="flex-1 p-4 flex items-center justify-center bg-slate-900/5 backdrop-blur-sm relative overflow-hidden">
-                        {task.photoUrl ? (
-                            <img
-                                src={task.photoUrl}
-                                alt="Proof"
-                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                            />
-                        ) : (
-                            <div className="text-slate-400 flex flex-col items-center">
-                                <AlertCircle size={48} className="mb-2" />
-                                <p>No image submitted</p>
+                        {/* Description */}
+                        {task.description && (
+                            <div>
+                                <h4 style={{ 
+                                    fontSize: "0.8rem", 
+                                    fontWeight: 600, 
+                                    color: "var(--text-secondary)",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                    marginBottom: "0.5rem"
+                                }}>
+                                    Description
+                                </h4>
+                                <p style={{ 
+                                    color: "var(--text-primary)", 
+                                    lineHeight: 1.6,
+                                    margin: 0
+                                }}>
+                                    {task.description}
+                                </p>
                             </div>
                         )}
+
+                        {/* Comment Input */}
+                        <div>
+                            <h4 style={{ 
+                                fontSize: "0.8rem", 
+                                fontWeight: 600, 
+                                color: "var(--text-secondary)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: "0.5rem"
+                            }}>
+                                Add Comment (Optional)
+                            </h4>
+                            <textarea
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Enter feedback for the engineer..."
+                                style={{
+                                    width: "100%",
+                                    padding: "1rem",
+                                    border: "1px solid var(--border)",
+                                    borderRadius: "1rem",
+                                    fontSize: "0.9rem",
+                                    resize: "none",
+                                    height: 100,
+                                    fontFamily: "inherit",
+                                    outline: "none"
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = "var(--brand-primary)";
+                                    e.target.style.boxShadow = "0 0 0 3px rgba(5, 150, 105, 0.1)";
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = "var(--border)";
+                                    e.target.style.boxShadow = "none";
+                                }}
+                            />
+                        </div>
                     </div>
 
-                    <div className="p-6 bg-white border-t border-slate-100 flex gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
-                        <button
-                            className="flex-1 py-4 rounded-xl font-bold text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+                    {/* Action Buttons */}
+                    <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                        <MotionButton
+                            className="btn-danger"
                             onClick={() => handleAction("reject")}
                             disabled={loading}
+                            style={{ flex: 1 }}
                         >
-                            Reject
-                        </button>
-                        <button
-                            className="flex-1 py-4 rounded-xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 transition-all transform hover:-translate-y-1"
+                            <X size={18} /> Reject
+                        </MotionButton>
+                        <MotionButton
+                            className="btn-success"
                             onClick={() => handleAction("approve")}
                             disabled={loading}
+                            style={{ flex: 1 }}
                         >
-                            Approve & Pay
-                        </button>
+                            <CheckCircle2 size={18} /> Approve
+                        </MotionButton>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                {/* Right: Photo Preview */}
+                <div style={{ 
+                    flex: 1, 
+                    background: "var(--bg-primary)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "2rem",
+                    position: "relative"
+                }}>
+                    {/* Close Button */}
+                    <motion.button
+                        onClick={onClose}
+                        style={{
+                            position: "absolute",
+                            top: "1rem",
+                            right: "1rem",
+                            background: "white",
+                            border: "1px solid var(--border)",
+                            borderRadius: "0.75rem",
+                            padding: "0.5rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}
+                        whileHover={{ scale: 1.05, background: "var(--bg-mint)" }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <X size={20} />
+                    </motion.button>
+
+                    {task.photoUrl ? (
+                        <div style={{ width: "100%", textAlign: "center" }}>
+                            <h4 style={{ 
+                                fontSize: "0.8rem", 
+                                fontWeight: 600, 
+                                color: "var(--text-secondary)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: "1rem"
+                            }}>
+                                Proof of Work
+                            </h4>
+                            <motion.img
+                                src={task.photoUrl}
+                                alt="Proof of work"
+                                style={{
+                                    maxWidth: "100%",
+                                    maxHeight: 400,
+                                    borderRadius: "1rem",
+                                    boxShadow: "var(--shadow-lg)"
+                                }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1 }}
+                            />
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: "center", color: "var(--text-secondary)" }}>
+                            <FileText size={48} style={{ opacity: 0.3, marginBottom: "1rem" }} />
+                            <p>No photo attached</p>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        </motion.div>
     );
 }

@@ -14,14 +14,23 @@ import {
     X,
     ChevronRight,
     AlertTriangle,
-    Image as ImageIcon
+    Sparkles,
+    Wallet,
+    TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { WalletCard } from "./WalletCard";
 import { PayoutModal } from "./PayoutModal";
 import { TransactionHistory } from "./TransactionHistory";
-
 import { useLanguage } from "../contexts/LanguageContext";
+import { 
+    MotionCard, 
+    MotionGradientCard, 
+    AnimatedCounter, 
+    MotionButton,
+    MotionListItem
+} from "./ui/motion";
 
 export function EngineerDashboard() {
     const { signOut } = useAuthActions();
@@ -37,102 +46,216 @@ export function EngineerDashboard() {
     const rejectedTasks = tasks.filter((t: any) => t.status === "REJECTED");
 
     return (
-        <div className="min-h-screen" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            {/* Header */}
-            <header className="header">
-                <div>
-                    <h1 className="header-title">{t('welcome')}</h1>
-                    <p className="header-subtitle">Bunyan Construction</p>
-                </div>
-                <button className="btn btn-ghost btn-icon" onClick={() => void signOut()}>
-                    <LogOut size={18} />
-                </button>
-            </header>
+        <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            {/* Animated Header */}
+            <motion.header 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{
+                    background: "linear-gradient(135deg, #059669 0%, #047857 50%, #064E3B 100%)",
+                    color: "white",
+                    padding: "1.5rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 20,
+                    boxShadow: "0 4px 20px rgba(5, 150, 105, 0.3)"
+                }}
+            >
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                >
+                    <div style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "0.5rem",
+                        marginBottom: "0.25rem"
+                    }}>
+                        <Sparkles size={14} style={{ opacity: 0.8 }} />
+                        <span style={{ 
+                            fontSize: "0.7rem", 
+                            textTransform: "uppercase",
+                            letterSpacing: "0.15em",
+                            opacity: 0.8
+                        }}>
+                            Engineer Portal
+                        </span>
+                    </div>
+                    <h1 style={{ 
+                        fontSize: "1.5rem", 
+                        fontWeight: 700, 
+                        margin: 0 
+                    }}>
+                        {t('welcome')}
+                    </h1>
+                    <p style={{ 
+                        fontSize: "0.875rem", 
+                        opacity: 0.9, 
+                        margin: 0,
+                        marginTop: "0.25rem"
+                    }}>
+                        Bunyan Construction
+                    </p>
+                </motion.div>
+                <motion.button 
+                    className="btn" 
+                    onClick={() => void signOut()}
+                    style={{
+                        background: "rgba(255,255,255,0.15)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        color: "white",
+                        padding: "0.75rem"
+                    }}
+                    whileHover={{ 
+                        background: "rgba(255,255,255,0.25)",
+                        scale: 1.05
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    <LogOut size={20} />
+                </motion.button>
+            </motion.header>
 
             {/* Wallet Section */}
-            <div style={{ padding: 16 }}>
-                <div className="bento-grid" style={{ padding: 0 }}>
+            <div style={{ padding: "1rem" }}>
+                <motion.div 
+                    className="bento-grid" 
+                    style={{ padding: 0, gap: "1rem" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                >
                     <WalletCard onRequestPayout={() => setShowPayoutModal(true)} />
                     <TransactionHistory />
-                </div>
+                </motion.div>
             </div>
 
             {/* Stats Row */}
-            <div style={{ display: "flex", gap: 12, padding: "0 16px 16px", overflowX: "auto" }}>
-                <div className="bento-card stat-card" style={{ minWidth: 120, flex: 1 }}>
-                    <div className="stat-icon orange">
-                        <Clock size={18} />
-                    </div>
-                    <div className="stat-value">{pendingTasks.length}</div>
-                    <div className="stat-label">{t('pending')}</div>
-                </div>
-
-                <div className="bento-card stat-card" style={{ minWidth: 120, flex: 1 }}>
-                    <div className="stat-icon blue">
-                        <Play size={18} className="rtl:rotate-180" />
-                    </div>
-                    <div className="stat-value">{inProgressTasks.length}</div>
-                    <div className="stat-label">{t('inProgress')}</div>
-                </div>
-
-                <div className="bento-card stat-card" style={{ minWidth: 120, flex: 1 }}>
-                    <div className="stat-icon green">
-                        <CheckCircle2 size={18} />
-                    </div>
-                    <div className="stat-value">{completedTasks.length}</div>
-                    <div className="stat-label">{t('completed')}</div>
-                </div>
-            </div>
+            <motion.div 
+                style={{ 
+                    display: "flex", 
+                    gap: "0.75rem", 
+                    padding: "0 1rem 1rem", 
+                    overflowX: "auto",
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none"
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+            >
+                <StatCard 
+                    icon={Clock} 
+                    value={pendingTasks.length} 
+                    label={t('pending')} 
+                    color="#F59E0B"
+                    bg="#FFFBEB"
+                    delay={0.35}
+                />
+                <StatCard 
+                    icon={Play} 
+                    value={inProgressTasks.length} 
+                    label={t('inProgress')} 
+                    color="#3B82F6"
+                    bg="#EFF6FF"
+                    delay={0.4}
+                />
+                <StatCard 
+                    icon={CheckCircle2} 
+                    value={completedTasks.length} 
+                    label={t('completed')} 
+                    color="#059669"
+                    bg="#ECFDF5"
+                    delay={0.45}
+                />
+            </motion.div>
 
             {/* Task List */}
-            <div style={{ padding: "0 16px 16px" }}>
-                <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>
+            <div style={{ padding: "0 1rem 1rem" }}>
+                <motion.h2 
+                    style={{ 
+                        fontSize: "1.125rem", 
+                        fontWeight: 700, 
+                        marginBottom: "1rem", 
+                        color: "var(--text-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem"
+                    }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    <ClipboardList size={20} style={{ color: "var(--brand-primary)" }} />
                     My Tasks
-                </h2>
+                </motion.h2>
+
                 {tasks.length === 0 ? (
-                    <div className="bento-card">
+                    <MotionCard delay={0.5}>
                         <div className="empty-state">
-                            <ClipboardList className="empty-icon" />
-                            <p className="empty-title">No tasks assigned</p>
+                            <motion.div
+                                animate={{ 
+                                    y: [0, -5, 0],
+                                    opacity: [0.5, 0.8, 0.5]
+                                }}
+                                transition={{ 
+                                    duration: 2, 
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            >
+                                <ClipboardList size={48} style={{ color: "var(--brand-primary)", opacity: 0.5 }} />
+                            </motion.div>
+                            <p className="empty-title" style={{ marginTop: "1rem" }}>No tasks assigned</p>
                             <p className="empty-text">Tasks assigned by your lead will appear here</p>
                         </div>
-                    </div>
+                    </MotionCard>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        {/* Rejected Tasks - Show First */}
-                        {rejectedTasks.map((task: any) => (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {/* Rejected Tasks - Show First with highlight */}
+                        {rejectedTasks.map((task: any, index: number) => (
                             <TaskCard
                                 key={task._id}
                                 task={task}
                                 onClick={() => setSelectedTask(task)}
                                 highlight="danger"
+                                index={index}
                             />
                         ))}
 
                         {/* Pending & In Progress */}
-                        {[...pendingTasks, ...inProgressTasks].map((task: any) => (
+                        {[...pendingTasks, ...inProgressTasks].map((task: any, index: number) => (
                             <TaskCard
                                 key={task._id}
                                 task={task}
                                 onClick={() => setSelectedTask(task)}
+                                index={rejectedTasks.length + index}
                             />
                         ))}
 
                         {/* Submitted */}
-                        {submittedTasks.map((task: any) => (
+                        {submittedTasks.map((task: any, index: number) => (
                             <TaskCard
                                 key={task._id}
                                 task={task}
                                 onClick={() => setSelectedTask(task)}
+                                index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + index}
                             />
                         ))}
 
                         {/* Completed */}
-                        {completedTasks.map((task: any) => (
+                        {completedTasks.map((task: any, index: number) => (
                             <TaskCard
                                 key={task._id}
                                 task={task}
                                 onClick={() => setSelectedTask(task)}
+                                index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + submittedTasks.length + index}
                             />
                         ))}
                     </div>
@@ -140,90 +263,174 @@ export function EngineerDashboard() {
             </div>
 
             {/* Task Detail Modal */}
-            {selectedTask && (
-                <TaskDetailModal
-                    task={selectedTask}
-                    onClose={() => setSelectedTask(null)}
-                />
-            )}
+            <AnimatePresence>
+                {selectedTask && (
+                    <TaskDetailModal
+                        task={selectedTask}
+                        onClose={() => setSelectedTask(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Payout Modal */}
-            {showPayoutModal && (
-                <PayoutModal onClose={() => setShowPayoutModal(false)} />
-            )}
+            <AnimatePresence>
+                {showPayoutModal && (
+                    <PayoutModal onClose={() => setShowPayoutModal(false)} />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
 
-function TaskCard({ task, onClick, highlight }: { task: any; onClick: () => void; highlight?: string }) {
+function StatCard({ 
+    icon: Icon, 
+    value, 
+    label, 
+    color, 
+    bg, 
+    delay 
+}: { 
+    icon: any; 
+    value: number; 
+    label: string; 
+    color: string; 
+    bg: string;
+    delay: number;
+}) {
+    return (
+        <motion.div 
+            className="bento-card stat-card"
+            style={{ minWidth: 110, flex: 1 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileHover={{ 
+                y: -4,
+                boxShadow: `0 12px 24px ${color}20`,
+                transition: { duration: 0.2 }
+            }}
+        >
+            <div className="stat-icon" style={{ background: bg, color }}>
+                <Icon size={20} />
+            </div>
+            <div className="stat-value">
+                <AnimatedCounter value={value} duration={1} />
+            </div>
+            <div className="stat-label">{label}</div>
+        </motion.div>
+    );
+}
+
+function TaskCard({ 
+    task, 
+    onClick, 
+    highlight,
+    index = 0 
+}: { 
+    task: any; 
+    onClick: () => void; 
+    highlight?: string;
+    index?: number;
+}) {
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "PENDING":
-                return <span className="badge badge-pending"><Clock size={12} /> Pending</span>;
-            case "IN_PROGRESS":
-                return <span className="badge badge-in-progress"><Play size={12} /> In Progress</span>;
-            case "SUBMITTED":
-                return <span className="badge badge-submitted"><Upload size={12} /> Submitted</span>;
-            case "APPROVED":
-                return <span className="badge badge-approved"><CheckCircle2 size={12} /> Approved</span>;
-            case "REJECTED":
-                return <span className="badge badge-rejected"><AlertTriangle size={12} /> Rejected</span>;
-            default:
-                return null;
-        }
+        const badges: Record<string, { className: string; icon: any; label: string }> = {
+            PENDING: { className: "badge-pending", icon: Clock, label: "Pending" },
+            IN_PROGRESS: { className: "badge-in-progress", icon: Play, label: "In Progress" },
+            SUBMITTED: { className: "badge-submitted", icon: Upload, label: "Submitted" },
+            APPROVED: { className: "badge-approved", icon: CheckCircle2, label: "Approved" },
+            REJECTED: { className: "badge-rejected", icon: AlertTriangle, label: "Rejected" },
+        };
+        
+        const badge = badges[status];
+        if (!badge) return null;
+        
+        return (
+            <span className={`badge ${badge.className}`}>
+                <badge.icon size={12} /> {badge.label}
+            </span>
+        );
     };
 
     return (
-        <div
+        <motion.div
             className="task-card"
             onClick={onClick}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+                delay: 0.5 + index * 0.05,
+                duration: 0.4,
+                ease: [0.25, 0.46, 0.45, 0.94]
+            }}
+            whileHover={{ 
+                y: -4,
+                boxShadow: "0 12px 24px rgba(5, 150, 105, 0.12)",
+                borderColor: highlight === "danger" ? "var(--danger)" : "rgba(5, 150, 105, 0.3)"
+            }}
+            whileTap={{ scale: 0.98 }}
             style={{
                 cursor: "pointer",
-                borderColor: highlight === "danger" ? "var(--danger)" : undefined
+                borderColor: highlight === "danger" ? "var(--danger)" : undefined,
+                borderWidth: highlight === "danger" ? 2 : 1
             }}
         >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 12 }}>
+            <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "start", 
+                marginBottom: "0.75rem" 
+            }}>
                 <div className="task-title">{task.title}</div>
                 {getStatusBadge(task.status)}
             </div>
 
-            <div className="task-meta" style={{ marginBottom: 8 }}>
+            <div className="task-meta" style={{ marginBottom: "0.5rem" }}>
                 <MapPin size={14} />
-                <span>{task.project} • {task.unit}</span>
+                <span>{task.project} - {task.unit}</span>
             </div>
 
             {task.description && (
                 <p style={{
                     fontSize: "0.875rem",
-                    color: "var(--text-muted)",
-                    marginBottom: 12,
+                    color: "var(--text-secondary)",
+                    marginBottom: "0.75rem",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    lineHeight: 1.5
                 }}>
                     {task.description}
                 </p>
             )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center" 
+            }}>
                 <span className="task-amount">${task.amount.toLocaleString()}</span>
                 <ChevronRight size={18} style={{ color: "var(--text-muted)" }} />
             </div>
 
             {task.status === "REJECTED" && task.rejectionReason && (
-                <div style={{
-                    marginTop: 12,
-                    padding: 12,
-                    background: "rgba(239, 68, 68, 0.1)",
-                    borderRadius: "var(--radius-sm)",
-                    fontSize: "0.875rem",
-                    color: "var(--danger)"
-                }}>
+                <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    style={{
+                        marginTop: "0.75rem",
+                        padding: "0.75rem 1rem",
+                        background: "rgba(239, 68, 68, 0.1)",
+                        borderRadius: "0.75rem",
+                        fontSize: "0.875rem",
+                        color: "var(--danger)",
+                        border: "1px solid rgba(239, 68, 68, 0.2)"
+                    }}
+                >
                     <strong>Rejection reason:</strong> {task.rejectionReason}
-                </div>
+                </motion.div>
             )}
-        </div>
+        </motion.div>
     );
 }
 
@@ -299,67 +506,83 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
     const isSubmitted = task.status === "SUBMITTED";
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <motion.div 
+            className="modal-overlay" 
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
+            <motion.div 
+                className="modal" 
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{ maxWidth: 480 }}
+            >
                 <div className="modal-header">
                     <div className="modal-title">Task Details</div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}>
-                        <X size={18} />
-                    </button>
+                    <motion.button 
+                        className="btn btn-ghost btn-icon" 
+                        onClick={onClose}
+                        whileHover={{ background: "var(--bg-mint)" }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <X size={20} />
+                    </motion.button>
                 </div>
 
-                <div className="modal-body">
+                <div className="modal-body" style={{ padding: "1.5rem" }}>
                     {/* Task Info */}
-                    <div style={{ marginBottom: 24 }}>
-                        <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: 8 }}>{task.title}</h3>
-                        <div className="task-meta" style={{ marginBottom: 8 }}>
+                    <div style={{ marginBottom: "1.5rem" }}>
+                        <h3 style={{ 
+                            fontSize: "1.25rem", 
+                            fontWeight: 700, 
+                            marginBottom: "0.5rem",
+                            color: "var(--text-primary)"
+                        }}>
+                            {task.title}
+                        </h3>
+                        <div className="task-meta" style={{ marginBottom: "0.75rem" }}>
                             <MapPin size={14} />
-                            <span>{task.project} • {task.unit}</span>
+                            <span>{task.project} - {task.unit}</span>
                         </div>
                         {task.description && (
-                            <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: 12 }}>
+                            <p style={{ 
+                                fontSize: "0.9rem", 
+                                color: "var(--text-secondary)", 
+                                marginBottom: "1rem",
+                                lineHeight: 1.6
+                            }}>
                                 {task.description}
                             </p>
                         )}
-                        <div className="task-amount" style={{ fontSize: "1.5rem" }}>
+                        <div style={{ 
+                            fontSize: "1.75rem", 
+                            fontWeight: 800, 
+                            color: "var(--brand-primary)" 
+                        }}>
                             ${task.amount.toLocaleString()}
                         </div>
                     </div>
 
                     {/* Reference Images */}
                     {task.attachmentUrls && task.attachmentUrls.length > 0 && (
-                        <div style={{ marginBottom: 24 }}>
+                        <div style={{ marginBottom: "1.5rem" }}>
                             <label className="label">Reference Images from Lead</label>
                             <div className="image-grid">
                                 {task.attachmentUrls.map((url: string, i: number) => (
-                                    <div key={i} className="image-thumb">
+                                    <motion.div 
+                                        key={i} 
+                                        className="image-thumb"
+                                        whileHover={{ scale: 1.05 }}
+                                    >
                                         <img src={url} alt="" />
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
-                        </div>
-                    )}
-
-                    {/* Comments */}
-                    {task.comments && task.comments.length > 0 && (
-                        <div style={{ marginBottom: 24 }}>
-                            <label className="label">Comments</label>
-                            {task.comments.map((comment: any, i: number) => (
-                                <div key={i} className="comment">
-                                    <div className="comment-avatar">
-                                        {comment.authorName?.charAt(0) || "?"}
-                                    </div>
-                                    <div className="comment-content">
-                                        <div className="comment-header">
-                                            <span className="comment-author">{comment.authorName}</span>
-                                            <span className="comment-time">
-                                                {new Date(comment.createdAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                        <p className="comment-text">{comment.text}</p>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     )}
 
@@ -377,63 +600,90 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             />
 
                             {selectedFile ? (
-                                <div style={{ marginBottom: 16 }}>
-                                    <div style={{ position: "relative", marginBottom: 12 }}>
-                                        <img
+                                <div style={{ marginBottom: "1rem" }}>
+                                    <div style={{ position: "relative", marginBottom: "0.75rem" }}>
+                                        <motion.img
                                             src={URL.createObjectURL(selectedFile)}
                                             alt="Proof"
                                             style={{
                                                 width: "100%",
-                                                borderRadius: "var(--radius-md)",
+                                                borderRadius: "1rem",
                                                 border: "1px solid var(--border)"
                                             }}
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
                                         />
-                                        <button
+                                        <motion.button
                                             className="btn btn-ghost btn-icon"
                                             onClick={() => setSelectedFile(null)}
-                                            style={{ position: "absolute", top: 8, right: 8 }}
+                                            style={{ 
+                                                position: "absolute", 
+                                                top: 8, 
+                                                right: 8,
+                                                background: "white",
+                                                boxShadow: "var(--shadow-md)"
+                                            }}
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
-                                            <X size={18} />
-                                        </button>
+                                            <X size={16} />
+                                        </motion.button>
                                     </div>
-                                    <button
-                                        className="btn btn-ghost"
+                                    <MotionButton
+                                        className="btn-ghost"
                                         onClick={() => fileInputRef.current?.click()}
                                         style={{ width: "100%" }}
                                     >
                                         <Camera size={18} />
                                         Retake Photo
-                                    </button>
+                                    </MotionButton>
                                 </div>
                             ) : (
-                                <div
+                                <motion.div
                                     className="upload-area"
                                     onClick={() => fileInputRef.current?.click()}
-                                    style={{ marginBottom: 16 }}
+                                    style={{ marginBottom: "1rem" }}
+                                    whileHover={{ 
+                                        borderColor: "var(--brand-primary)",
+                                        background: "var(--bg-mint)"
+                                    }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     <Camera className="upload-icon" />
                                     <p className="upload-text">Tap to take photo</p>
                                     <p className="upload-hint">Show your completed work</p>
-                                </div>
+                                </motion.div>
                             )}
 
                             {!gpsLocation ? (
-                                <button className="btn btn-ghost" onClick={getLocation} style={{ width: "100%", marginBottom: 16 }}>
+                                <MotionButton 
+                                    className="btn-ghost" 
+                                    onClick={getLocation} 
+                                    style={{ width: "100%", marginBottom: "1rem" }}
+                                >
                                     <MapPin size={18} />
                                     Capture Location (Optional)
-                                </button>
+                                </MotionButton>
                             ) : (
-                                <div style={{
-                                    padding: 12,
-                                    background: "rgba(34, 197, 94, 0.1)",
-                                    borderRadius: "var(--radius-sm)",
-                                    marginBottom: 16,
-                                    fontSize: "0.875rem",
-                                    color: "var(--success)"
-                                }}>
-                                    <MapPin size={14} style={{ display: "inline", marginRight: 8 }} />
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{
+                                        padding: "0.875rem 1rem",
+                                        background: "var(--bg-mint)",
+                                        borderRadius: "1rem",
+                                        marginBottom: "1rem",
+                                        fontSize: "0.875rem",
+                                        color: "var(--brand-primary)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                        border: "1px solid rgba(5, 150, 105, 0.2)"
+                                    }}
+                                >
+                                    <MapPin size={16} />
                                     Location captured: {gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)}
-                                </div>
+                                </motion.div>
                             )}
                         </div>
                     )}
@@ -442,38 +692,59 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                     {(isSubmitted || isCompleted) && task.photoUrl && (
                         <div>
                             <label className="label">Your Submitted Work</label>
-                            <img
+                            <motion.img
                                 src={task.photoUrl}
                                 alt="Submitted proof"
                                 style={{
                                     width: "100%",
-                                    borderRadius: "var(--radius-md)",
+                                    borderRadius: "1rem",
                                     border: "1px solid var(--border)"
                                 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
                             />
                         </div>
                     )}
                 </div>
 
-                <div className="modal-footer">
+                {/* Action Footer */}
+                <div style={{ 
+                    padding: "1rem 1.5rem", 
+                    borderTop: "1px solid var(--border)",
+                    background: "var(--bg-primary)"
+                }}>
                     {canStart && (
-                        <button className="btn btn-primary" onClick={handleStart} style={{ width: "100%" }}>
+                        <MotionButton
+                            className="btn-primary"
+                            onClick={handleStart}
+                            style={{ width: "100%" }}
+                        >
                             <Play size={18} />
                             Start Task
-                        </button>
+                        </MotionButton>
                     )}
 
                     {canSubmit && (
-                        <button
-                            className="btn btn-success"
+                        <MotionButton
+                            className="btn-success"
                             onClick={handleSubmit}
                             disabled={!selectedFile || uploading}
                             style={{ width: "100%" }}
                         >
                             {uploading ? (
                                 <>
-                                    <div className="loading-spinner" style={{ width: 16, height: 16 }} />
-                                    Submitting...
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        style={{
+                                            width: 18,
+                                            height: 18,
+                                            border: "2px solid rgba(255,255,255,0.3)",
+                                            borderTopColor: "white",
+                                            borderRadius: "50%"
+                                        }}
+                                    />
+                                    Uploading...
                                 </>
                             ) : (
                                 <>
@@ -481,38 +752,39 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                                     Submit for Review
                                 </>
                             )}
-                        </button>
+                        </MotionButton>
                     )}
 
                     {isSubmitted && (
-                        <div style={{
-                            width: "100%",
-                            padding: 16,
-                            background: "rgba(168, 85, 247, 0.1)",
-                            borderRadius: "var(--radius-md)",
-                            textAlign: "center",
-                            color: "#a855f7"
+                        <div style={{ 
+                            textAlign: "center", 
+                            color: "var(--text-secondary)",
+                            padding: "0.5rem",
+                            background: "#FEF3C7",
+                            borderRadius: "1rem",
+                            fontSize: "0.9rem"
                         }}>
-                            <Clock size={20} style={{ marginBottom: 4 }} />
-                            <p style={{ fontWeight: 500 }}>Awaiting Lead Review</p>
+                            <Clock size={16} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+                            Waiting for lead approval...
                         </div>
                     )}
 
                     {isCompleted && (
-                        <div style={{
-                            width: "100%",
-                            padding: 16,
-                            background: "rgba(34, 197, 94, 0.1)",
-                            borderRadius: "var(--radius-md)",
-                            textAlign: "center",
-                            color: "var(--success)"
+                        <div style={{ 
+                            textAlign: "center", 
+                            color: "var(--brand-primary)",
+                            padding: "0.5rem",
+                            background: "var(--bg-mint)",
+                            borderRadius: "1rem",
+                            fontSize: "0.9rem",
+                            fontWeight: 600
                         }}>
-                            <CheckCircle2 size={20} style={{ marginBottom: 4 }} />
-                            <p style={{ fontWeight: 500 }}>Task Approved ✓</p>
+                            <CheckCircle2 size={16} style={{ display: "inline", marginRight: "0.5rem", verticalAlign: "middle" }} />
+                            Task completed and paid!
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

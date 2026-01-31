@@ -2,7 +2,27 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
+// Role types: admin, acting_manager, engineering_lead, engineer, finance_manager, stock_manager
+const roleValidator = v.union(
+  v.literal("admin"),
+  v.literal("acting_manager"),
+  v.literal("engineering_lead"),
+  v.literal("engineer"),
+  v.literal("finance_manager"),
+  v.literal("stock_manager")
+);
+
 const applicationTables = {
+  // USER ROLES - Central role management
+  userRoles: defineTable({
+    userId: v.string(),
+    role: roleValidator,
+    assignedBy: v.optional(v.string()),
+    assignedAt: v.number(),
+    isActive: v.boolean(),
+  }).index("by_user", ["userId"])
+    .index("by_role", ["role"]),
+
   // 1. PROJECTS (The Job Site)
   projects: defineTable({
     name: v.string(),
@@ -87,6 +107,57 @@ const applicationTables = {
     createdAt: v.number(),
     description: v.string(),
   }).index("by_user", ["userId"]),
+
+  // 8. MATERIALS (Inventory items)
+  materials: defineTable({
+    name: v.string(),
+    nameAr: v.optional(v.string()),
+    unit: v.string(), // "kg", "piece", "meter", "bag", "ton"
+    category: v.string(), // "cement", "steel", "electrical", "plumbing", "finishing"
+    currentStock: v.number(),
+    minStock: v.number(), // Alert threshold
+    unitPrice: v.number(),
+    lastUpdated: v.number(),
+    updatedBy: v.optional(v.string()),
+  }).index("by_category", ["category"]),
+
+  // 9. MATERIAL REQUESTS (Stock requests from engineers)
+  materialRequests: defineTable({
+    projectId: v.id("projects"),
+    unitId: v.optional(v.id("units")),
+    requestedBy: v.string(), // userId
+    requestedByName: v.string(),
+    items: v.array(v.object({
+      materialId: v.id("materials"),
+      materialName: v.string(),
+      quantity: v.number(),
+      unit: v.string(),
+    })),
+    status: v.string(), // "PENDING", "APPROVED", "REJECTED", "DELIVERED"
+    priority: v.string(), // "LOW", "NORMAL", "HIGH", "URGENT"
+    notes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.number(),
+    approvedAt: v.optional(v.number()),
+    approvedBy: v.optional(v.string()),
+    deliveredAt: v.optional(v.number()),
+    deliveredBy: v.optional(v.string()),
+  }).index("by_project", ["projectId"])
+    .index("by_requester", ["requestedBy"])
+    .index("by_status", ["status"]),
+
+  // 10. STOCK MOVEMENTS (Inventory audit trail)
+  stockMovements: defineTable({
+    materialId: v.id("materials"),
+    type: v.string(), // "IN", "OUT", "ADJUSTMENT"
+    quantity: v.number(),
+    previousStock: v.number(),
+    newStock: v.number(),
+    relatedRequestId: v.optional(v.id("materialRequests")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    createdBy: v.string(),
+  }).index("by_material", ["materialId"]),
 };
 
 export default defineSchema({

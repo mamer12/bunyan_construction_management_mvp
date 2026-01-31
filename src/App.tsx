@@ -5,11 +5,15 @@ import { Toaster } from "sonner";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { EngineerDashboard } from "./components/EngineerDashboard";
 import { ContractorMobile } from "./components/ContractorMobile";
+import { FinanceDashboard } from "./components/FinanceDashboard";
+import { StockDashboard } from "./components/StockDashboard";
+import { AdminDashboard } from "./components/AdminDashboard";
 import React from "react";
 
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { useIsMobile } from "./hooks/use-mobile";
 
 export default function App() {
   return (
@@ -55,14 +59,12 @@ function Content() {
 }
 
 function MainApp() {
-  // 1. Get the Role from the backend
-  const role = useQuery(api.roles.getMyRole);
-
-  // 2. Mobile Detection Service
+  // Get the role with permissions from the backend
+  const roleData = useQuery(api.roles.getMyRoleWithPermissions);
   const isMobile = useIsMobile();
 
   // Loading state while role fetch is pending
-  if (role === undefined) {
+  if (roleData === undefined) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" style={{ width: 32, height: 32 }} />
@@ -70,21 +72,32 @@ function MainApp() {
     );
   }
 
-  const isEngineer = role === "engineer";
+  const role = roleData?.role || "engineer";
 
-  // 3. Routing Logic
-  if (isEngineer) {
-    // If engineer is on mobile, show the optimized mobile view
-    if (isMobile) {
-      return <ContractorMobile />;
-    }
-    // Otherwise show the desktop dashboard
-    return <EngineerDashboard />;
+  // Route based on role
+  switch (role) {
+    case "admin":
+      return <AdminDashboard />;
+
+    case "acting_manager":
+      // Acting managers see the lead dashboard with full access
+      return <LeadDashboard />;
+
+    case "engineering_lead":
+      return <LeadDashboard />;
+
+    case "finance_manager":
+      return <FinanceDashboard />;
+
+    case "stock_manager":
+      return <StockDashboard />;
+
+    case "engineer":
+    default:
+      // Engineers on mobile get the optimized mobile view
+      if (isMobile) {
+        return <ContractorMobile />;
+      }
+      return <EngineerDashboard />;
   }
-
-  // Default to Lead Dashboard for non-engineers (Leads/Admins)
-  return <LeadDashboard />;
 }
-
-// Simple hook for mobile detection
-import { useIsMobile } from "./hooks/use-mobile";

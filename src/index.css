@@ -549,6 +549,45 @@ body {
   flex: 1;
 }
 
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-primary);
+}
+
+@media (max-width: 640px) {
+  .modal {
+    margin: 0;
+    max-height: 100vh;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100% !important;
+  }
+
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-body {
+    max-height: 60vh;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
 /* ============================================
    HEADER (Engineer Mobile)
    ============================================ */
@@ -741,6 +780,65 @@ tr:hover td {
 .text-emerald-dark { color: var(--brand-primary-dark); }
 .bg-emerald { background: var(--brand-primary); }
 .bg-mint { background: var(--bg-mint); }
+
+/* ============================================
+   MOBILE UTILITIES
+   ============================================ */
+
+.hidden {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex !important;
+  }
+  .md\:hidden {
+    display: none !important;
+  }
+  .md\:block {
+    display: block !important;
+  }
+  .md\:grid {
+    display: grid !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .md\:flex, .md\:block, .md\:grid {
+    display: none !important;
+  }
+}
+
+/* Mobile-first input sizing */
+@media (max-width: 640px) {
+  .input, .btn {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .bento-card {
+    border-radius: var(--radius-xl);
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Safe area for mobile devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .modal-footer {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
 
 /* ============================================
    IMAGE GRID

@@ -34,6 +34,7 @@ import {
     MotionButton,
 } from "./ui/motion";
 import { Modal } from "./ui/modal";
+import { TableContainer, DataTable, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
 
 export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const { t, language } = useLanguage();
@@ -93,178 +94,165 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="flex flex-col gap-4 md:gap-6"
+                        className="flex flex-col gap-6 md:gap-8 flex-1 min-h-0"
                     >
                         {/* Summary Stats Row */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <MotionCard delay={0.1}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                        <Building2 size={24} />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
+                            {[
+                                { label: language === 'ar' ? 'المشاريع' : 'Projects', value: units.length, icon: Building2, bg: 'bg-emerald-100', text: 'text-emerald-600' },
+                                { label: language === 'ar' ? 'المهام' : 'Tasks', value: allTasks.length, icon: ClipboardList, bg: 'bg-blue-100', text: 'text-blue-600' },
+                                { label: language === 'ar' ? 'للمراجعة' : 'To Review', value: tasksForReview.length, icon: Clock, bg: 'bg-amber-100', text: 'text-amber-600' },
+                                { label: language === 'ar' ? 'الإنجاز' : 'Completion', value: completionPercentage, suffix: '%', icon: TrendingUp, bg: 'bg-purple-100', text: 'text-purple-600' },
+                            ].map((stat, i) => (
+                                <MotionCard key={stat.label} delay={0.1 + i * 0.05} className="min-w-0">
+                                    <div className="flex items-center gap-3 min-w-0 p-1">
+                                        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0", stat.bg, stat.text)}>
+                                            <stat.icon size={22} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs text-slate-500 font-medium truncate">{stat.label}</p>
+                                            <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">{stat.value}{stat.suffix ?? ''}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-medium">{language === 'ar' ? 'المشاريع' : 'Projects'}</p>
-                                        <p className="text-2xl font-bold text-slate-900">{units.length}</p>
-                                    </div>
-                                </div>
-                            </MotionCard>
-                            <MotionCard delay={0.2}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
-                                        <ClipboardList size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-medium">{language === 'ar' ? 'المهام' : 'Tasks'}</p>
-                                        <p className="text-2xl font-bold text-slate-900">{allTasks.length}</p>
-                                    </div>
-                                </div>
-                            </MotionCard>
-                            <MotionCard delay={0.3}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-                                        <Clock size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-medium">{language === 'ar' ? 'للمراجعة' : 'To Review'}</p>
-                                        <p className="text-2xl font-bold text-slate-900">{tasksForReview.length}</p>
-                                    </div>
-                                </div>
-                            </MotionCard>
-                            <MotionCard delay={0.4}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600">
-                                        <TrendingUp size={24} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-medium">{language === 'ar' ? 'الإنجاز' : 'Completion'}</p>
-                                        <p className="text-2xl font-bold text-slate-900">{completionPercentage}%</p>
-                                    </div>
-                                </div>
-                            </MotionCard>
+                                </MotionCard>
+                            ))}
                         </div>
 
                         {/* Recent Activity & Tasks Table */}
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 gap-6 md:gap-8 flex-1 min-h-0">
                             {/* Tasks for Review Table */}
-                            <MotionCard delay={0.5}>
-                                <div className="card-header pb-4 border-b border-slate-50 mb-4 flex justify-between items-center">
-                                    <h3 className="font-bold text-slate-800">{language === 'ar' ? 'مهام للمراجعة' : 'Tasks for Review'}</h3>
-                                    <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold border border-amber-100 uppercase tracking-wider">
+                            <MotionCard delay={0.5} className="overflow-hidden">
+                                <header className="dashboard-section__header">
+                                    <h3 className="dashboard-section__title truncate">{language === 'ar' ? 'مهام للمراجعة' : 'Tasks for Review'}</h3>
+                                    <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-200 uppercase tracking-wide whitespace-nowrap">
                                         {tasksForReview.length} {language === 'ar' ? 'معلقة' : 'Pending'}
                                     </span>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
-                                        <thead>
-                                            <tr className="text-[10px] text-slate-400 uppercase tracking-wider font-bold border-b border-slate-50">
-                                                <th className="pb-3 px-1">{language === 'ar' ? 'المهمة' : 'Task'}</th>
-                                                <th className="pb-3 px-1">{language === 'ar' ? 'المهندس' : 'Engineer'}</th>
-                                                <th className="pb-3 px-1">{language === 'ar' ? 'المشروع' : 'Project'}</th>
-                                                <th className="pb-3 px-1 text-right">{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50">
+                                </header>
+                                <div className="dashboard-section__body pt-0">
+                                <TableContainer>
+                                    <DataTable>
+                                        <TableHeader>
+                                            <TableRow className="border-b border-slate-100">
+                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهمة' : 'Task'}</TableHead>
+                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهندس' : 'Engineer'}</TableHead>
+                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المشروع' : 'Project'}</TableHead>
+                                                <TableHead className="pb-3 px-4 text-end">{language === 'ar' ? 'المبلغ' : 'Amount'}</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-y divide-slate-50">
                                             {tasksForReview.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={4} className="py-8 text-center text-slate-400 text-sm">
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="py-8 text-center text-slate-500 text-sm">
                                                         {language === 'ar' ? 'لا توجد مهام للمراجعة' : 'No tasks waiting for review'}
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             ) : (
                                                 tasksForReview.map((task: any) => (
-                                                    <tr
+                                                    <TableRow
                                                         key={task._id}
                                                         className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
                                                         onClick={() => setSelectedTask(task)}
                                                     >
-                                                        <td className="py-3 px-1">
-                                                            <p className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors">{task.title}</p>
+                                                        <TableCell className="py-3 px-4 min-w-0">
+                                                            <p className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors truncate">{task.title}</p>
                                                             <p className="text-[10px] text-slate-400">{new Date(task.submittedAt || Date.now()).toLocaleDateString()}</p>
-                                                        </td>
-                                                        <td className="py-3 px-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600">
+                                                        </TableCell>
+                                                        <TableCell className="py-3 px-4">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600 flex-shrink-0">
                                                                     {task.engineerName?.charAt(0)}
                                                                 </div>
-                                                                <span className="text-xs text-slate-600">{task.engineerName}</span>
+                                                                <span className="text-xs text-slate-600 truncate">{task.engineerName}</span>
                                                             </div>
-                                                        </td>
-                                                        <td className="py-3 px-1">
+                                                        </TableCell>
+                                                        <TableCell className="py-3 px-4">
                                                             <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{task.project}</span>
-                                                        </td>
-                                                        <td className="py-3 px-1 text-right">
+                                                        </TableCell>
+                                                        <TableCell className="py-3 px-4 text-end">
                                                             <span className="text-sm font-bold text-slate-900">${task.amount.toLocaleString()}</span>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ))
                                             )}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </DataTable>
+                                </TableContainer>
                                 </div>
                             </MotionCard>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Recent Activity */}
-                                <MotionCard delay={0.6}>
-                                    <div className="card-header pb-4 border-b border-slate-50 mb-4 font-bold text-slate-800">
-                                        {language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
-                                    </div>
-                                    <div className="space-y-4">
-                                        {allTasks.slice(0, 5).map((task: any) => (
-                                            <div key={task._id} className="flex gap-4 items-start group">
-                                                <div className={cn(
-                                                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-                                                    task.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
-                                                        task.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
-                                                            "bg-blue-50 text-blue-600"
-                                                )}>
-                                                    {task.status === 'APPROVED' ? <CheckCircle2 size={16} /> :
-                                                        task.status === 'REJECTED' ? <X size={16} /> :
-                                                            <Clock size={16} />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-bold text-slate-700 truncate">{task.title}</p>
-                                                    <p className="text-[10px] text-slate-400">
-                                                        {task.engineerName} • {new Date(task.updatedAt || Date.now()).toLocaleTimeString()}
-                                                    </p>
-                                                </div>
-                                                <div className={cn(
-                                                    "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tighter",
-                                                    task.status === 'APPROVED' ? "bg-emerald-500 text-white" :
-                                                        task.status === 'REJECTED' ? "bg-rose-500 text-white" :
-                                                            "bg-blue-500 text-white"
-                                                )}>
-                                                    {task.status}
-                                                </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                                {/* Recent Activity - same visual language as table */}
+                                <MotionCard delay={0.6} className="overflow-hidden">
+                                    <header className="dashboard-section__header">
+                                        <h3 className="dashboard-section__title">{language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}</h3>
+                                    </header>
+                                    <div className="dashboard-section__body p-0">
+                                        {allTasks.length === 0 ? (
+                                            <div className="py-12 px-4 text-center">
+                                                <Clock size={40} className="mx-auto text-slate-200 dark:text-slate-600 mb-3" />
+                                                <p className="text-sm font-medium text-slate-500">{language === 'ar' ? 'لا يوجد نشاط بعد' : 'No activity yet'}</p>
                                             </div>
-                                        ))}
+                                        ) : (
+                                        <ul className="divide-y divide-slate-100">
+                                            {allTasks.slice(0, 5).map((task: any) => (
+                                                <li key={task._id} className="flex gap-3 items-center py-3 px-4 hover:bg-slate-50/50 transition-colors min-w-0">
+                                                    <div className={cn(
+                                                        "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                                                        task.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
+                                                            task.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
+                                                                "bg-slate-100 text-slate-600"
+                                                    )}>
+                                                        {task.status === 'APPROVED' ? <CheckCircle2 size={18} /> :
+                                                            task.status === 'REJECTED' ? <X size={18} /> :
+                                                                <Clock size={18} />}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-semibold text-slate-800 truncate">{task.title}</p>
+                                                        <p className="text-xs text-slate-500 truncate">
+                                                            {task.engineerName} · {new Date(task.updatedAt || Date.now()).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                    <span className={cn(
+                                                        "px-2 py-0.5 rounded-full text-xs font-semibold uppercase shrink-0",
+                                                        task.status === 'APPROVED' ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                                                            task.status === 'REJECTED' ? "bg-rose-100 text-rose-700 border border-rose-200" :
+                                                                "bg-slate-100 text-slate-600 border border-slate-200"
+                                                    )}>
+                                                        {task.status}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        )}
                                     </div>
                                 </MotionCard>
 
-                                {/* Quick Actions */}
-                                <MotionCard delay={0.7}>
-                                    <div className="card-header pb-4 border-b border-slate-50 mb-4 font-bold text-slate-800">
-                                        {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button
-                                            onClick={() => setShowCreateModal(true)}
-                                            className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center gap-2 hover:bg-emerald-50 hover:border-emerald-100 transition-all group"
-                                        >
-                                            <div className="w-10 h-10 rounded-lg bg-emerald-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <Plus size={20} />
-                                            </div>
-                                            <span className="text-xs font-bold text-slate-600">{language === 'ar' ? 'مهمة جديدة' : 'New Task'}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('team')}
-                                            className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-100 transition-all group"
-                                        >
-                                            <div className="w-10 h-10 rounded-lg bg-blue-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <Users size={20} />
-                                            </div>
-                                            <span className="text-xs font-bold text-slate-600">{language === 'ar' ? 'إدارة الفريق' : 'Team Management'}</span>
-                                        </button>
+                                {/* Quick Actions - unified button style */}
+                                <MotionCard delay={0.7} className="overflow-hidden">
+                                    <header className="dashboard-section__header">
+                                        <h3 className="dashboard-section__title">{language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}</h3>
+                                    </header>
+                                    <div className="dashboard-section__body">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                onClick={() => setShowCreateModal(true)}
+                                                className="flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 transition-all group min-h-[120px]"
+                                            >
+                                                <div className="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                                    <Plus size={24} />
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700 text-center leading-tight">{language === 'ar' ? 'مهمة جديدة' : 'New Task'}</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTab('team')}
+                                                className="flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 transition-all group min-h-[120px]"
+                                            >
+                                                <div className="w-12 h-12 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                                                    <Users size={24} />
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700 group-hover:text-blue-700 text-center leading-tight">{language === 'ar' ? 'إدارة الفريق' : 'Team Management'}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </MotionCard>
                             </div>
@@ -292,7 +280,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 
     if (!showHeader) {
         return (
-            <div className="p-4 md:p-6">
+            <div className="flex-1 p-6 md:p-8 lg:p-10 min-h-0">
                 <AnimatePresence mode="wait">
                     {renderContent()}
                 </AnimatePresence>
@@ -311,7 +299,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main className="main-content">
+            <main className="main-content flex flex-col min-h-screen">
                 <TopBar
                     breadcrumb={activeTab === 'dashboard' ? t('welcome') || "Dashboard" : t(activeTab as any) || activeTab}
                     onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
@@ -319,7 +307,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                     userRole={role || "guest"}
                 />
 
-                <div className="p-4 md:p-6">
+                <div className="flex-1 p-6 md:p-8 lg:p-10 min-h-0">
                     <AnimatePresence mode="wait">
                         {renderContent()}
                     </AnimatePresence>

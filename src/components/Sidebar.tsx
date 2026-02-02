@@ -155,13 +155,9 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isColl
                 {/* Collapse Toggle Button - Desktop only */}
                 {!isMobile && onToggleCollapse && (
                     <motion.button
+                        className="sidebar-collapse-btn"
                         onClick={onToggleCollapse}
                         style={{
-                            position: "absolute",
-                            top: "1.5rem",
-                            right: "-12px",
-                            width: 24,
-                            height: 24,
                             background: "var(--bg-card)",
                             border: "1px solid var(--border)",
                             borderRadius: "50%",

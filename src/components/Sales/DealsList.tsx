@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { DownloadContractButton } from '../PDF';
+import { TableContainer, DataTable, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
 import { motion } from 'framer-motion';
 import {
     Search,
@@ -96,80 +97,81 @@ export function DealsList() {
     );
 
     if (!deals) {
-        return <div className="p-8 text-center text-gray-500">Loading deals...</div>;
+        return <div className="p-8 text-center" style={{ color: 'var(--text-muted)' }}>Loading deals...</div>;
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden text-sm">
-            {/* Toolbar */}
-            <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input
-                        type="text"
-                        placeholder={labels.search[language as 'en' | 'ar']}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                    />
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <Filter size={16} className="text-gray-400" />
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="border border-gray-200 rounded-lg py-2 px-3 text-sm focus:outline-none"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="reserved">Reserved</option>
-                        <option value="contract_signed">Contract Signed</option>
-                        <option value="completed">Completed</option>
-                    </select>
+        <div className="dashboard-card overflow-hidden">
+            <div className="card-header pb-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-center flex-wrap">
+                <h3 className="font-bold text-slate-800">{language === 'ar' ? 'الصفقات' : 'Deals'}</h3>
+                <div className="card-header__actions flex items-center gap-3 flex-wrap">
+                    <div className="relative w-full sm:w-56 min-w-0 search-input-wrapper">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder={labels.search[language as 'en' | 'ar']}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="search-input w-full"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Filter size={16} className="text-slate-400" />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border border-slate-200 rounded-lg py-2 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="reserved">Reserved</option>
+                            <option value="contract_signed">Contract Signed</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full text-left" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
-                        <tr>
-                            <th className="p-4">{labels.unit[language as 'en' | 'ar']}</th>
-                            <th className="p-4">{labels.client[language as 'en' | 'ar']}</th>
-                            <th className="p-4">{labels.price[language as 'en' | 'ar']}</th>
-                            <th className="p-4">{labels.status[language as 'en' | 'ar']}</th>
-                            <th className="p-4">{labels.date[language as 'en' | 'ar']}</th>
-                            <th className="p-4">{labels.magicLink[language as 'en' | 'ar']}</th>
-                            <th className="p-4 text-center">{labels.actions[language as 'en' | 'ar']}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {filteredDeals?.map((deal) => (
-                            <tr key={deal._id} className="hover:bg-gray-50 transition-colors group">
-                                <td className="p-4 font-medium text-gray-900">
-                                    <div className="flex items-center gap-2">
-                                        <Building2 size={16} className="text-brand-primary" />
-                                        {deal.unitName}
+            <div className="card-body pt-0">
+                <TableContainer>
+                    <DataTable>
+                        <TableHeader>
+                            <TableRow className="border-b border-slate-100">
+                                <TableHead className="pb-3 px-4">{labels.unit[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4">{labels.client[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4">{labels.price[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4">{labels.status[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4">{labels.date[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4">{labels.magicLink[language as 'en' | 'ar']}</TableHead>
+                                <TableHead className="pb-3 px-4 text-end">{labels.actions[language as 'en' | 'ar']}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-slate-50">
+                            {filteredDeals?.map((deal) => (
+                                <TableRow key={deal._id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <TableCell className="py-3 px-4 font-medium min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                        <span className="truncate">{deal.unitName}</span>
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1">{deal.projectName}</div>
-                                </td>
-                                <td className="p-4">
-                                    <div className="font-medium text-gray-900">{deal.clientName}</div>
-                                </td>
-                                <td className="p-4 font-medium text-gray-900">
+                                    <div className="text-xs mt-1 truncate text-slate-400">{deal.projectName}</div>
+                                </TableCell>
+                                <TableCell className="py-3 px-4 font-medium min-w-0">
+                                    <span className="truncate block">{deal.clientName}</span>
+                                </TableCell>
+                                <TableCell className="py-3 px-4 font-medium text-slate-900">
                                     {formatCurrency(deal.finalPrice)}
-                                </td>
-                                <td className="p-4">
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                         style={{ backgroundColor: `${statusColors[deal.status]}20`, color: statusColors[deal.status] }}
                                     >
                                         {deal.status}
                                     </span>
-                                </td>
-                                <td className="p-4 text-gray-500">
+                                </TableCell>
+                                <TableCell className="py-3 px-4 text-slate-500 text-sm">
                                     {formatDate(deal.createdAt)}
-                                </td>
-                                <td className="p-4">
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
                                     {deal.publicAccessEnabled && deal.publicAccessToken ? (
                                         <div className="flex items-center gap-2">
                                             <button
@@ -184,7 +186,7 @@ export function DealsList() {
                                             </button>
                                             <button
                                                 onClick={() => window.open(`/view?token=${deal.publicAccessToken}`, '_blank')}
-                                                className="text-gray-400 hover:text-gray-600"
+                                                className="text-slate-400 hover:text-slate-600"
                                                 title="View"
                                             >
                                                 <ExternalLink size={14} />
@@ -193,7 +195,7 @@ export function DealsList() {
                                     ) : (
                                         <button
                                             onClick={() => handleGenerateLink(deal._id)}
-                                            className="text-xs flex items-center gap-1 text-gray-500 hover:text-brand-primary bg-gray-100 px-2 py-1 rounded border border-gray-200 hover:border-brand-primary hover:bg-brand-primary/5 transition-colors"
+                                            className="text-xs flex items-center gap-1 text-slate-500 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-2 py-1 rounded border border-slate-200 hover:border-emerald-200 transition-colors"
                                         >
                                             {statusColors[deal.status] === '#10B981' || statusColors[deal.status] === '#3B82F6' ? (
                                                 <>
@@ -205,34 +207,34 @@ export function DealsList() {
                                             )}
                                         </button>
                                     )}
-                                </td>
-                                <td className="p-4">
+                                </TableCell>
+                                <TableCell className="py-3 px-4 text-end">
                                     <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <DownloadContractButton dealId={deal._id} variant="icon" />
 
-                                        {/* Toggle Access */}
                                         {deal.publicAccessEnabled && (
                                             <button
                                                 onClick={() => handleDisableLink(deal._id)}
-                                                className="p-2 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
+                                                className="p-2 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                                 title={labels.disable[language as 'en' | 'ar']}
                                             >
                                                 <EyeOff size={18} />
                                             </button>
                                         )}
                                     </div>
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ))}
                         {filteredDeals?.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className="p-8 text-center text-gray-500">
+                            <TableRow>
+                                <TableCell colSpan={7} className="py-8 text-center text-slate-400 text-sm">
                                     No deals found matching your criteria.
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </DataTable>
+            </TableContainer>
             </div>
         </div>
     );

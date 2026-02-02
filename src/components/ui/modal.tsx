@@ -62,8 +62,8 @@ export function Modal({ isOpen, onClose, children, title, maxWidth = "md" }: Mod
                             aria-modal="true"
                         >
                             {/* Header */}
-                            <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100 dark:border-slate-800">
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center justify-between gap-3 p-4 md:p-6 border-b border-slate-100 dark:border-slate-800 min-w-0">
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">
                                     {title}
                                 </h2>
                                 <button

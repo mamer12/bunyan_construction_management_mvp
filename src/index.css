@@ -258,13 +258,48 @@
    RTL SUPPORT (Arabic)
    ============================================ */
 [dir="rtl"] {
-  /* Text alignment */
   text-align: right;
+}
+
+/* Prevent Arabic/long text overflow and glitches */
+[dir="rtl"] body,
+[dir="ltr"] body {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+[dir="rtl"] .main-content,
+[dir="ltr"] .main-content {
+  min-width: 0;
+}
+
+/* RTL-safe text alignment (use logical properties) */
+.text-start { text-align: start; }
+.text-end { text-align: end; }
+
+/* Table cell overflow in RTL */
+.data-table td,
+.data-table th {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 [dir="rtl"] .sidebar {
   border-right: none;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar collapse button: flip position in RTL */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+}
+[dir="rtl"] .sidebar-collapse-btn {
+  right: auto;
+  left: -12px;
 }
 
 @media (max-width: 768px) {
@@ -402,6 +437,50 @@
   text-align: left;
 }
 
+/* ============================================
+   DASHBOARD SECTION (unified card pattern)
+   ============================================ */
+.dashboard-section {
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.08), 0 6px 20px -4px rgb(0 0 0 / 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  min-height: 3.5rem;
+}
+
+.dashboard-section__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  min-width: 0;
+}
+
+.dashboard-section__body {
+  padding: 1.25rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-section__header .badge,
+.dashboard-section__header [class*="rounded-full"] {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -475,6 +554,30 @@ body {
   display: none;
 }
 
+/* ============================================
+   MOBILE NAV - Apple-style glass
+   ============================================ */
+.mobile-nav-glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: saturate(160%) blur(32px);
+  -webkit-backdrop-filter: saturate(160%) blur(32px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 12px 48px rgba(0, 0, 0, 0.06);
+}
+
+.dark .mobile-nav-glass {
+  background: rgba(20, 20, 20, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -540,22 +643,22 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
-  padding: 1.5rem;
+  padding: 0;
+  width: 100%;
 }
 
 .bento-card {
   background: var(--bg-card);
   border-radius: var(--radius-2xl);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.08), 0 6px 20px -4px rgb(0 0 0 / 0.06);
   border: 1px solid rgba(226, 232, 240, 0.6);
-  /* Softer border */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
 }
 
 .bento-card:hover {
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 12px 24px -4px rgb(0 0 0 / 0.12), 0 8px 28px -6px rgb(0 0 0 / 0.08);
   transform: translateY(-2px);
   border-color: rgba(16, 185, 129, 0.2);
 }
@@ -838,11 +941,12 @@ body {
   border-radius: var(--radius-2xl);
   padding: 1.25rem;
   border: 1px solid var(--border);
+  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.08), 0 6px 20px -4px rgb(0 0 0 / 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .task-card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 12px 24px -4px rgb(0 0 0 / 0.12), 0 8px 28px -6px rgb(0 0 0 / 0.08);
   transform: translateY(-2px);
   border-color: var(--border-emerald);
 }
@@ -1344,7 +1448,7 @@ tr:hover td {
   align-items: center;
   gap: 1rem;
   border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.08), 0 6px 20px -4px rgb(0 0 0 / 0.06);
 }
 
 .stat-card__icon {
@@ -1408,7 +1512,7 @@ tr:hover td {
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.08), 0 6px 20px -4px rgb(0 0 0 / 0.06);
   overflow: hidden;
 }
 
@@ -1451,6 +1555,7 @@ tr:hover td {
 
 .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
@@ -1463,7 +1568,7 @@ tr:hover td {
 }
 
 .data-table th {
-  text-align: left;
+  text-align: start;
   padding: 0.75rem 1rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -1479,6 +1584,44 @@ tr:hover td {
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-light);
   vertical-align: middle;
+}
+
+/* Mobile: prevent vertical letter wrap, use horizontal scroll */
+@media (max-width: 768px) {
+  .table-container {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    border-radius: 0;
+  }
+
+  .table-container table,
+  .data-table {
+    min-width: 640px;
+  }
+
+  .data-table th,
+  .data-table td,
+  .table-container th,
+  .table-container td {
+    white-space: nowrap;
+    min-width: 4.5rem;
+  }
+
+  .data-table th:first-child,
+  .data-table td:first-child,
+  .table-container th:first-child,
+  .table-container td:first-child {
+    min-width: 6rem;
+    position: sticky;
+    left: 0;
+    background: var(--bg-card);
+    z-index: 1;
+    box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.06);
+  }
+
+  .data-table thead th:first-child {
+    background: var(--bg-primary);
+  }
 }
 
 .data-table tbody tr:hover {

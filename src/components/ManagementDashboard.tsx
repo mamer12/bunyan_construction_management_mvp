@@ -195,45 +195,45 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
             case "dashboard":
             default:
                 return (
-                    <div className="flex flex-col gap-8">
+                    <div className="flex flex-col gap-8 md:gap-10 flex-1 min-h-0">
                         {/* Header Section */}
-                        <div className="flex justify-between items-end">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        <div className="flex flex-wrap justify-between items-end gap-4">
+                            <div className="min-w-0">
+                                <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
                                     {language === 'ar' ? 'لوحة القيادة' : 'Executive Overview'}
                                 </h1>
-                                <p className="text-slate-500 font-semibold mt-1 uppercase text-[10px] tracking-[0.15em]">
+                                <p className="text-slate-500 font-medium mt-1 text-xs uppercase tracking-wider">
                                     {language === 'ar' ? 'مراقبة أداء المشاريع' : 'Project Performance & Metrics'}
                                 </p>
                             </div>
-                            <div className="hidden md:flex gap-2">
-                                <div className="px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    Live Updates
-                                </div>
+                            <div className="hidden md:flex items-center gap-2 shrink-0">
+                                <span className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    {language === 'ar' ? 'تحديث مباشر' : 'Live'}
+                                </span>
                             </div>
                         </div>
 
                         {/* Top Stats Grid */}
-                        <BentoGrid columns={4}>
+                        <BentoGrid columns={4} className="w-full gap-4 md:gap-5">
                             {overviewStats.map((stat, index) => (
-                                <MotionCard key={stat.label} delay={index * 0.1} className="relative overflow-hidden group">
+                                <MotionCard key={stat.label} delay={index * 0.1} className="relative overflow-hidden group min-w-0">
                                     <div className={cn("absolute top-0 right-0 w-24 h-24 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 opacity-20", stat.bg)} />
-                                    <div className="p-6 relative z-10">
-                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-sm", stat.bg, stat.textColor)}>
-                                            <stat.icon size={24} />
+                                    <div className="p-5 relative z-10 min-w-0">
+                                        <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-105 shadow-sm shrink-0", stat.bg, stat.textColor)}>
+                                            <stat.icon size={22} />
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                                        <div className="flex items-baseline gap-1">
+                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1 truncate">{stat.label}</p>
+                                        <div className="flex items-baseline gap-1 flex-wrap">
                                             <AnimatedCounter
                                                 value={stat.value}
-                                                className="text-2xl font-bold text-slate-800"
+                                                className="text-xl md:text-2xl font-bold text-slate-800 tabular-nums"
                                                 prefix={stat.isCurrency ? "$" : ""}
                                                 suffix={stat.suffix || ""}
                                             />
                                         </div>
                                         {stat.subValue && (
-                                            <p className="text-[10px] font-bold text-slate-500 mt-1">{stat.subValue}</p>
+                                            <p className="text-xs font-medium text-slate-500 mt-1 truncate">{stat.subValue}</p>
                                         )}
                                     </div>
                                 </MotionCard>
@@ -241,23 +241,23 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                         </BentoGrid>
 
                         {/* Middle Row: Projects Breakdown & Quick Data */}
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8 flex-1 min-h-0">
                             {/* Detailed Projects List */}
-                            <MotionCard className="xl:col-span-2" delay={0.4}>
-                                <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                                    <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest flex items-center gap-2">
-                                        <Briefcase size={16} className="text-emerald-500" />
-                                        {language === 'ar' ? 'تفاصيل المشاريع' : 'Project Distribution'}
+                            <MotionCard className="xl:col-span-2 overflow-hidden" delay={0.4}>
+                                <header className="dashboard-section__header">
+                                    <h3 className="dashboard-section__title flex items-center gap-2">
+                                        <Briefcase size={16} className="text-emerald-500 shrink-0" />
+                                        <span className="truncate">{language === 'ar' ? 'تفاصيل المشاريع' : 'Project Distribution'}</span>
                                     </h3>
-                                    <span className="bg-slate-50 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full border border-slate-100 uppercase">
-                                        {projects.length} Total
+                                    <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200 uppercase tracking-wide whitespace-nowrap shrink-0">
+                                        {projects.length} {language === 'ar' ? 'الإجمالي' : 'Total'}
                                     </span>
-                                </div>
-                                <div className="divide-y divide-slate-50">
+                                </header>
+                                <div className="divide-y divide-slate-100">
                                     {projects.length === 0 ? (
-                                        <div className="py-20 text-center">
-                                            <Building2 size={48} className="mx-auto text-slate-100 mb-4" />
-                                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No active projects</p>
+                                        <div className="py-16 px-4 text-center">
+                                            <Building2 size={48} className="mx-auto text-slate-200 dark:text-slate-600 mb-4" />
+                                            <p className="text-slate-500 font-semibold text-sm">{language === 'ar' ? 'لا توجد مشاريع نشطة' : 'No active projects'}</p>
                                         </div>
                                     ) : (
                                         projects.map((project: any, index) => {
@@ -275,22 +275,22 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                                                             isExpanded ? "bg-emerald-50/30" : "hover:bg-slate-50/50"
                                                         )}
                                                     >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
+                                                        <div className="flex items-center gap-4 min-w-0">
+                                                            <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold text-sm shrink-0">
                                                                 {project.name.charAt(0).toUpperCase()}
                                                             </div>
-                                                            <div>
-                                                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition-colors">{project.name}</h4>
-                                                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1 uppercase tracking-tighter">
-                                                                    <MapPin size={10} /> {project.location || "Central"}
+                                                            <div className="min-w-0">
+                                                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition-colors truncate">{project.name}</h4>
+                                                                <p className="text-xs text-slate-500 flex items-center gap-1 truncate">
+                                                                    <MapPin size={12} className="shrink-0 text-emerald-500" /> {project.location || "Central"}
                                                                 </p>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-8">
+                                                        <div className="flex items-center gap-4 shrink-0">
                                                             <div className="hidden md:flex flex-col items-end">
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Completion</span>
-                                                                <span className={cn("text-xs font-bold", completionRate > 75 ? "text-emerald-600" : "text-amber-500")}>
+                                                                <span className="text-xs font-semibold text-slate-500 uppercase">{language === 'ar' ? 'الإنجاز' : 'Completion'}</span>
+                                                                <span className={cn("text-sm font-bold tabular-nums", completionRate > 75 ? "text-emerald-600" : "text-amber-600")}>
                                                                     {completionRate}%
                                                                 </span>
                                                             </div>
@@ -311,27 +311,25 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                                                                 exit={{ height: 0, opacity: 0 }}
                                                                 className="overflow-hidden bg-slate-50/50"
                                                             >
-                                                                <div className="p-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Budget Utilization</p>
-                                                                        <p className="text-sm font-bold text-slate-800">{formatCurrency(project.budgetSpent || 0)}</p>
-                                                                        <p className="text-[9px] text-slate-400 mt-1">of {formatCurrency(project.totalBudget || 0)}</p>
+                                                                <div className="p-6 grid grid-cols-2 lg:grid-cols-4 gap-4" dir="ltr">
+                                                                    <div className="p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 text-start">
+                                                                        <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">{language === 'ar' ? 'استخدام الميزانية' : 'Budget'}</p>
+                                                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-100 tabular-nums">{formatCurrency(project.budgetSpent || 0)}</p>
+                                                                        <p className="text-xs text-slate-400 mt-0.5">/ {formatCurrency(project.totalBudget || 0)}</p>
                                                                     </div>
-                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Team Size</p>
-                                                                        <p className="text-sm font-bold text-slate-800">{project.unitCount || 0} Units</p>
-                                                                        <p className="text-[9px] text-slate-400 mt-1">Active on project</p>
+                                                                    <div className="p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 text-start">
+                                                                        <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">{language === 'ar' ? 'الوحدات' : 'Units'}</p>
+                                                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-100 tabular-nums">{project.unitCount || 0}</p>
                                                                     </div>
-                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Tasks Done</p>
-                                                                        <p className="text-sm font-bold text-emerald-600">{project.completedTasksCount || 0}</p>
-                                                                        <p className="text-[9px] text-slate-400 mt-1">out of {project.totalTasksCount || 0}</p>
+                                                                    <div className="p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 text-start">
+                                                                        <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">{language === 'ar' ? 'المهام المنجزة' : 'Tasks Done'}</p>
+                                                                        <p className="text-sm font-bold text-emerald-600 tabular-nums">{project.completedTasksCount || 0} / {project.totalTasksCount || 0}</p>
                                                                     </div>
-                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
-                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Status</p>
+                                                                    <div className="p-4 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 text-start">
+                                                                        <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">{language === 'ar' ? 'الحالة' : 'Status'}</p>
                                                                         <div className="flex items-center gap-2 mt-1">
-                                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                                            <span className="text-xs font-bold text-slate-800 uppercase tracking-tighter">Healthy</span>
+                                                                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                                                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{language === 'ar' ? 'سليم' : 'Healthy'}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -347,44 +345,44 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
 
                             {/* Right Sidebar: Quick Insights */}
                             <div className="flex flex-col gap-6">
-                                {/* Stock Insight */}
-                                <MotionCard delay={0.5}>
-                                    <div className="p-6">
-                                        <h4 className="font-bold text-slate-800 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2">
-                                            <Package size={14} className="text-rose-500" />
-                                            Stock Insights
+                                {/* Stock Insight - RTL-safe alignment */}
+                                <MotionCard delay={0.5} className="overflow-hidden">
+                                    <header className="dashboard-section__header">
+                                        <h4 className="dashboard-section__title flex items-center gap-2">
+                                            <Package size={16} className="text-rose-500 shrink-0" />
+                                            <span className="truncate">{language === 'ar' ? 'تنبيهات المخزون' : 'Stock Insights'}</span>
                                         </h4>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Inventory Value</span>
-                                                <span className="text-sm font-bold text-slate-800">{formatCurrency(totalStockValue)}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center bg-rose-50 p-3 rounded-xl border border-rose-100">
-                                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-tighter">Critical Low Stock</span>
-                                                <span className="text-sm font-bold text-rose-700">{lowStockItems} Items</span>
-                                            </div>
+                                    </header>
+                                    <div className="dashboard-section__body space-y-3">
+                                        <div className="flex justify-between items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 min-w-0">
+                                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide truncate text-start">{language === 'ar' ? 'قيمة المخزون' : 'Inventory Value'}</span>
+                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-100 shrink-0 tabular-nums">{formatCurrency(totalStockValue)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center gap-3 bg-rose-50 dark:bg-rose-900/20 p-3 rounded-xl border border-rose-100 dark:border-rose-800/50 min-w-0">
+                                            <span className="text-xs font-semibold text-rose-600 uppercase tracking-wide truncate text-start">{language === 'ar' ? 'منخفض حرج' : 'Critical Low Stock'}</span>
+                                            <span className="text-sm font-bold text-rose-700 dark:text-rose-400 shrink-0 tabular-nums">{lowStockItems} {language === 'ar' ? 'عنصر' : 'Items'}</span>
                                         </div>
                                     </div>
                                 </MotionCard>
 
-                                {/* Team Insight */}
+                                {/* Team / Force Insight */}
                                 <MotionCard delay={0.6} className="bg-slate-900 border-none relative overflow-hidden">
                                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),transparent)]" />
                                     <div className="p-6 relative z-10">
-                                        <h4 className="font-bold text-white/50 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2">
-                                            <Users size={14} className="text-emerald-500" />
-                                            Force Insight
+                                        <h4 className="font-bold text-white/70 uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                                            <Users size={16} className="text-emerald-400 shrink-0" />
+                                            <span>{language === 'ar' ? 'أداء الفريق' : 'Force Insight'}</span>
                                         </h4>
                                         <div className="flex items-end gap-3 mb-2">
-                                            <span className="text-4xl font-bold text-white">{overallCompletionRate}%</span>
-                                            <div className="flex flex-col text-emerald-400 font-bold text-[10px] uppercase tracking-widest mb-1">
-                                                <span>Global</span>
-                                                <span>Rating</span>
+                                            <span className="text-3xl font-bold text-white tabular-nums">{overallCompletionRate}%</span>
+                                            <div className="flex flex-col text-emerald-400 font-semibold text-xs uppercase tracking-wider mb-1">
+                                                <span>{language === 'ar' ? 'إجمالي' : 'Global'}</span>
+                                                <span>{language === 'ar' ? 'التقييم' : 'Rating'}</span>
                                             </div>
                                         </div>
-                                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-6">Aggregate across {projects.length} sites</p>
-                                        <button className="w-full py-3 bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-colors">
-                                            Generate Report
+                                        <p className="text-xs text-white/50 font-medium uppercase tracking-wide mb-6">{language === 'ar' ? `عبر ${projects.length} مشاريع` : `Across ${projects.length} sites`}</p>
+                                        <button type="button" className="w-full py-3 bg-emerald-500 text-white font-semibold text-xs uppercase tracking-wider rounded-xl shadow-md hover:bg-emerald-400 transition-colors">
+                                            {language === 'ar' ? 'تقرير' : 'Generate Report'}
                                         </button>
                                     </div>
                                 </MotionCard>
@@ -397,7 +395,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
 
     if (!showHeader) {
         return (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 md:gap-8 flex-1 min-h-0">
                 <AnimatePresence mode="wait">
                     {renderContent()}
                 </AnimatePresence>
@@ -416,7 +414,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main className="main-content">
+            <main className="main-content flex flex-col min-h-screen">
                 <TopBar
                     breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -424,7 +422,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                     userRole={role || "guest"}
                 />
 
-                <div className="p-4 md:p-8">
+                <div className="flex-1 p-6 md:p-8 lg:p-10 min-h-0">
                     <AnimatePresence mode="wait">
                         {renderContent()}
                     </AnimatePresence>

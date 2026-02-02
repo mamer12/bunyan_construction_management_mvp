@@ -154,8 +154,8 @@ export function RoleAccessManagement() {
                 </div>
             </div>
 
-            <div style={{ overflowX: "auto" }}>
-                <table style={{
+            <div className="table-container">
+                <table className="data-table" style={{
                     width: "100%",
                     borderCollapse: "collapse",
                     minWidth: 600

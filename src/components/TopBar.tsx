@@ -83,8 +83,8 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
             }}
         >
             {/* Left Section - Greeting */}
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0, flex: 1 }}>
+                <div style={{ minWidth: 0 }}>
                     <motion.h1
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -96,10 +96,13 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                             margin: 0,
                             display: "flex",
                             alignItems: "center",
-                            gap: "0.5rem"
+                            gap: "0.5rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
                         }}
                     >
-                        {greeting}, {userName}
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{greeting}, {userName}</span>
                         <motion.span
                             animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
                             transition={{

@@ -1,5 +1,5 @@
-/* Import Cairo font for Arabic-native feel */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+/* Modern Typography: Inter for Latin, Cairo for Arabic */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,66 +11,94 @@
        EMERALD & CONCRETE PALETTE - LIGHT MODE
        "Architectural Drawing" - Clean, Professional
        ============================================ */
-    
+
     /* Core Surfaces (HSL for Tailwind compatibility) */
-    --background: 210 40% 98%;      /* slate-50 - Soft white, no glare */
-    --foreground: 222 47% 11%;      /* slate-900 - Deep ink */
+    --background: 210 40% 98%;
+    /* slate-50 - Soft white, no glare */
+    --foreground: 222 47% 11%;
+    /* slate-900 - Deep ink */
 
-    --card: 0 0% 100%;              /* Pure white cards */
-    --card-foreground: 222 47% 11%; /* slate-900 */
- 
+    --card: 0 0% 100%;
+    /* Pure white cards */
+    --card-foreground: 222 47% 11%;
+    /* slate-900 */
+
     /* Brand Colors - Emerald */
-    --primary: 158 64% 52%;         /* emerald-600 - Professional green */
-    --primary-foreground: 210 40% 98%; /* White text on primary */
+    --primary: 158 64% 52%;
+    /* emerald-600 - Professional green */
+    --primary-foreground: 210 40% 98%;
+    /* White text on primary */
 
-    --secondary: 210 40% 96.1%;     /* slate-100 - Subtle grey */
+    --secondary: 210 40% 96.1%;
+    /* slate-100 - Subtle grey */
     --secondary-foreground: 222 47% 11%;
 
     /* Muted Elements */
-    --muted: 210 40% 96.1%;         /* slate-100 */
-    --muted-foreground: 215.4 16.3% 46.9%; /* slate-500 */
+    --muted: 210 40% 96.1%;
+    /* slate-100 */
+    --muted-foreground: 215.4 16.3% 46.9%;
+    /* slate-500 */
 
-    --accent: 210 40% 96.1%;        /* slate-100 */
+    --accent: 210 40% 96.1%;
+    /* slate-100 */
     --accent-foreground: 222 47% 11%;
 
     /* Borders & Inputs */
-    --border: 214.3 31.8% 91.4%;    /* slate-200 */
+    --border: 214.3 31.8% 91.4%;
+    /* slate-200 */
     --input: 214.3 31.8% 91.4%;
-    --ring: 158 64% 52%;             /* emerald-600 for focus rings */
+    --ring: 158 64% 52%;
+    /* emerald-600 for focus rings */
 
     /* Legacy Variables (for backward compatibility) */
-    --bg-primary: #F8FAFC;          /* slate-50 */
+    --bg-primary: #F8FAFC;
+    /* slate-50 */
     --bg-secondary: #FFFFFF;
     --bg-sidebar: linear-gradient(180deg, #059669 0%, #047857 50%, #065F46 100%);
     --bg-sidebar-solid: #059669;
-    --bg-surface: #F1F5F9;          /* slate-100 */
+    --bg-surface: #F1F5F9;
+    /* slate-100 */
 
     /* Mint / Sage backgrounds */
-    --bg-mint: #ECFDF5;             /* emerald-50 */
+    --bg-mint: #ECFDF5;
+    /* emerald-50 */
     --bg-card: #FFFFFF;
     --bg-card-hover: #F0FDF4;
 
     /* Text Colors */
-    --text-primary: #0F172A;        /* slate-900 */
-    --text-secondary: #475569;      /* slate-600 - Readable body text */
+    --text-primary: #0F172A;
+    /* slate-900 */
+    --text-secondary: #475569;
+    /* slate-600 - Readable body text */
     --text-inverse: #FFFFFF;
-    --text-muted: #94A3B8;          /* slate-400 */
+    --text-muted: #94A3B8;
+    /* slate-400 */
 
     /* Brand Colors - Emerald */
-    --brand-primary: #059669;       /* emerald-600 */
-    --brand-primary-dark: #047857;  /* emerald-700 */
-    --brand-primary-light: #10B981; /* emerald-500 */
-    --brand-accent: #34D399;        /* emerald-400 */
+    --brand-primary: #059669;
+    /* emerald-600 */
+    --brand-primary-dark: #047857;
+    /* emerald-700 */
+    --brand-primary-light: #10B981;
+    /* emerald-500 */
+    --brand-accent: #34D399;
+    /* emerald-400 */
 
     /* Status Colors */
-    --success: #10B981;             /* emerald-500 */
-    --warning: #F59E0B;             /* amber-500 */
-    --danger: #EF4444;              /* red-500 */
-    --info: #3B82F6;                /* blue-500 */
+    --success: #10B981;
+    /* emerald-500 */
+    --warning: #F59E0B;
+    /* amber-500 */
+    --danger: #EF4444;
+    /* red-500 */
+    --info: #3B82F6;
+    /* blue-500 */
 
     /* UI Elements */
-    --border-legacy: #E2E8F0;       /* slate-200 */
-    --border-light: #F1F5F9;        /* slate-100 */
+    --border-legacy: #E2E8F0;
+    /* slate-200 */
+    --border-light: #F1F5F9;
+    /* slate-100 */
     --border-emerald: rgba(5, 150, 105, 0.2);
 
     /* Glass Effect */
@@ -95,10 +123,14 @@
     --radius-full: 9999px;
 
     /* Status Backgrounds */
-    --bg-success: #ECFDF5;          /* emerald-50 */
-    --bg-warning: #FFFBEB;          /* amber-50 */
-    --bg-danger: #FEF2F2;           /* red-50 */
-    --bg-info: #EFF6FF;             /* blue-50 */
+    --bg-success: #ECFDF5;
+    /* emerald-50 */
+    --bg-warning: #FFFBEB;
+    /* amber-50 */
+    --bg-danger: #FEF2F2;
+    /* red-50 */
+    --bg-info: #EFF6FF;
+    /* blue-50 */
   }
 
   /* ============================================
@@ -107,64 +139,95 @@
      ============================================ */
   .dark {
     /* Core Surfaces */
-    --background: 222 47% 11%;      /* slate-950 - Deep navy-black (not void) */
-    --foreground: 210 40% 98%;      /* slate-50 - Almost white */
- 
-    --card: 222 47% 11%;            /* slate-900 - Distinct from background */
+    --background: 222 47% 11%;
+    /* slate-950 - Deep navy-black (not void) */
+    --foreground: 210 40% 98%;
+    /* slate-50 - Almost white */
+
+    --card: 222 47% 11%;
+    /* slate-900 - Distinct from background */
     --card-foreground: 210 40% 98%;
- 
+
     /* Brand Colors - Brighter Emerald for visibility */
-    --primary: 142 71% 45%;         /* emerald-500 - Pops against dark */
-    --primary-foreground: 144.9 80.4% 10%; /* Dark green text */
- 
-    --secondary: 217.2 32.6% 17.5%; /* slate-800 - Deep steel */
+    --primary: 142 71% 45%;
+    /* emerald-500 - Pops against dark */
+    --primary-foreground: 144.9 80.4% 10%;
+    /* Dark green text */
+
+    --secondary: 217.2 32.6% 17.5%;
+    /* slate-800 - Deep steel */
     --secondary-foreground: 210 40% 98%;
- 
+
     /* Muted Elements */
-    --muted: 217.2 32.6% 17.5%;     /* slate-800 */
-    --muted-foreground: 215 20.2% 65.1%; /* slate-400 - Low contrast */
- 
-    --accent: 217.2 32.6% 17.5%;    /* slate-800 */
+    --muted: 217.2 32.6% 17.5%;
+    /* slate-800 */
+    --muted-foreground: 215 20.2% 65.1%;
+    /* slate-400 - Low contrast */
+
+    --accent: 217.2 32.6% 17.5%;
+    /* slate-800 */
     --accent-foreground: 210 40% 98%;
- 
+
     /* Borders & Inputs */
-    --border: 217.2 32.6% 17.5%;    /* slate-800 */
+    --border: 217.2 32.6% 17.5%;
+    /* slate-800 */
     --input: 217.2 32.6% 17.5%;
-    --ring: 142 71% 45%;             /* emerald-500 for focus rings */
+    --ring: 142 71% 45%;
+    /* emerald-500 for focus rings */
 
     /* Legacy Variables */
-    --bg-primary: #020617;           /* slate-950 */
-    --bg-secondary: #0F172A;         /* slate-900 */
+    --bg-primary: #020617;
+    /* slate-950 */
+    --bg-secondary: #0F172A;
+    /* slate-900 */
     --bg-sidebar: linear-gradient(180deg, #064E3B 0%, #065F46 50%, #047857 100%);
     --bg-sidebar-solid: #064E3B;
-    --bg-surface: #1E293B;           /* slate-800 */
+    --bg-surface: #1E293B;
+    /* slate-800 */
 
     /* Dark card backgrounds */
-    --bg-mint: #022C22;              /* Dark emerald tint */
-    --bg-card: #0F172A;              /* slate-900 */
-    --bg-card-hover: #1E293B;        /* slate-800 */
+    --bg-mint: #022C22;
+    /* Dark emerald tint */
+    --bg-card: #0F172A;
+    /* slate-900 */
+    --bg-card-hover: #1E293B;
+    /* slate-800 */
 
     /* Dark text colors */
-    --text-primary: #F8FAFC;         /* slate-50 */
-    --text-secondary: #94A3B8;       /* slate-400 - Reduced eye strain */
-    --text-inverse: #020617;         /* slate-950 */
-    --text-muted: #64748B;           /* slate-500 */
+    --text-primary: #F8FAFC;
+    /* slate-50 */
+    --text-secondary: #94A3B8;
+    /* slate-400 - Reduced eye strain */
+    --text-inverse: #020617;
+    /* slate-950 */
+    --text-muted: #64748B;
+    /* slate-500 */
 
     /* Brand colors - Brighter for dark mode */
-    --brand-primary: #10B981;        /* emerald-500 - Glowing accent */
-    --brand-primary-dark: #059669;   /* emerald-600 */
-    --brand-primary-light: #34D399;  /* emerald-400 */
-    --brand-accent: #6EE7B7;         /* emerald-300 */
+    --brand-primary: #10B981;
+    /* emerald-500 - Glowing accent */
+    --brand-primary-dark: #059669;
+    /* emerald-600 */
+    --brand-primary-light: #34D399;
+    /* emerald-400 */
+    --brand-accent: #6EE7B7;
+    /* emerald-300 */
 
     /* Status colors - Adjusted for dark */
-    --success: #10B981;              /* emerald-500 */
-    --warning: #FBBF24;              /* amber-400 */
-    --danger: #F87171;               /* red-400 */
-    --info: #60A5FA;                 /* blue-400 */
+    --success: #10B981;
+    /* emerald-500 */
+    --warning: #FBBF24;
+    /* amber-400 */
+    --danger: #F87171;
+    /* red-400 */
+    --info: #60A5FA;
+    /* blue-400 */
 
     /* Dark borders */
-    --border-legacy: #1E293B;        /* slate-800 */
-    --border-light: #334155;         /* slate-700 */
+    --border-legacy: #1E293B;
+    /* slate-800 */
+    --border-light: #334155;
+    /* slate-700 */
     --border-emerald: rgba(16, 185, 129, 0.3);
 
     /* Dark glass effect */
@@ -180,10 +243,14 @@
     --shadow-emerald: 0 4px 14px 0 rgb(16 185 129 / 0.3);
 
     /* Status Backgrounds - Dark mode */
-    --bg-success: #022C22;          /* dark emerald */
-    --bg-warning: #422006;          /* dark amber */
-    --bg-danger: #450A0A;           /* dark red */
-    --bg-info: #1E3A8A;             /* dark blue */
+    --bg-success: #022C22;
+    /* dark emerald */
+    --bg-warning: #422006;
+    /* dark amber */
+    --bg-danger: #450A0A;
+    /* dark red */
+    --bg-info: #1E3A8A;
+    /* dark blue */
   }
 }
 
@@ -309,10 +376,10 @@
 }
 
 /* RTL-aware spacing utilities */
-[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+[dir="rtl"] .space-x-1> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-2> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-3> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-4> :not([hidden])~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
 
@@ -340,14 +407,23 @@
 }
 
 body {
-  font-family: "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter", "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  line-height: 1.5;
+  /* Improved vertical rhythm */
+  letter-spacing: -0.01em;
+  /* Tighter for Inter */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[dir="rtl"] body {
+  font-family: "Cairo", "Inter", sans-serif;
+  letter-spacing: 0;
 }
 
 /* ============================================
@@ -470,17 +546,18 @@ body {
 .bento-card {
   background: var(--bg-card);
   border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  /* Softer border */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
 }
 
 .bento-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
-  border-color: var(--border-emerald);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 .bento-card.glass {

@@ -31,10 +31,9 @@ export function FloatingMobileNav({ activeTab, onTabChange, allowedMenuIds }: Fl
         { id: "settings", icon: Settings },
     ];
 
-    // Filter and limit to 5 most important items for mobile
+    // Filter and show all allowed items for mobile
     const menuItems = allMenuItems
-        .filter(item => allowedMenuIds.includes(item.id))
-        .slice(0, 5);
+        .filter(item => allowedMenuIds.includes(item.id));
 
     return (
         <div
@@ -70,10 +69,19 @@ export function FloatingMobileNav({ activeTab, onTabChange, allowedMenuIds }: Fl
                         padding: "0.75rem 1rem",
                         boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
                         display: "flex",
-                        gap: "0.5rem",
-                        alignItems: "center"
+                        gap: "0.25rem",
+                        alignItems: "center",
+                        overflowX: "auto",
+                        maxWidth: "calc(100vw - 2rem)",
+                        scrollbarWidth: "none", // Hide scrollbar for cleaner look
+                        msOverflowStyle: "none"
                     }}
                 >
+                    <style>{`
+                        div::-webkit-scrollbar {
+                            display: none;
+                        }
+                    `}</style>
                     {menuItems.map((item) => {
                         const isActive = activeTab === item.id;
                         return (

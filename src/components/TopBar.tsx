@@ -68,14 +68,14 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{
-                height: 80,
+                height: 56,
                 background: "var(--bg-card)",
                 backdropFilter: "blur(20px)",
                 borderBottom: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "0 2rem",
+                padding: "0 1.25rem",
                 position: "sticky",
                 top: 0,
                 zIndex: 30,
@@ -84,15 +84,13 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
         >
             {/* Left Section - Greeting */}
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                {/* Mobile Menu Toggle */}
-
                 <div>
                     <motion.h1
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 }}
                         style={{
-                            fontSize: "1.5rem",
+                            fontSize: "1.125rem",
                             fontWeight: "700",
                             color: "var(--text-primary)",
                             margin: 0,
@@ -101,7 +99,7 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                             gap: "0.5rem"
                         }}
                     >
-                        {greeting}, {userName.split(' ')[0]}
+                        {greeting}, {userName}
                         <motion.span
                             animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
                             transition={{
@@ -118,10 +116,10 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                         style={{
-                            fontSize: "0.875rem",
+                            fontSize: "0.75rem",
                             color: "var(--text-secondary)",
                             margin: 0,
-                            marginTop: "0.25rem"
+                            fontWeight: 500
                         }}
                     >
                         {breadcrumb}

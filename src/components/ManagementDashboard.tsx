@@ -7,17 +7,21 @@ import {
     Package,
     DollarSign,
     Users,
-    CheckCircle2,
-    Clock,
     AlertTriangle,
-    BarChart3,
-    ChevronDown,
-    ChevronUp,
     MapPin,
-    Briefcase
+    Briefcase,
+    ChevronDown,
+    ChevronUp
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MotionCard, StaggerContainer, StaggerItem } from "./ui/motion";
+import {
+    MotionCard,
+    StaggerContainer,
+    StaggerItem,
+    BentoGrid,
+    AnimatedCounter,
+    ProjectCard
+} from "./ui/motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
@@ -29,6 +33,7 @@ import { StockView } from "./StockView";
 import { SettingsView } from "./SettingsView";
 import { SalesView } from "./Sales/SalesView";
 import { useIsMobile } from "../hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface ProjectMetrics {
     projectId: string;
@@ -44,7 +49,7 @@ interface ProjectMetrics {
     engineers: string[];
 }
 
-export function ManagementDashboard() {
+export function ManagementDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const { t, language } = useLanguage();
     const [expandedProject, setExpandedProject] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("dashboard");
@@ -54,8 +59,7 @@ export function ManagementDashboard() {
 
     // Fetch actual user data
     const role = useQuery(api.roles.getMyRole);
-    const users = useQuery(api.users.getUsers);
-    const currentUser = users?.find((u: any) => u.role === role);
+    const currentUser = useQuery(api.auth.loggedInUser);
 
     // Define which menu items each role can see
     const ROLE_MENU_ACCESS: Record<string, string[]> = {
@@ -112,13 +116,13 @@ export function ManagementDashboard() {
     // Overall metrics
     const totalProjects = projects.length;
     const totalActiveProjects = projectMetrics.filter(p => p.inProgressTasks > 0 || p.pendingTasks > 0).length;
-    const totalBudget = projectMetrics.reduce((sum, p) => sum + p.budget, 0);
-    const totalSpent = projectMetrics.reduce((sum, p) => sum + p.totalSpent, 0);
+    const totalBudget = projects.reduce((sum, p: any) => sum + (p.totalBudget || 0), 0);
+    const totalSpent = projects.reduce((sum, p: any) => sum + (p.budgetSpent || 0), 0);
     const overallCompletionRate = allTasks.length > 0
         ? Math.round((allTasks.filter((t: any) => t.status === "APPROVED").length / allTasks.length) * 100)
         : 0;
 
-    // Stock metrics - use currentStock and minimumStock fields
+    // Stock metrics
     const lowStockItems = materials.filter((m: any) => (m.currentStock || 0) <= (m.minimumStock || 0)).length;
     const totalStockValue = materials.reduce((sum: number, m: any) => sum + ((m.currentStock || 0) * (m.pricePerUnit || 0)), 0);
 
@@ -126,48 +130,54 @@ export function ManagementDashboard() {
     const pendingPayoutsAmount = payouts.filter((p: any) => p.status === "PENDING").reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ', {
-            style: 'decimal',
+        return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-US', {
+            style: 'currency',
+            currency: 'USD',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
-        }).format(amount) + ' IQD';
+        }).format(amount);
     };
 
     const overviewStats = [
         {
             label: language === 'ar' ? 'إجمالي المشاريع' : 'Total Projects',
-            value: totalProjects.toString(),
+            value: totalProjects,
             subValue: `${totalActiveProjects} ${language === 'ar' ? 'نشط' : 'active'}`,
             icon: Building2,
-            color: '#059669',
-            bg: '#ECFDF5'
+            color: 'emerald',
+            bg: 'bg-emerald-50',
+            textColor: 'text-emerald-600'
         },
         {
             label: language === 'ar' ? 'إجمالي الميزانية' : 'Total Budget',
-            value: formatCurrency(totalBudget),
-            subValue: `${formatCurrency(totalSpent)} ${language === 'ar' ? 'صرف' : 'spent'}`,
+            value: totalBudget,
+            isCurrency: true,
+            subValue: `${formatCurrency(totalSpent)} ${language === 'ar' ? 'مصروف' : 'spent'}`,
             icon: DollarSign,
-            color: '#3B82F6',
-            bg: '#EFF6FF'
+            color: 'blue',
+            bg: 'bg-blue-50',
+            textColor: 'text-blue-600'
         },
         {
             label: language === 'ar' ? 'نسبة الإنجاز' : 'Completion Rate',
-            value: `${overallCompletionRate}%`,
+            value: overallCompletionRate,
+            suffix: '%',
             icon: TrendingUp,
-            color: '#8B5CF6',
-            bg: '#F5F3FF'
+            color: 'purple',
+            bg: 'bg-purple-50',
+            textColor: 'text-purple-600'
         },
         {
             label: language === 'ar' ? 'تنبيهات المخزون' : 'Stock Alerts',
-            value: lowStockItems.toString(),
+            value: lowStockItems,
             subValue: language === 'ar' ? 'عناصر منخفضة' : 'low items',
             icon: lowStockItems > 0 ? AlertTriangle : Package,
-            color: lowStockItems > 0 ? '#DC2626' : '#059669',
-            bg: lowStockItems > 0 ? '#FEF2F2' : '#ECFDF5'
+            color: lowStockItems > 0 ? 'rose' : 'emerald',
+            bg: lowStockItems > 0 ? 'bg-rose-50' : 'bg-emerald-50',
+            textColor: lowStockItems > 0 ? 'text-rose-600' : 'text-emerald-600'
         },
     ];
 
-    // Render different views based on active tab
     const renderContent = () => {
         switch (activeTab) {
             case "projects":
@@ -185,401 +195,218 @@ export function ManagementDashboard() {
             case "dashboard":
             default:
                 return (
-                    <div className="flex flex-col gap-6">
-                        {/* Header */}
-                        <div>
-                            <h2 style={{
-                                fontSize: "1.5rem",
-                                fontWeight: 700,
-                                color: "var(--text-primary)",
-                                marginBottom: "0.25rem"
-                            }}>
-                                {language === 'ar' ? 'لوحة تحكم الإدارة' : 'Management Dashboard'}
-                            </h2>
-                            <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-                                {language === 'ar' ? 'نظرة شاملة على المشاريع والأداء والموارد' : 'Comprehensive overview of projects, performance, and resources'}
-                            </p>
-                        </div>
-
-                        {/* Overview Stats */}
-                        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {overviewStats.map((stat, index) => (
-                                <StaggerItem key={stat.label}>
-                                    <MotionCard delay={index * 0.05}>
-                                        <div style={{
-                                            display: "flex",
-                                            alignItems: "flex-start",
-                                            gap: "1rem",
-                                            padding: "1.25rem"
-                                        }}>
-                                            <div style={{
-                                                width: 48,
-                                                height: 48,
-                                                borderRadius: "1rem",
-                                                background: stat.bg,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                color: stat.color,
-                                                flexShrink: 0
-                                            }}>
-                                                <stat.icon size={24} />
-                                            </div>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{
-                                        fontSize: "0.75rem",
-                                        color: "var(--text-muted)",
-                                        marginBottom: "0.25rem",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em"
-                                    }}>
-                                        {stat.label}
-                                    </p>
-                                    <p style={{
-                                        fontSize: "1.5rem",
-                                        fontWeight: 700,
-                                        color: "var(--text-primary)"
-                                    }}>
-                                        {stat.value}
-                                    </p>
-                                    {stat.subValue && (
-                                        <p style={{
-                                            fontSize: "0.75rem",
-                                            color: "var(--text-secondary)"
-                                        }}>
-                                            {stat.subValue}
-                                        </p>
-                                    )}
+                    <div className="flex flex-col gap-8">
+                        {/* Header Section */}
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                                    {language === 'ar' ? 'لوحة القيادة' : 'Executive Overview'}
+                                </h1>
+                                <p className="text-slate-500 font-semibold mt-1 uppercase text-[10px] tracking-[0.15em]">
+                                    {language === 'ar' ? 'مراقبة أداء المشاريع' : 'Project Performance & Metrics'}
+                                </p>
+                            </div>
+                            <div className="hidden md:flex gap-2">
+                                <div className="px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Live Updates
                                 </div>
                             </div>
-                        </MotionCard>
-                    </StaggerItem>
-                ))}
-            </StaggerContainer>
-
-            {/* Project-by-Project Breakdown */}
-            <MotionCard delay={0.2}>
-                <div className="card-header" style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                }}>
-                    <h3 className="card-title">
-                        <Briefcase size={18} style={{ marginRight: "0.5rem" }} />
-                        {language === 'ar' ? 'تفاصيل المشاريع' : 'Projects Breakdown'}
-                    </h3>
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                        {projectMetrics.length} {language === 'ar' ? 'مشروع' : 'projects'}
-                    </span>
-                </div>
-                <div>
-                    {projectMetrics.length === 0 ? (
-                        <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>
-                            {language === 'ar' ? 'لا توجد مشاريع' : 'No projects yet'}
                         </div>
-                    ) : (
-                        projectMetrics.map((project, index) => {
-                            const isExpanded = expandedProject === project.projectId;
-                            const completionRate = project.totalTasks > 0
-                                ? Math.round((project.completedTasks / project.totalTasks) * 100)
-                                : 0;
-                            const budgetUsed = project.budget > 0
-                                ? Math.round((project.totalSpent / project.budget) * 100)
-                                : 0;
 
-                            return (
-                                <motion.div
-                                    key={project.projectId}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    style={{
-                                        borderBottom: "1px solid var(--border)",
-                                    }}
-                                >
-                                    {/* Project Header */}
-                                    <div
-                                        onClick={() => setExpandedProject(isExpanded ? null : project.projectId)}
-                                        style={{
-                                            padding: "1rem 1.25rem",
-                                            cursor: "pointer",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            background: isExpanded ? "var(--bg-mint)" : "transparent",
-                                            transition: "background 0.2s"
-                                        }}
-                                    >
-                                        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                                            <div style={{
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: "0.75rem",
-                                                background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                color: "white",
-                                                fontWeight: 700,
-                                                fontSize: "0.875rem"
-                                            }}>
-                                                {project.projectName.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-                                                    {project.projectName}
-                                                </p>
-                                                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                                                    <MapPin size={12} />
-                                                    {project.location || (language === 'ar' ? 'غير محدد' : 'Not specified')}
-                                                </p>
-                                            </div>
+                        {/* Top Stats Grid */}
+                        <BentoGrid columns={4}>
+                            {overviewStats.map((stat, index) => (
+                                <MotionCard key={stat.label} delay={index * 0.1} className="relative overflow-hidden group">
+                                    <div className={cn("absolute top-0 right-0 w-24 h-24 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 opacity-20", stat.bg)} />
+                                    <div className="p-6 relative z-10">
+                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-sm", stat.bg, stat.textColor)}>
+                                            <stat.icon size={24} />
                                         </div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                                            {/* Mini stats */}
-                                            <div style={{ textAlign: "center", display: "none" }} className="md:block">
-                                                <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>{project.totalUnits}</p>
-                                                <p style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{language === 'ar' ? 'وحدة' : 'Units'}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <AnimatedCounter
+                                                value={stat.value}
+                                                className="text-2xl font-bold text-slate-800"
+                                                prefix={stat.isCurrency ? "$" : ""}
+                                                suffix={stat.suffix || ""}
+                                            />
+                                        </div>
+                                        {stat.subValue && (
+                                            <p className="text-[10px] font-bold text-slate-500 mt-1">{stat.subValue}</p>
+                                        )}
+                                    </div>
+                                </MotionCard>
+                            ))}
+                        </BentoGrid>
+
+                        {/* Middle Row: Projects Breakdown & Quick Data */}
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                            {/* Detailed Projects List */}
+                            <MotionCard className="xl:col-span-2" delay={0.4}>
+                                <div className="p-6 border-b border-slate-50 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-800 uppercase text-xs tracking-widest flex items-center gap-2">
+                                        <Briefcase size={16} className="text-emerald-500" />
+                                        {language === 'ar' ? 'تفاصيل المشاريع' : 'Project Distribution'}
+                                    </h3>
+                                    <span className="bg-slate-50 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full border border-slate-100 uppercase">
+                                        {projects.length} Total
+                                    </span>
+                                </div>
+                                <div className="divide-y divide-slate-50">
+                                    {projects.length === 0 ? (
+                                        <div className="py-20 text-center">
+                                            <Building2 size={48} className="mx-auto text-slate-100 mb-4" />
+                                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No active projects</p>
+                                        </div>
+                                    ) : (
+                                        projects.map((project: any, index) => {
+                                            const isExpanded = expandedProject === project._id;
+                                            const completionRate = project.totalTasksCount > 0
+                                                ? Math.round((project.completedTasksCount / project.totalTasksCount) * 100)
+                                                : 0;
+
+                                            return (
+                                                <div key={project._id} className="group">
+                                                    <div
+                                                        onClick={() => setExpandedProject(isExpanded ? null : project._id)}
+                                                        className={cn(
+                                                            "p-4 flex items-center justify-between cursor-pointer transition-colors",
+                                                            isExpanded ? "bg-emerald-50/30" : "hover:bg-slate-50/50"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
+                                                                {project.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition-colors">{project.name}</h4>
+                                                                <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1 uppercase tracking-tighter">
+                                                                    <MapPin size={10} /> {project.location || "Central"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-8">
+                                                            <div className="hidden md:flex flex-col items-end">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Completion</span>
+                                                                <span className={cn("text-xs font-bold", completionRate > 75 ? "text-emerald-600" : "text-amber-500")}>
+                                                                    {completionRate}%
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-24 hidden lg:block">
+                                                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${completionRate}%` }} />
+                                                                </div>
+                                                            </div>
+                                                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                        </div>
+                                                    </div>
+
+                                                    <AnimatePresence>
+                                                        {isExpanded && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: "auto", opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                className="overflow-hidden bg-slate-50/50"
+                                                            >
+                                                                <div className="p-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Budget Utilization</p>
+                                                                        <p className="text-sm font-bold text-slate-800">{formatCurrency(project.budgetSpent || 0)}</p>
+                                                                        <p className="text-[9px] text-slate-400 mt-1">of {formatCurrency(project.totalBudget || 0)}</p>
+                                                                    </div>
+                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Team Size</p>
+                                                                        <p className="text-sm font-bold text-slate-800">{project.unitCount || 0} Units</p>
+                                                                        <p className="text-[9px] text-slate-400 mt-1">Active on project</p>
+                                                                    </div>
+                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Tasks Done</p>
+                                                                        <p className="text-sm font-bold text-emerald-600">{project.completedTasksCount || 0}</p>
+                                                                        <p className="text-[9px] text-slate-400 mt-1">out of {project.totalTasksCount || 0}</p>
+                                                                    </div>
+                                                                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                                                                        <p className="text-[9px] font-bold text-slate-400 mb-2 uppercase">Status</p>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                                            <span className="text-xs font-bold text-slate-800 uppercase tracking-tighter">Healthy</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </MotionCard>
+
+                            {/* Right Sidebar: Quick Insights */}
+                            <div className="flex flex-col gap-6">
+                                {/* Stock Insight */}
+                                <MotionCard delay={0.5}>
+                                    <div className="p-6">
+                                        <h4 className="font-bold text-slate-800 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2">
+                                            <Package size={14} className="text-rose-500" />
+                                            Stock Insights
+                                        </h4>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Inventory Value</span>
+                                                <span className="text-sm font-bold text-slate-800">{formatCurrency(totalStockValue)}</span>
                                             </div>
-                                            <div style={{ textAlign: "center", display: "none" }} className="md:block">
-                                                <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>{project.totalTasks}</p>
-                                                <p style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{language === 'ar' ? 'مهمة' : 'Tasks'}</p>
+                                            <div className="flex justify-between items-center bg-rose-50 p-3 rounded-xl border border-rose-100">
+                                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-tighter">Critical Low Stock</span>
+                                                <span className="text-sm font-bold text-rose-700">{lowStockItems} Items</span>
                                             </div>
-                                            <div style={{ textAlign: "center", display: "none" }} className="md:block">
-                                                <p style={{ fontSize: "1rem", fontWeight: 700, color: completionRate >= 50 ? "#059669" : "#F59E0B" }}>{completionRate}%</p>
-                                                <p style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{language === 'ar' ? 'إنجاز' : 'Done'}</p>
-                                            </div>
-                                            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                         </div>
                                     </div>
+                                </MotionCard>
 
-                                    {/* Expanded Details */}
-                                    <AnimatePresence>
-                                        {isExpanded && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                                style={{ overflow: "hidden" }}
-                                            >
-                                                <div style={{
-                                                    padding: "1.25rem",
-                                                    background: "var(--bg-secondary)",
-                                                    display: "grid",
-                                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                                                    gap: "1rem"
-                                                }}>
-                                                    {/* Task Status */}
-                                                    <div style={{
-                                                        background: "var(--bg-card)",
-                                                        padding: "1rem",
-                                                        borderRadius: "0.75rem"
-                                                    }}>
-                                                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.75rem" }}>
-                                                            {language === 'ar' ? 'حالة المهام' : 'Task Status'}
-                                                        </p>
-                                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                                                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                                                                <span style={{ color: "#059669" }}>✓ {language === 'ar' ? 'مكتمل' : 'Completed'}</span>
-                                                                <span style={{ fontWeight: 600 }}>{project.completedTasks}</span>
-                                                            </div>
-                                                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                                                                <span style={{ color: "#3B82F6" }}>◐ {language === 'ar' ? 'قيد التنفيذ' : 'In Progress'}</span>
-                                                                <span style={{ fontWeight: 600 }}>{project.inProgressTasks}</span>
-                                                            </div>
-                                                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                                                                <span style={{ color: "#F59E0B" }}>○ {language === 'ar' ? 'معلق' : 'Pending'}</span>
-                                                                <span style={{ fontWeight: 600 }}>{project.pendingTasks}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Budget */}
-                                                    <div style={{
-                                                        background: "var(--bg-card)",
-                                                        padding: "1rem",
-                                                        borderRadius: "0.75rem"
-                                                    }}>
-                                                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.75rem" }}>
-                                                            {language === 'ar' ? 'الميزانية' : 'Budget'}
-                                                        </p>
-                                                        <p style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                                                            {formatCurrency(project.budget)}
-                                                        </p>
-                                                        <div style={{ marginTop: "0.5rem" }}>
-                                                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "0.25rem" }}>
-                                                                <span>{language === 'ar' ? 'مصروف' : 'Spent'}</span>
-                                                                <span style={{ color: budgetUsed > 90 ? "#DC2626" : "var(--text-secondary)" }}>{budgetUsed}%</span>
-                                                            </div>
-                                                            <div style={{ height: 6, background: "var(--bg-secondary)", borderRadius: 3, overflow: "hidden" }}>
-                                                                <div style={{
-                                                                    width: `${Math.min(budgetUsed, 100)}%`,
-                                                                    height: "100%",
-                                                                    background: budgetUsed > 90 ? "#DC2626" : budgetUsed > 70 ? "#F59E0B" : "#059669",
-                                                                    borderRadius: 3
-                                                                }} />
-                                                            </div>
-                                                            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
-                                                                {formatCurrency(project.totalSpent)} / {formatCurrency(project.budget)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Team */}
-                                                    <div style={{
-                                                        background: "var(--bg-card)",
-                                                        padding: "1rem",
-                                                        borderRadius: "0.75rem"
-                                                    }}>
-                                                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.75rem" }}>
-                                                            {language === 'ar' ? 'الفريق' : 'Team'}
-                                                        </p>
-                                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                                            <Users size={20} color="var(--brand-primary)" />
-                                                            <span style={{ fontSize: "1.125rem", fontWeight: 700 }}>
-                                                                {project.engineers.length}
-                                                            </span>
-                                                            <span style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
-                                                                {language === 'ar' ? 'مهندسين' : 'engineers'}
-                                                            </span>
-                                                        </div>
-                                                        <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.5rem" }}>
-                                                            {project.totalUnits} {language === 'ar' ? 'وحدة' : 'units'}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Completion */}
-                                                    <div style={{
-                                                        background: "var(--bg-card)",
-                                                        padding: "1rem",
-                                                        borderRadius: "0.75rem"
-                                                    }}>
-                                                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.75rem" }}>
-                                                            {language === 'ar' ? 'نسبة الإنجاز' : 'Completion'}
-                                                        </p>
-                                                        <div style={{
-                                                            width: 60,
-                                                            height: 60,
-                                                            borderRadius: "50%",
-                                                            background: `conic-gradient(${completionRate >= 50 ? "#059669" : "#F59E0B"} ${completionRate * 3.6}deg, var(--bg-secondary) 0deg)`,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center"
-                                                        }}>
-                                                            <div style={{
-                                                                width: 48,
-                                                                height: 48,
-                                                                borderRadius: "50%",
-                                                                background: "var(--bg-card)",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                fontSize: "0.875rem",
-                                                                fontWeight: 700,
-                                                                color: completionRate >= 50 ? "#059669" : "#F59E0B"
-                                                            }}>
-                                                                {completionRate}%
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.div>
-                            );
-                        })
-                    )}
-                </div>
-            </MotionCard>
-
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Stock Summary */}
-                <MotionCard delay={0.3}>
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <Package size={18} style={{ marginRight: "0.5rem" }} />
-                            {language === 'ar' ? 'ملخص المخزون' : 'Stock Summary'}
-                        </h3>
-                    </div>
-                    <div style={{ padding: "1.25rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'إجمالي العناصر' : 'Total Items'}</span>
-                            <span style={{ fontWeight: 600 }}>{materials.length}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'قيمة المخزون' : 'Stock Value'}</span>
-                            <span style={{ fontWeight: 600 }}>{formatCurrency(totalStockValue)}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ color: lowStockItems > 0 ? "#DC2626" : "var(--text-muted)" }}>
-                                {language === 'ar' ? 'منخفض المخزون' : 'Low Stock'}
-                            </span>
-                            <span style={{ fontWeight: 600, color: lowStockItems > 0 ? "#DC2626" : "var(--text-primary)" }}>
-                                {lowStockItems}
-                            </span>
+                                {/* Team Insight */}
+                                <MotionCard delay={0.6} className="bg-slate-900 border-none relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),transparent)]" />
+                                    <div className="p-6 relative z-10">
+                                        <h4 className="font-bold text-white/50 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2">
+                                            <Users size={14} className="text-emerald-500" />
+                                            Force Insight
+                                        </h4>
+                                        <div className="flex items-end gap-3 mb-2">
+                                            <span className="text-4xl font-bold text-white">{overallCompletionRate}%</span>
+                                            <div className="flex flex-col text-emerald-400 font-bold text-[10px] uppercase tracking-widest mb-1">
+                                                <span>Global</span>
+                                                <span>Rating</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-6">Aggregate across {projects.length} sites</p>
+                                        <button className="w-full py-3 bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-colors">
+                                            Generate Report
+                                        </button>
+                                    </div>
+                                </MotionCard>
+                            </div>
                         </div>
                     </div>
-                </MotionCard>
-
-                {/* Finance Summary */}
-                <MotionCard delay={0.35}>
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <DollarSign size={18} style={{ marginRight: "0.5rem" }} />
-                            {language === 'ar' ? 'ملخص المالية' : 'Finance Summary'}
-                        </h3>
-                    </div>
-                    <div style={{ padding: "1.25rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'إجمالي المصروف' : 'Total Spent'}</span>
-                            <span style={{ fontWeight: 600 }}>{formatCurrency(totalSpent)}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'طلبات معلقة' : 'Pending Payouts'}</span>
-                            <span style={{ fontWeight: 600, color: "#F59E0B" }}>{formatCurrency(pendingPayoutsAmount)}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'الميزانية المتبقية' : 'Remaining Budget'}</span>
-                            <span style={{ fontWeight: 600, color: "#059669" }}>{formatCurrency(totalBudget - totalSpent)}</span>
-                        </div>
-                    </div>
-                </MotionCard>
-
-                {/* Team Performance */}
-                <MotionCard delay={0.4}>
-                    <div className="card-header">
-                        <h3 className="card-title">
-                            <Users size={18} style={{ marginRight: "0.5rem" }} />
-                            {language === 'ar' ? 'أداء الفريق' : 'Team Performance'}
-                        </h3>
-                    </div>
-                    <div style={{ padding: "1.25rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'إجمالي المهندسين' : 'Total Engineers'}</span>
-                            <span style={{ fontWeight: 600 }}>{engineers.length}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'مهام مكتملة' : 'Completed Tasks'}</span>
-                            <span style={{ fontWeight: 600, color: "#059669" }}>{allTasks.filter((t: any) => t.status === "APPROVED").length}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span style={{ color: "var(--text-muted)" }}>{language === 'ar' ? 'متوسط الإنجاز' : 'Avg Completion'}</span>
-                            <span style={{ fontWeight: 600 }}>{overallCompletionRate}%</span>
-                        </div>
-                    </div>
-                </MotionCard>
-            </div>
-                        </div>
-                    );
+                );
         }
     };
 
+    if (!showHeader) {
+        return (
+            <div className="flex flex-col gap-6">
+                <AnimatePresence mode="wait">
+                    {renderContent()}
+                </AnimatePresence>
+            </div>
+        );
+    }
+
     return (
-        <div className="layout-container" style={{ background: "var(--bg-primary)" }}>
-            {/* Sidebar - Hidden on mobile */}
+        <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
@@ -589,9 +416,7 @@ export function ManagementDashboard() {
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            {/* Main Content */}
-            <div className="main-content" style={{ marginLeft: isMobile ? 0 : (isSidebarCollapsed ? 80 : 280) }}>
-                {/* TopBar */}
+            <main className="main-content">
                 <TopBar
                     breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -599,13 +424,13 @@ export function ManagementDashboard() {
                     userRole={role || "guest"}
                 />
 
-                {/* Content Area */}
-                <div style={{ padding: "2rem" }}>
-                    {renderContent()}
+                <div className="p-4 md:p-8">
+                    <AnimatePresence mode="wait">
+                        {renderContent()}
+                    </AnimatePresence>
                 </div>
-            </div>
+            </main>
 
-            {/* Floating Mobile Nav */}
             {isMobile && (
                 <FloatingMobileNav
                     activeTab={activeTab}

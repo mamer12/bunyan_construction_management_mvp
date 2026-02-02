@@ -94,8 +94,8 @@ export function MotionCard({ children, className = "", delay = 0, onClick, style
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={{
-        y: -5,
-        boxShadow: "0 20px 25px -5px rgb(5 150 105 / 0.15), 0 8px 10px -6px rgb(5 150 105 / 0.15)",
+        y: -3,
+        boxShadow: "0 12px 20px -10px rgba(0, 0, 0, 0.1)",
         transition: { duration: 0.2 }
       }}
       onClick={onClick}
@@ -421,6 +421,128 @@ export function PulseIndicator({ color = "#EF4444" }: { color?: string }) {
     />
   );
 }
+
+// ============================================
+// BENTO GRID COMPONENTS
+// ============================================
+
+interface BentoGridProps {
+  children: ReactNode;
+  className?: string;
+  columns?: number;
+}
+
+export function BentoGrid({ children, className = "", columns = 4 }: BentoGridProps) {
+  return (
+    <div
+      className={cn(
+        "bento-grid",
+        columns === 4 && "lg:grid-cols-4",
+        columns === 3 && "lg:grid-cols-3",
+        columns === 2 && "lg:grid-cols-2",
+        className
+      )}
+      style={{ padding: 0 }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ================= ===========================
+// PROFESSIONAL PROJECT CARD
+// ============================================
+
+interface ProjectCardProps {
+  project: any;
+  onClick?: () => void;
+  delay?: number;
+}
+
+export function ProjectCard({ project, onClick, delay = 0 }: ProjectCardProps) {
+  const completionRate = project.totalTasksCount > 0
+    ? Math.round((project.completedTasksCount / project.totalTasksCount) * 100)
+    : project.completionRate || 0;
+
+  const budgetUsage = project.totalBudget > 0
+    ? Math.round((project.budgetSpent / project.totalBudget) * 100)
+    : project.budgetUsage || 0;
+
+  return (
+    <MotionCard
+      onClick={onClick}
+      delay={delay}
+      className="group overflow-hidden flex flex-col h-full"
+    >
+      {/* Background Accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700" />
+
+      <div className="p-5 flex flex-col h-full relative z-10">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors duration-300">
+              <Building2 size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                {project.name || project.projectName}
+              </h3>
+              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                <MapPin size={10} className="text-emerald-500" />
+                {project.location || "Default Location"}
+              </div>
+            </div>
+          </div>
+          <div className={cn(
+            "px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter",
+            project.status === 'ACTIVE' ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"
+          )}>
+            {project.status || 'ACTIVE'}
+          </div>
+        </div>
+
+        {/* Progress Section */}
+        <div className="mt-2 mb-6">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Progress</span>
+            <span className="text-lg font-bold text-slate-800">{completionRate}%</span>
+          </div>
+          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${completionRate}%` }}
+              transition={{ duration: 1, delay: delay + 0.3 }}
+              className="h-full bg-emerald-500 rounded-full"
+            />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4 mt-auto pt-4 border-t border-slate-50">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Budget</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm font-bold text-slate-700">
+                {budgetUsage}%
+              </span>
+              <span className="text-[9px] text-slate-400 font-bold">USED</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Units</p>
+            <span className="text-sm font-bold text-slate-700">
+              {project.unitCount || project.totalUnits || 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    </MotionCard>
+  );
+}
+
+// Re-export icon for ProjectCard
+import { Building2, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Re-export motion and AnimatePresence for convenience
 export { motion, AnimatePresence };

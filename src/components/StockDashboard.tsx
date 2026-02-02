@@ -115,13 +115,7 @@ export function StockDashboard() {
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main
-                className="main-content"
-                style={{
-                    marginLeft: isMobile ? 0 : (isSidebarCollapsed ? '80px' : '280px'),
-                    transition: "margin-left 0.3s ease"
-                }}
-            >
+            <main className="main-content">
                 <TopBar
                     userName={currentUser?.name || "User"}
                     userRole={currentUser?.role || "guest"}

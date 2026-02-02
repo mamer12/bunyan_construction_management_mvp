@@ -16,15 +16,16 @@ import {
     AlertTriangle,
     Sparkles,
     Wallet,
-    Package, // New Import
+    Package,
     TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { MaterialRequestModal } from "./MaterialRequestModal"; // New Import
+import { MaterialRequestModal } from "./MaterialRequestModal";
 import { WalletCard } from "./WalletCard";
 import { PayoutModal } from "./PayoutModal";
 import { TransactionHistory } from "./TransactionHistory";
+import { DownloadInvoiceButton } from "./PDF";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
     MotionCard,
@@ -33,285 +34,331 @@ import {
     MotionButton,
     MotionListItem
 } from "./ui/motion";
+import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
+import { FloatingMobileNav } from "./FloatingMobileNav";
+import { useIsMobile } from "../hooks/use-mobile";
+
+const ROLE_MENU_ACCESS = {
+    admin: ["dashboard", "projects", "teams", "wallet", "settings"],
+    acting_manager: ["dashboard", "projects", "teams", "wallet", "settings"],
+    lead: ["dashboard", "projects", "teams", "wallet"],
+    engineer: ["dashboard", "tasks", "wallet"],
+    guest: ["dashboard"]
+};
+
+// --- Types ---
+import { Doc, Id } from "../../convex/_generated/dataModel";
+
+interface Task extends Omit<Doc<"tasks">, "status"> {
+    status: "PENDING" | "IN_PROGRESS" | "SUBMITTED" | "APPROVED" | "REJECTED";
+    project?: string;
+    unit?: string;
+    photoUrl?: string;
+    attachmentUrls?: string[];
+}
 
 export function EngineerDashboard() {
     const { signOut } = useAuthActions();
-    const tasks = useQuery(api.tasks.getMyTasks) || [];
-    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const tasks = (useQuery(api.tasks.getMyTasks) || []) as Task[];
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [showPayoutModal, setShowPayoutModal] = useState(false);
-    const [showMaterialModal, setShowMaterialModal] = useState(false); // New State
+    const [showMaterialModal, setShowMaterialModal] = useState(false);
     const { t, language } = useLanguage();
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const isMobile = useIsMobile();
+    const [activeTab, setActiveTab] = useState("dashboard");
 
-    const pendingTasks = tasks.filter((t: any) => t.status === "PENDING");
-    const inProgressTasks = tasks.filter((t: any) => t.status === "IN_PROGRESS");
-    const completedTasks = tasks.filter((t: any) => t.status === "APPROVED");
-    const submittedTasks = tasks.filter((t: any) => t.status === "SUBMITTED");
-    const rejectedTasks = tasks.filter((t: any) => t.status === "REJECTED");
+    const currentUser = useQuery(api.auth.loggedInUser);
+    const role = (currentUser?.role as keyof typeof ROLE_MENU_ACCESS) || "guest";
+    const allowedMenuIds = ROLE_MENU_ACCESS[role] || [];
+
+    const pendingTasks = tasks.filter((t: Task) => t.status === "PENDING");
+    const inProgressTasks = tasks.filter((t: Task) => t.status === "IN_PROGRESS");
+    const completedTasks = tasks.filter((t: Task) => t.status === "APPROVED");
+    const submittedTasks = tasks.filter((t: Task) => t.status === "SUBMITTED");
+    const rejectedTasks = tasks.filter((t: Task) => t.status === "REJECTED");
 
     return (
         <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            {/* Animated Header */}
-            <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            <Sidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
+
+            <div
+                className="main-content"
                 style={{
-                    background: "linear-gradient(135deg, #059669 0%, #047857 50%, #064E3B 100%)",
-                    color: "white",
-                    padding: "1.5rem",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 20,
-                    boxShadow: "0 4px 20px rgba(5, 150, 105, 0.3)"
+                    marginLeft: isMobile ? 0 : (isSidebarCollapsed ? '80px' : '280px'),
+                    transition: "margin-left 0.3s ease"
                 }}
             >
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        marginBottom: "0.25rem"
-                    }}>
-                        <Sparkles size={14} style={{ opacity: 0.8 }} />
-                        <span style={{
-                            fontSize: "0.7rem",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.15em",
-                            opacity: 0.8
-                        }}>
-                            Engineer Portal
-                        </span>
-                    </div>
-                    <h1 style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 700,
-                        margin: 0
-                    }}>
-                        {t('welcome')}
-                    </h1>
-                    <p style={{
-                        fontSize: "0.875rem",
-                        opacity: 0.9,
-                        margin: 0,
-                        marginTop: "0.25rem"
-                    }}>
-                        Bunyan Construction
-                    </p>
-                </motion.div>
-                <motion.button
-                    className="btn"
-                    onClick={() => void signOut()}
-                    style={{
-                        background: "rgba(255,255,255,0.15)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255,255,255,0.2)",
-                        color: "white",
-                        padding: "0.75rem"
-                    }}
-                    whileHover={{
-                        background: "rgba(255,255,255,0.25)",
-                        scale: 1.05
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    <LogOut size={20} />
-                </motion.button>
-            </motion.header>
+                <TopBar
+                    userName={currentUser?.name || "User"}
+                    userRole={currentUser?.role || "guest"}
+                />
 
-            {/* Wallet Section */}
-            <div style={{ padding: "1rem" }}>
+                {/* Animated Header */}
+                <motion.header
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    style={{
+                        background: "linear-gradient(135deg, #059669 0%, #047857 50%, #064E3B 100%)",
+                        color: "white",
+                        padding: "1.5rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 20,
+                        boxShadow: "0 4px 20px rgba(5, 150, 105, 0.3)"
+                    }}
+                >
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                    >
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            marginBottom: "0.25rem"
+                        }}>
+                            <Sparkles size={14} style={{ opacity: 0.8 }} />
+                            <span style={{
+                                fontSize: "0.7rem",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.15em",
+                                opacity: 0.8
+                            }}>
+                                Engineer Portal
+                            </span>
+                        </div>
+                        <h1 style={{
+                            fontSize: "1.5rem",
+                            fontWeight: 700,
+                            margin: 0
+                        }}>
+                            {t('welcome')}
+                        </h1>
+                        <p style={{
+                            fontSize: "0.875rem",
+                            opacity: 0.9,
+                            margin: 0,
+                            marginTop: "0.25rem"
+                        }}>
+                            Bunyan Construction
+                        </p>
+                    </motion.div>
+                    <motion.button
+                        className="btn"
+                        onClick={() => void signOut()}
+                        style={{
+                            background: "rgba(255,255,255,0.15)",
+                            backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                            color: "white",
+                            padding: "0.75rem"
+                        }}
+                        whileHover={{
+                            background: "rgba(255,255,255,0.25)",
+                            scale: 1.05
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <LogOut size={20} />
+                    </motion.button>
+                </motion.header>
+
+                {/* Wallet Section */}
+                <div style={{ padding: "1rem" }}>
+                    <motion.div
+                        className="bento-grid"
+                        style={{ padding: 0, gap: "1rem" }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                    >
+                        <WalletCard onRequestPayout={() => setShowPayoutModal(true)} />
+                        <TransactionHistory />
+                    </motion.div>
+                </div>
+
+                {/* Actions Row */}
+                <div style={{ padding: "0 1rem", marginBottom: "1rem", display: "flex", justifyContent: "flex-end" }}>
+                    <MotionButton
+                        className="btn-primary"
+                        onClick={() => setShowMaterialModal(true)}
+                    >
+                        <Package size={18} /> Request Materials
+                    </MotionButton>
+                </div>
+
+                {/* Stats Row */}
                 <motion.div
-                    className="bento-grid"
-                    style={{ padding: 0, gap: "1rem" }}
+                    style={{
+                        display: "flex",
+                        gap: "0.75rem",
+                        padding: "0 1rem 1rem",
+                        overflowX: "auto",
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none"
+                    }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                    <WalletCard onRequestPayout={() => setShowPayoutModal(true)} />
-                    <TransactionHistory />
+                    <StatCard
+                        icon={Clock}
+                        value={pendingTasks.length}
+                        label={t('pending')}
+                        color="#F59E0B"
+                        bg="#FFFBEB"
+                        delay={0.35}
+                    />
+                    <StatCard
+                        icon={Play}
+                        value={inProgressTasks.length}
+                        label={t('inProgress')}
+                        color="#3B82F6"
+                        bg="#EFF6FF"
+                        delay={0.4}
+                    />
+                    <StatCard
+                        icon={CheckCircle2}
+                        value={completedTasks.length}
+                        label={t('completed')}
+                        color="#059669"
+                        bg="#ECFDF5"
+                        delay={0.45}
+                    />
                 </motion.div>
-            </div>
 
-            {/* Actions Row */}
-            <div style={{ padding: "0 1rem", marginBottom: "1rem", display: "flex", justifyContent: "flex-end" }}>
-                <MotionButton
-                    className="btn-primary"
-                    onClick={() => setShowMaterialModal(true)}
-                >
-                    <Package size={18} /> Request Materials
-                </MotionButton>
-            </div>
+                {/* Task List */}
+                <div style={{ padding: "0 1rem 1rem" }}>
+                    <motion.h2
+                        style={{
+                            fontSize: "1.125rem",
+                            fontWeight: 700,
+                            marginBottom: "1rem",
+                            color: "var(--text-primary)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem"
+                        }}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <ClipboardList size={20} style={{ color: "var(--brand-primary)" }} />
+                        My Tasks
+                    </motion.h2>
 
-            {/* Stats Row */}
-            <motion.div
-                style={{
-                    display: "flex",
-                    gap: "0.75rem",
-                    padding: "0 1rem 1rem",
-                    overflowX: "auto",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none"
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-            >
-                <StatCard
-                    icon={Clock}
-                    value={pendingTasks.length}
-                    label={t('pending')}
-                    color="#F59E0B"
-                    bg="#FFFBEB"
-                    delay={0.35}
-                />
-                <StatCard
-                    icon={Play}
-                    value={inProgressTasks.length}
-                    label={t('inProgress')}
-                    color="#3B82F6"
-                    bg="#EFF6FF"
-                    delay={0.4}
-                />
-                <StatCard
-                    icon={CheckCircle2}
-                    value={completedTasks.length}
-                    label={t('completed')}
-                    color="#059669"
-                    bg="#ECFDF5"
-                    delay={0.45}
-                />
-            </motion.div>
+                    {tasks.length === 0 ? (
+                        <MotionCard delay={0.5}>
+                            <div className="empty-state">
+                                <motion.div
+                                    animate={{
+                                        y: [0, -5, 0],
+                                        opacity: [0.5, 0.8, 0.5]
+                                    }}
+                                    transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                >
+                                    <ClipboardList size={48} style={{ color: "var(--brand-primary)", opacity: 0.5 }} />
+                                </motion.div>
+                                <p className="empty-title" style={{ marginTop: "1rem" }}>No tasks assigned</p>
+                                <p className="empty-text">Tasks assigned by your lead will appear here</p>
+                            </div>
+                        </MotionCard>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            {/* Rejected Tasks - Show First with highlight */}
+                            {rejectedTasks.map((task: Task, index: number) => (
+                                <TaskCard
+                                    key={task._id}
+                                    task={task}
+                                    onClick={() => setSelectedTask(task)}
+                                    highlight="danger"
+                                    index={index}
+                                />
+                            ))}
 
-            {/* Task List */}
-            <div style={{ padding: "0 1rem 1rem" }}>
-                <motion.h2
-                    style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 700,
-                        marginBottom: "1rem",
-                        color: "var(--text-primary)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem"
-                    }}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <ClipboardList size={20} style={{ color: "var(--brand-primary)" }} />
-                    My Tasks
-                </motion.h2>
+                            {/* Pending & In Progress */}
+                            {[...pendingTasks, ...inProgressTasks].map((task: Task, index: number) => (
+                                <TaskCard
+                                    key={task._id}
+                                    task={task}
+                                    onClick={() => setSelectedTask(task)}
+                                    index={rejectedTasks.length + index}
+                                />
+                            ))}
 
-                {tasks.length === 0 ? (
-                    <MotionCard delay={0.5}>
-                        <div className="empty-state">
-                            <motion.div
-                                animate={{
-                                    y: [0, -5, 0],
-                                    opacity: [0.5, 0.8, 0.5]
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            >
-                                <ClipboardList size={48} style={{ color: "var(--brand-primary)", opacity: 0.5 }} />
-                            </motion.div>
-                            <p className="empty-title" style={{ marginTop: "1rem" }}>No tasks assigned</p>
-                            <p className="empty-text">Tasks assigned by your lead will appear here</p>
+                            {/* Submitted */}
+                            {submittedTasks.map((task: Task, index: number) => (
+                                <TaskCard
+                                    key={task._id}
+                                    task={task}
+                                    onClick={() => setSelectedTask(task)}
+                                    index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + index}
+                                />
+                            ))}
+
+                            {/* Completed */}
+                            {completedTasks.map((task: Task, index: number) => (
+                                <TaskCard
+                                    key={task._id}
+                                    task={task}
+                                    onClick={() => setSelectedTask(task)}
+                                    index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + submittedTasks.length + index}
+                                />
+                            ))}
                         </div>
-                    </MotionCard>
-                ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        {/* Rejected Tasks - Show First with highlight */}
-                        {rejectedTasks.map((task: any, index: number) => (
-                            <TaskCard
-                                key={task._id}
-                                task={task}
-                                onClick={() => setSelectedTask(task)}
-                                highlight="danger"
-                                index={index}
-                            />
-                        ))}
+                    )}
+                </div>
 
-                        {/* Pending & In Progress */}
-                        {[...pendingTasks, ...inProgressTasks].map((task: any, index: number) => (
-                            <TaskCard
-                                key={task._id}
-                                task={task}
-                                onClick={() => setSelectedTask(task)}
-                                index={rejectedTasks.length + index}
-                            />
-                        ))}
+                {/* MODALS */}
+                <AnimatePresence>
+                    {selectedTask && (
+                        <TaskDetailModal
+                            task={selectedTask}
+                            onClose={() => setSelectedTask(null)}
+                        />
+                    )}
+                </AnimatePresence>
 
-                        {/* Submitted */}
-                        {submittedTasks.map((task: any, index: number) => (
-                            <TaskCard
-                                key={task._id}
-                                task={task}
-                                onClick={() => setSelectedTask(task)}
-                                index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + index}
-                            />
-                        ))}
+                <AnimatePresence>
+                    {showPayoutModal && (
+                        <PayoutModal onClose={() => setShowPayoutModal(false)} />
+                    )}
+                </AnimatePresence>
 
-                        {/* Completed */}
-                        {completedTasks.map((task: any, index: number) => (
-                            <TaskCard
-                                key={task._id}
-                                task={task}
-                                onClick={() => setSelectedTask(task)}
-                                index={rejectedTasks.length + pendingTasks.length + inProgressTasks.length + submittedTasks.length + index}
-                            />
-                        ))}
-                    </div>
+                <AnimatePresence>
+                    {showMaterialModal && (
+                        <MaterialRequestModal
+                            projectId="TODO_PROJECT_ID"
+                            onClose={() => setShowMaterialModal(false)}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {isMobile && (
+                    <FloatingMobileNav
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        allowedMenuIds={allowedMenuIds}
+                    />
                 )}
             </div>
-
-            {/* Task Detail Modal */}
-            <AnimatePresence>
-                {selectedTask && (
-                    <TaskDetailModal
-                        task={selectedTask}
-                        onClose={() => setSelectedTask(null)}
-                    />
-                )}
-            </AnimatePresence>
-
-            {/* Payout Modal */}
-            <AnimatePresence>
-                {showPayoutModal && (
-                    <PayoutModal onClose={() => setShowPayoutModal(false)} />
-                )}
-            </AnimatePresence>
-
-            {/* Material Request Modal */}
-            <AnimatePresence>
-                {showMaterialModal && (
-                    <MaterialRequestModal
-                        projectId="TODO_PROJECT_ID" // TODO: Properly Select Project
-                        onClose={() => setShowMaterialModal(false)}
-                    />
-                )}
-            </AnimatePresence>
-            {/* MODALS */}
-            <AnimatePresence>
-                {showMaterialModal && (
-                    <MaterialRequestModal
-                        projectId="TODO_PROJECT_ID" // Engineer usually works on assigned tasks, need to pick project
-                        // Probably need to select project INSIDE the modal or infer from tasks
-                        onClose={() => setShowMaterialModal(false)}
-                    />
-                )}
-            </AnimatePresence>
-        </div >
+        </div>
     );
 }
 
@@ -360,7 +407,7 @@ function TaskCard({
     highlight,
     index = 0
 }: {
-    task: any;
+    task: Task;
     onClick: () => void;
     highlight?: string;
     index?: number;
@@ -467,7 +514,7 @@ function TaskCard({
     );
 }
 
-function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) {
+function TaskDetailModal({ task, onClose }: { task: Task; onClose: () => void }) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -533,10 +580,7 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
         }
     };
 
-    // REJECTED tasks can be restarted (start again)
-    // PENDING tasks can be started
     const canStart = task.status === "PENDING" || task.status === "REJECTED";
-    // Only IN_PROGRESS tasks can be submitted (after starting)
     const canSubmit = task.status === "IN_PROGRESS";
     const isCompleted = task.status === "APPROVED";
     const isSubmitted = task.status === "SUBMITTED";
@@ -572,7 +616,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                 </div>
 
                 <div className="modal-body" style={{ padding: "1.5rem" }}>
-                    {/* Task Info */}
                     <div style={{ marginBottom: "1.5rem" }}>
                         <h3 style={{
                             fontSize: "1.25rem",
@@ -582,9 +625,14 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                         }}>
                             {task.title}
                         </h3>
-                        <div className="task-meta" style={{ marginBottom: "0.75rem" }}>
-                            <MapPin size={14} />
-                            <span>{task.project} - {task.unit}</span>
+                        <div className="task-meta" style={{ marginBottom: "0.75rem", display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MapPin size={14} />
+                                <span>{task.project} - {task.unit}</span>
+                            </div>
+                            {task.status === "APPROVED" && (
+                                <DownloadInvoiceButton taskId={task._id} />
+                            )}
                         </div>
                         {task.description && (
                             <p style={{
@@ -605,7 +653,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                         </div>
                     </div>
 
-                    {/* Reference Images */}
                     {task.attachmentUrls && task.attachmentUrls.length > 0 && (
                         <div style={{ marginBottom: "1.5rem" }}>
                             <label className="label">Reference Images from Lead</label>
@@ -623,7 +670,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                         </div>
                     )}
 
-                    {/* Submit Work Section */}
                     {canSubmit && (
                         <div>
                             <label className="label">Submit Proof of Work</label>
@@ -725,7 +771,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                         </div>
                     )}
 
-                    {/* Submitted Proof */}
                     {(isSubmitted || isCompleted) && task.photoUrl && (
                         <div>
                             <label className="label">Your Submitted Work</label>
@@ -744,7 +789,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                     )}
                 </div>
 
-                {/* Action Footer */}
                 <div style={{
                     padding: "1rem 1.5rem",
                     borderTop: "1px solid var(--border)",
@@ -797,7 +841,7 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                             textAlign: "center",
                             color: "var(--text-secondary)",
                             padding: "0.5rem",
-                            background: "#FEF3C7",
+                            background: "var(--bg-warning)",
                             borderRadius: "1rem",
                             fontSize: "0.9rem"
                         }}>
@@ -822,6 +866,6 @@ function TaskDetailModal({ task, onClose }: { task: any; onClose: () => void }) 
                     )}
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div >
     );
 }

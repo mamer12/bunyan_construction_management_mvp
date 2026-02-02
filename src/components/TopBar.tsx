@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, Globe, Menu, Sparkles, Check, X } from "lucide-react";
+import { Bell, Search, Globe, Menu, Sparkles, Check, X, Sun, Moon, Monitor } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useNotifications } from "../contexts/NotificationContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { ShakingBell, PulseIndicator } from "./ui/motion";
 
 interface TopBarProps {
@@ -23,11 +24,28 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
     guest: "Guest",
 };
 
+// Get time-based greeting
+const getGreeting = (language: string) => {
+    const hour = new Date().getHours();
+    if (language === 'ar') {
+        if (hour < 12) return "صباح الخير";
+        if (hour < 17) return "مساء الخير";
+        return "مساء الخير";
+    } else {
+        if (hour < 12) return "Good Morning";
+        if (hour < 17) return "Good Afternoon";
+        return "Good Evening";
+    }
+};
+
 export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "User", userRole = "guest" }: TopBarProps) {
     const { t, language, setLanguage } = useLanguage();
     const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
+    const { theme, toggleTheme, isDark, effectiveTheme } = useTheme();
     const [showNotifications, setShowNotifications] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
+
+    const greeting = getGreeting(language);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -51,128 +69,97 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
             transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{
                 height: 80,
-                background: "rgba(255, 255, 255, 0.8)",
+                background: "var(--bg-card)",
                 backdropFilter: "blur(20px)",
-                borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
+                borderBottom: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "0 2rem",
                 position: "sticky",
                 top: 0,
-                zIndex: 20
+                zIndex: 30,
+                boxShadow: "var(--shadow-sm)"
             }}
         >
-            {/* Left Side - Welcome Message */}
+            {/* Left Section - Greeting */}
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 {/* Mobile Menu Toggle */}
-                {onToggleSidebar && (
-                    <motion.button
-                        onClick={onToggleSidebar}
-                        className="md:hidden"
+
+                <div>
+                    <motion.h1
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
                         style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: "0.5rem",
-                            borderRadius: "0.75rem",
+                            fontSize: "1.5rem",
+                            fontWeight: "700",
+                            color: "var(--text-primary)",
+                            margin: 0,
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center"
+                            gap: "0.5rem"
                         }}
-                        whileHover={{ background: "rgba(5, 150, 105, 0.1)" }}
-                        whileTap={{ scale: 0.95 }}
                     >
-                        <Menu size={24} color="var(--text-primary)" />
-                    </motion.button>
-                )}
-
-                {/* Welcome Message */}
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1, duration: 0.4 }}
-                >
-                    <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        marginBottom: "0.25rem"
-                    }}>
-                        <Sparkles size={14} style={{ color: "var(--brand-primary)" }} />
-                        <span style={{
-                            fontSize: "0.75rem",
+                        {greeting}, {userName.split(' ')[0]}
+                        <motion.span
+                            animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
+                            transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatDelay: 3
+                            }}
+                        >
+                            👋
+                        </motion.span>
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        style={{
+                            fontSize: "0.875rem",
                             color: "var(--text-secondary)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                            fontWeight: 500
-                        }}>
-                            {breadcrumb}
-                        </span>
-                    </div>
-                    <h1 style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 700,
-                        color: "var(--text-primary)",
-                        margin: 0,
-                        lineHeight: 1.2
-                    }}>
-                        Welcome back, <span style={{ color: "var(--brand-primary)" }}>{userName}</span>
-                    </h1>
-                </motion.div>
+                            margin: 0,
+                            marginTop: "0.25rem"
+                        }}
+                    >
+                        {breadcrumb}
+                    </motion.p>
+                </div>
             </div>
 
-            {/* Right Side - Actions */}
-            <motion.div
-                style={{ display: "flex", alignItems: "center", gap: "1rem" }}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-            >
-                {/* Search Bar */}
-                <motion.div
+            {/* Right Section - Actions */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                {/* Theme Toggle */}
+                <motion.button
+                    onClick={toggleTheme}
                     style={{
-                        position: "relative",
-                        display: "none"
+                        background: "var(--bg-primary)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text-secondary)",
+                        cursor: "pointer",
+                        padding: "0.625rem",
+                        borderRadius: "0.75rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
-                    className="md:flex"
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{
+                        borderColor: "var(--brand-primary)",
+                        color: "var(--brand-primary)"
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    title={theme === 'system' ? 'System theme' : effectiveTheme === 'dark' ? 'Dark mode' : 'Light mode'}
                 >
-                    <Search
-                        size={18}
-                        style={{
-                            position: "absolute",
-                            left: language === 'en' ? 14 : 'auto',
-                            right: language === 'ar' ? 14 : 'auto',
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            color: "var(--text-muted)"
-                        }}
-                    />
-                    <input
-                        type="text"
-                        placeholder={t('searchPlaceholder')}
-                        style={{
-                            padding: language === 'en' ? "0.75rem 1rem 0.75rem 2.75rem" : "0.75rem 2.75rem 0.75rem 1rem",
-                            borderRadius: "1rem",
-                            border: "1px solid var(--border)",
-                            background: "var(--bg-primary)",
-                            fontSize: "0.875rem",
-                            outline: "none",
-                            width: 220,
-                            transition: "all 0.2s",
-                            fontFamily: "inherit"
-                        }}
-                        onFocus={(e) => {
-                            e.target.style.borderColor = "var(--brand-primary)";
-                            e.target.style.boxShadow = "0 0 0 3px rgba(5, 150, 105, 0.1)";
-                        }}
-                        onBlur={(e) => {
-                            e.target.style.borderColor = "var(--border)";
-                            e.target.style.boxShadow = "none";
-                        }}
-                    />
-                </motion.div>
+                    {theme === 'system' ? (
+                        <Monitor size={18} />
+                    ) : effectiveTheme === 'dark' ? (
+                        <Moon size={18} />
+                    ) : (
+                        <Sun size={18} />
+                    )}
+                </motion.button>
 
                 {/* Language Toggle */}
                 <motion.button
@@ -186,14 +173,14 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                         alignItems: "center",
                         gap: "0.375rem",
                         padding: "0.5rem 0.875rem",
-                        borderRadius: "1rem",
+                        borderRadius: "0.75rem",
                         fontWeight: 600,
                         fontSize: "0.8rem",
                         fontFamily: "inherit"
                     }}
                     whileHover={{
                         scale: 1.05,
-                        background: "#D1FAE5"
+                        background: "var(--bg-card-hover)"
                     }}
                     whileTap={{ scale: 0.95 }}
                 >
@@ -209,14 +196,14 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                             style={{
                                 background: "var(--bg-primary)",
                                 border: "1px solid var(--border)",
-                                color: "var(--text-secondary)",
+                                color: "var(--text-primary)",
                                 cursor: "pointer",
                                 padding: "0.625rem",
-                                borderRadius: "1rem",
+                                borderRadius: "0.75rem",
+                                position: "relative",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center",
-                                position: "relative"
+                                justifyContent: "center"
                             }}
                             whileHover={{
                                 borderColor: "var(--brand-primary)",
@@ -224,27 +211,30 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                             }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <Bell size={20} />
-                            {/* Notification indicator */}
+                            <Bell size={18} />
                             {unreadCount > 0 && (
-                                <span style={{
-                                    position: "absolute",
-                                    top: -4,
-                                    right: -4,
-                                    minWidth: 18,
-                                    height: 18,
-                                    borderRadius: "50%",
-                                    background: "#EF4444",
-                                    color: "white",
-                                    fontSize: "0.65rem",
-                                    fontWeight: 700,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "0 4px"
-                                }}>
-                                    {unreadCount > 99 ? "99+" : unreadCount}
-                                </span>
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    style={{
+                                        position: "absolute",
+                                        top: -4,
+                                        right: -4,
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: "50%",
+                                        background: "var(--danger)",
+                                        color: "white",
+                                        fontSize: "0.65rem",
+                                        fontWeight: "bold",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        border: "2px solid var(--bg-card)"
+                                    }}
+                                >
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </motion.div>
                             )}
                         </motion.button>
                     </ShakingBell>
@@ -278,7 +268,7 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                                     justifyContent: "space-between",
                                     alignItems: "center"
                                 }}>
-                                    <h4 style={{ margin: 0, fontWeight: 600 }}>{t("notifications")}</h4>
+                                    <h4 style={{ margin: 0, fontWeight: 600, color: "var(--text-primary)" }}>{t("notifications")}</h4>
                                     {notifications.length > 0 && (
                                         <button
                                             onClick={markAllAsRead}
@@ -353,54 +343,7 @@ export function TopBar({ breadcrumb = "Dashboard", onToggleSidebar, userName = "
                         )}
                     </AnimatePresence>
                 </div>
-
-                {/* Profile */}
-                <motion.div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        paddingLeft: "1rem",
-                        borderLeft: "1px solid var(--border)",
-                        marginLeft: "0.5rem"
-                    }}
-                    className="hidden md:flex"
-                >
-                    <div style={{ textAlign: "right" }}>
-                        <div style={{
-                            fontSize: "0.875rem",
-                            fontWeight: 700,
-                            color: "var(--text-primary)"
-                        }}>
-                            {userName}
-                        </div>
-                        <div style={{
-                            fontSize: "0.75rem",
-                            color: "var(--text-secondary)"
-                        }}>
-                            {ROLE_DISPLAY_NAMES[userRole] || userRole}
-                        </div>
-                    </div>
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: "14px",
-                            background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "white",
-                            fontWeight: 700,
-                            fontSize: "1rem",
-                            boxShadow: "0 4px 12px rgba(5, 150, 105, 0.3)"
-                        }}
-                    >
-                        AA
-                    </motion.div>
-                </motion.div>
-            </motion.div>
+            </div>
         </motion.header>
     );
 }

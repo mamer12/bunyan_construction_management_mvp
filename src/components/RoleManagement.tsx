@@ -267,7 +267,7 @@ export function RoleManagement() {
                                             <MotionButton
                                                 className="btn-ghost btn-sm"
                                                 onClick={() => handleDeleteRole(role._id)}
-                                                style={{ color: "#DC2626" }}
+                                                style={{ color: "var(--danger)" }}
                                             >
                                                 <Trash2 size={14} />
                                             </MotionButton>
@@ -374,7 +374,7 @@ export function RoleManagement() {
                                             padding: "0.5rem 0.75rem",
                                             borderRadius: "0.5rem",
                                             border: "1px solid var(--border)",
-                                            background: newRole.permissions.includes(module.id) ? "#ECFDF5" : "var(--bg-secondary)",
+                                            background: newRole.permissions.includes(module.id) ? "var(--bg-mint)" : "var(--bg-secondary)",
                                             color: newRole.permissions.includes(module.id) ? "#059669" : "var(--text-secondary)",
                                             cursor: module.id === "dashboard" ? "not-allowed" : "pointer",
                                             fontSize: "0.875rem",
@@ -467,7 +467,7 @@ export function RoleManagement() {
                                             padding: "0.5rem 0.75rem",
                                             borderRadius: "0.5rem",
                                             border: "1px solid var(--border)",
-                                            background: editingRole.permissions?.includes(module.id) ? "#ECFDF5" : "var(--bg-secondary)",
+                                            background: editingRole.permissions?.includes(module.id) ? "var(--bg-mint)" : "var(--bg-secondary)",
                                             color: editingRole.permissions?.includes(module.id) ? "#059669" : "var(--text-secondary)",
                                             cursor: module.id === "dashboard" ? "not-allowed" : "pointer",
                                             fontSize: "0.875rem",

@@ -206,6 +206,29 @@ export const reviewTask = mutation({
         createdAt: Date.now(),
         description: `Task approved: ${task.title}`,
       });
+
+      // === MILESTONE TRIGGER: Update linked installments ===
+      if (task.isMilestone) {
+        // Find all installments linked to this task
+        const linkedInstallments = await ctx.db
+          .query("installments")
+          .withIndex("by_linked_task", (q) => q.eq("linkedConstructionTaskId", args.taskId))
+          .collect();
+
+        const now = Date.now();
+        const gracePeriod = 7 * 24 * 60 * 60 * 1000; // 7 days grace period
+
+        for (const installment of linkedInstallments) {
+          // Update due date to now + grace period
+          await ctx.db.patch(installment._id, {
+            dueDate: now + gracePeriod,
+            originalDueDate: installment.dueDate,
+          });
+        }
+
+        // Note: In production, you'd also want to trigger notifications here
+        // to the sales team about the milestone completion
+      }
     }
 
     return { success: true };

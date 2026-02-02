@@ -1,0 +1,56 @@
+convex/auth.ts(2,26): error TS2307: Cannot find module '@convex-dev/auth/providers/Password' or its corresponding type declarations.
+convex/auth.ts(3,27): error TS2307: Cannot find module '@convex-dev/auth/providers/Anonymous' or its corresponding type declarations.
+convex/crm.ts(390,27): error TS2339: Property 'projectId' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'projectId' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; }'.
+convex/crm.ts(391,53): error TS2339: Property 'projectId' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'projectId' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; }'.
+convex/crm.ts(396,37): error TS2339: Property 'name' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'name' does not exist on type '{ _id: Id<"tasks">; _creationTime: number; description?: string; assignedBy?: string; attachments?: Id<"_storage">[]; proofPhotoId?: Id<"_storage">; proofGps?: { lat: number; lng: number; }; ... 10 more ...; assignedTo: string; }'.
+convex/crm.ts(398,39): error TS2339: Property 'name' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'name' does not exist on type '{ _id: Id<"tasks">; _creationTime: number; description?: string; assignedBy?: string; attachments?: Id<"_storage">[]; proofPhotoId?: Id<"_storage">; proofGps?: { lat: number; lng: number; }; ... 10 more ...; assignedTo: string; }'.
+convex/crm.ts(399,40): error TS2339: Property 'phone' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'phone' does not exist on type '{ _id: Id<"projects">; _creationTime: number; leadId?: string; developerId?: string; name: string; location: string; totalBudget: number; status: string; }'.
+convex/crm.ts(654,43): error TS2339: Property 'name' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'name' does not exist on type '{ _id: Id<"tasks">; _creationTime: number; description?: string; assignedBy?: string; attachments?: Id<"_storage">[]; proofPhotoId?: Id<"_storage">; proofGps?: { lat: number; lng: number; }; ... 10 more ...; assignedTo: string; }'.
+convex/crm.ts(655,47): error TS2339: Property 'location' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; } | ... 23 more ... | { ...; }'.
+  Property 'location' does not exist on type '{ _id: Id<"users">; _creationTime: number; name?: string; status?: string; userId?: string; email?: string; role?: string; roles?: string[]; joinedAt?: number; isAnonymous?: boolean; phone?: string; company?: string; commissionRate?: number; }'.
+src/components/Sidebar.tsx(150,17): error TS2322: Type '{ hidden: { x: number; opacity: number; }; visible: { x: number; opacity: number; width: number; transition: { width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { ...; }; }; }; exit: { ...; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ x: number; opacity: number; width: number; transition: { width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; }; }' is not assignable to type 'Variant'.
+      Type '{ x: number; opacity: number; width: number; transition: { width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; }; }' is not assignable to type 'TargetAndTransition'.
+        Types of property 'transition' are incompatible.
+          Type '{ width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; }' is not assignable to type 'Transition<any>'.
+            Type '{ width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+              Type '{ width: { duration: number; ease: number[]; }; x: { type: string; stiffness: number; damping: number; }; opacity: { duration: number; }; }' is not assignable to type 'StyleTransitions'.
+                The types of 'x.type' are incompatible between these types.
+                  Type 'string' is not assignable to type 'AnimationGeneratorType'.
+src/components/Sidebar.tsx(185,21): error TS2322: Type '{ hidden: { opacity: number; scale: number; }; visible: { opacity: number; scale: number; transition: { delay: number; duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '{ opacity: number; scale: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+      Type '{ opacity: number; scale: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+        Type '{ opacity: number; scale: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any>; transitionEnd?: ResolvedValues$1; }'.
+          Types of property 'transition' are incompatible.
+            Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'Transition<any>'.
+              Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                  Types of property 'ease' are incompatible.
+                    Type 'number[]' is not assignable to type 'Easing | Easing[]'.
+                      Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                        Type 'number[]' is not assignable to type 'Easing[]'.
+                          Type 'number' is not assignable to type 'Easing'.
+src/components/Sidebar.tsx(278,29): error TS2322: Type '{ hidden: { opacity: number; x: number; }; visible: (i: number) => { opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }; }' is not assignable to type 'Variants'.
+  Property 'visible' is incompatible with index signature.
+    Type '(i: number) => { opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'Variant'.
+      Type '(i: number) => { opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'TargetResolver'.
+        Type '{ opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'string | TargetAndTransition'.
+          Type '{ opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ opacity: number; x: number; transition: { delay: number; duration: number; ease: number[]; }; }' is not assignable to type '{ transition?: Transition<any>; transitionEnd?: ResolvedValues$1; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'Transition<any>'.
+                  Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ delay: number; duration: number; ease: number[]; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'ease' are incompatible.
+                        Type 'number[]' is not assignable to type 'Easing | Easing[]'.
+                          Type 'number[]' is not assignable to type 'EasingFunction | Easing[]'.
+                            Type 'number[]' is not assignable to type 'Easing[]'.
+                              Type 'number' is not assignable to type 'Easing'.

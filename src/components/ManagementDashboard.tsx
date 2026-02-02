@@ -19,6 +19,16 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { MotionCard, StaggerContainer, StaggerItem } from "./ui/motion";
 import { useLanguage } from "../contexts/LanguageContext";
+import { Sidebar } from "./Sidebar";
+import { TopBar } from "./TopBar";
+import { FloatingMobileNav } from "./FloatingMobileNav";
+import { ProjectsView } from "./ProjectsView";
+import { TeamsView } from "./TeamsView";
+import { FinanceOverview } from "./FinanceOverview";
+import { StockView } from "./StockView";
+import { SettingsView } from "./SettingsView";
+import { SalesView } from "./Sales/SalesView";
+import { useIsMobile } from "../hooks/use-mobile";
 
 interface ProjectMetrics {
     projectId: string;
@@ -37,6 +47,30 @@ interface ProjectMetrics {
 export function ManagementDashboard() {
     const { t, language } = useLanguage();
     const [expandedProject, setExpandedProject] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState("dashboard");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const isMobile = useIsMobile();
+
+    // Fetch actual user data
+    const role = useQuery(api.roles.getMyRole);
+    const users = useQuery(api.users.getUsers);
+    const currentUser = users?.find((u: any) => u.role === role);
+
+    // Define which menu items each role can see
+    const ROLE_MENU_ACCESS: Record<string, string[]> = {
+        admin: ["dashboard", "management", "projects", "sales", "finance", "team", "stock", "settings"],
+        acting_manager: ["dashboard", "management", "projects", "sales", "finance", "team"],
+        lead: ["dashboard", "projects", "finance", "team"],
+        engineer: ["dashboard", "projects"],
+        finance: ["dashboard", "finance"],
+        stock: ["dashboard", "stock"],
+        sales_agent: ["dashboard", "sales"],
+        broker: ["dashboard", "sales"],
+        guest: ["dashboard"],
+    };
+
+    const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
 
     // Fetch all data
     const allTasks = useQuery(api.tasks.getAllTasks) || [];
@@ -133,47 +167,64 @@ export function ManagementDashboard() {
         },
     ];
 
-    return (
-        <div className="flex flex-col gap-6">
-            {/* Header */}
-            <div>
-                <h2 style={{
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
-                    color: "var(--text-primary)",
-                    marginBottom: "0.25rem"
-                }}>
-                    {language === 'ar' ? 'لوحة تحكم الإدارة' : 'Management Dashboard'}
-                </h2>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-                    {language === 'ar' ? 'نظرة شاملة على المشاريع والأداء والموارد' : 'Comprehensive overview of projects, performance, and resources'}
-                </p>
-            </div>
-
-            {/* Overview Stats */}
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {overviewStats.map((stat, index) => (
-                    <StaggerItem key={stat.label}>
-                        <MotionCard delay={index * 0.05}>
-                            <div style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                gap: "1rem",
-                                padding: "1.25rem"
+    // Render different views based on active tab
+    const renderContent = () => {
+        switch (activeTab) {
+            case "projects":
+                return <ProjectsView />;
+            case "team":
+                return <TeamsView />;
+            case "finance":
+                return <FinanceOverview />;
+            case "stock":
+                return <StockView />;
+            case "settings":
+                return <SettingsView />;
+            case "sales":
+                return <SalesView />;
+            case "dashboard":
+            default:
+                return (
+                    <div className="flex flex-col gap-6">
+                        {/* Header */}
+                        <div>
+                            <h2 style={{
+                                fontSize: "1.5rem",
+                                fontWeight: 700,
+                                color: "var(--text-primary)",
+                                marginBottom: "0.25rem"
                             }}>
-                                <div style={{
-                                    width: 48,
-                                    height: 48,
-                                    borderRadius: "1rem",
-                                    background: stat.bg,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: stat.color,
-                                    flexShrink: 0
-                                }}>
-                                    <stat.icon size={24} />
-                                </div>
+                                {language === 'ar' ? 'لوحة تحكم الإدارة' : 'Management Dashboard'}
+                            </h2>
+                            <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+                                {language === 'ar' ? 'نظرة شاملة على المشاريع والأداء والموارد' : 'Comprehensive overview of projects, performance, and resources'}
+                            </p>
+                        </div>
+
+                        {/* Overview Stats */}
+                        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {overviewStats.map((stat, index) => (
+                                <StaggerItem key={stat.label}>
+                                    <MotionCard delay={index * 0.05}>
+                                        <div style={{
+                                            display: "flex",
+                                            alignItems: "flex-start",
+                                            gap: "1rem",
+                                            padding: "1.25rem"
+                                        }}>
+                                            <div style={{
+                                                width: 48,
+                                                height: 48,
+                                                borderRadius: "1rem",
+                                                background: stat.bg,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                color: stat.color,
+                                                flexShrink: 0
+                                            }}>
+                                                <stat.icon size={24} />
+                                            </div>
                                 <div style={{ flex: 1 }}>
                                     <p style={{
                                         fontSize: "0.75rem",
@@ -521,6 +572,47 @@ export function ManagementDashboard() {
                     </div>
                 </MotionCard>
             </div>
+                        </div>
+                    );
+        }
+    };
+
+    return (
+        <div className="layout-container" style={{ background: "var(--bg-primary)" }}>
+            {/* Sidebar - Hidden on mobile */}
+            <Sidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
+
+            {/* Main Content */}
+            <div className="main-content" style={{ marginLeft: isMobile ? 0 : (isSidebarCollapsed ? 80 : 280) }}>
+                {/* TopBar */}
+                <TopBar
+                    breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    userName={currentUser?.name || "User"}
+                    userRole={role || "guest"}
+                />
+
+                {/* Content Area */}
+                <div style={{ padding: "2rem" }}>
+                    {renderContent()}
+                </div>
+            </div>
+
+            {/* Floating Mobile Nav */}
+            {isMobile && (
+                <FloatingMobileNav
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    allowedMenuIds={allowedMenuIds}
+                />
+            )}
         </div>
     );
 }

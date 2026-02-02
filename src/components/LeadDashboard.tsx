@@ -33,8 +33,11 @@ import { ProjectsView } from "./ProjectsView";
 import { TeamsView } from "./TeamsView";
 import { StockView } from "./StockView";
 import { SettingsView } from "./SettingsView";
+import { SalesView } from "./Sales";
+import { FloatingMobileNav } from "./FloatingMobileNav";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useIsMobile } from "../hooks/use-mobile";
 import {
     MotionCard,
     MotionGradientCard,
@@ -53,6 +56,28 @@ export function LeadDashboard() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const isMobile = useIsMobile();
+
+    // Fetch actual user data
+    const role = useQuery(api.roles.getMyRole);
+    const users = useQuery(api.users.getUsers);
+    const currentUser = users?.find((u: any) => u.role === role);
+
+    // Define which menu items each role can see
+    const ROLE_MENU_ACCESS: Record<string, string[]> = {
+        admin: ["dashboard", "management", "projects", "sales", "finance", "team", "stock", "settings"],
+        acting_manager: ["dashboard", "management", "projects", "sales", "finance", "team"],
+        lead: ["dashboard", "projects", "finance", "team"],
+        engineer: ["dashboard", "projects"],
+        finance: ["dashboard", "finance"],
+        stock: ["dashboard", "stock"],
+        sales_agent: ["dashboard", "sales"],
+        broker: ["dashboard", "sales"],
+        guest: ["dashboard"],
+    };
+
+    const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
 
     // Data Queries
     const stats = useQuery(api.tasks.getStats);
@@ -79,18 +104,22 @@ export function LeadDashboard() {
     const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     return (
-        <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ background: "var(--bg-primary)" }}>
             <Sidebar
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 isOpen={isSidebarOpen}
                 onClose={() => setSidebarOpen(false)}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main className="main-content">
+            <main className="main-content" style={{ marginLeft: isMobile ? 0 : (isSidebarCollapsed ? 80 : 280) }}>
                 <TopBar
                     breadcrumb={activeTab === 'dashboard' ? t('welcome') : t(activeTab as any)}
                     onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+                    userName={currentUser?.name || "User"}
+                    userRole={role || "guest"}
                 />
 
                 <div className="p-4 md:p-6">
@@ -187,7 +216,7 @@ export function LeadDashboard() {
                                                                 minWidth: 20,
                                                                 height: 20,
                                                                 borderRadius: "50%",
-                                                                background: "#EF4444",
+                                                                background: "var(--danger)",
                                                                 color: "white",
                                                                 fontSize: "0.7rem",
                                                                 fontWeight: 700,
@@ -488,6 +517,18 @@ export function LeadDashboard() {
                                 <SettingsView />
                             </motion.div>
                         )}
+
+                        {activeTab === "sales" && (
+                            <motion.div
+                                key="sales"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <SalesView />
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
             </main>
@@ -512,6 +553,14 @@ export function LeadDashboard() {
                     />
                 )}
             </AnimatePresence>
+
+            {isMobile && (
+                <FloatingMobileNav
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    allowedMenuIds={allowedMenuIds}
+                />
+            )}
         </div>
     );
 }

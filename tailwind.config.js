@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ['class'],  // Enable class-based dark mode
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -50,6 +51,22 @@ export default {
       spacing: {
         section: "2rem",
         container: "1rem",
+      },
+      backgroundColor: {
+        'theme-primary': 'var(--bg-primary)',
+        'theme-secondary': 'var(--bg-secondary)',
+        'theme-card': 'var(--bg-card)',
+        'theme-surface': 'var(--bg-surface)',
+        'theme-mint': 'var(--bg-mint)',
+      },
+      textColor: {
+        'theme-primary': 'var(--text-primary)',
+        'theme-secondary': 'var(--text-secondary)',
+        'theme-muted': 'var(--text-muted)',
+      },
+      borderColor: {
+        'theme': 'var(--border)',
+        'theme-light': 'var(--border-light)',
       },
     },
   },

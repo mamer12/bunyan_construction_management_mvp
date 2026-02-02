@@ -9,6 +9,7 @@ import {
     Globe,
     Moon,
     Sun,
+    Monitor,
     Edit2,
     Trash2,
     Shield,
@@ -166,35 +167,62 @@ export function SettingsView() {
                         <MotionCard className="dashboard-card" style={{ marginTop: "1.5rem" }}>
                             <div className="card-header">
                                 <div className="card-header__title">
-                                    <Sun size={20} />
+                                    {theme === 'system' ? <Monitor size={20} /> : isDark ? <Moon size={20} /> : <Sun size={20} />}
                                     <h3>{t("theme")}</h3>
                                 </div>
                             </div>
                             <div className="card-body">
-                                <div style={{ display: "flex", gap: "1rem" }}>
-                                    <MotionButton 
-                                        className="btn-primary" 
-                                        style={{ flex: 1 }}
-                                    >
-                                        <Sun size={18} /> {t("lightMode")}
-                                    </MotionButton>
-                                    <MotionButton 
-                                        className="btn-ghost" 
-                                        style={{ flex: 1, opacity: 0.5, cursor: "not-allowed" }}
-                                        disabled
-                                    >
-                                        <Moon size={18} /> {t("darkMode")}
-                                    </MotionButton>
-                                </div>
                                 <p style={{
-                                    marginTop: "0.75rem",
+                                    marginBottom: "1rem",
                                     fontSize: "0.875rem",
                                     color: "var(--text-secondary)"
                                 }}>
                                     {language === 'ar'
-                                        ? "المظهر الداكن سيتوفر قريباً"
-                                        : "Dark mode coming soon"}
+                                        ? "🌞 الوضع الفاتح أفضل في ضوء الشمس الساطع. 🌙 الوضع الداكن أفضل في المكاتب المظلمة."
+                                        : "🌞 Light mode is better in bright sunlight. 🌙 Dark mode is better in dim offices."}
                                 </p>
+                                <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                                    <MotionButton 
+                                        className={theme === 'system' ? "btn-primary" : "btn-ghost"} 
+                                        onClick={() => setTheme('system')}
+                                        style={{ flex: 1, minWidth: "150px" }}
+                                    >
+                                        <Monitor size={18} />
+                                        {language === 'ar' ? 'تلقائي' : 'System'}
+                                    </MotionButton>
+                                    <MotionButton 
+                                        className={theme === 'light' ? "btn-primary" : "btn-ghost"} 
+                                        onClick={() => setTheme('light')}
+                                        style={{ flex: 1, minWidth: "150px" }}
+                                    >
+                                        <Sun size={18} />
+                                        {language === 'ar' ? 'فاتح' : 'Light'}
+                                    </MotionButton>
+                                    <MotionButton 
+                                        className={theme === 'dark' ? "btn-primary" : "btn-ghost"} 
+                                        onClick={() => setTheme('dark')}
+                                        style={{ flex: 1, minWidth: "150px" }}
+                                    >
+                                        <Moon size={18} />
+                                        {language === 'ar' ? 'داكن' : 'Dark'}
+                                    </MotionButton>
+                                </div>
+                                <div style={{
+                                    marginTop: "1rem",
+                                    padding: "0.75rem",
+                                    background: "var(--bg-mint)",
+                                    border: "1px solid var(--border-emerald)",
+                                    borderRadius: "var(--radius-lg)",
+                                    fontSize: "0.75rem",
+                                    color: "var(--text-secondary)"
+                                }}>
+                                    <strong style={{ color: "var(--brand-primary)" }}>
+                                        {language === 'ar' ? '💡 نصيحة: ' : '💡 Tip: '}
+                                    </strong>
+                                    {language === 'ar'
+                                        ? 'الوضع "تلقائي" يتبع إعدادات نظامك. مثالي للعمل الليلي والنهاري.'
+                                        : '"System" mode follows your device settings. Perfect for day and night shifts.'}
+                                </div>
                             </div>
                         </MotionCard>
                     </StaggerItem>

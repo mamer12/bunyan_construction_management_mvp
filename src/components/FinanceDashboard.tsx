@@ -3,6 +3,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { FloatingMobileNav } from "./FloatingMobileNav";
+import { useIsMobile } from "../hooks/use-mobile";
 import { Modal } from "./ui/modal";
 import { MotionCard, MotionButton, StaggerContainer, StaggerItem } from "./ui/motion";
 import {
@@ -24,16 +26,26 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 
+const ROLE_MENU_ACCESS = {
+    admin: ["dashboard", "projects", "teams", "wallet", "settings"],
+    acting_manager: ["dashboard", "projects", "teams", "wallet", "settings"],
+    lead: ["dashboard", "projects", "teams", "wallet"],
+    engineer: ["dashboard", "tasks", "wallet"],
+    guest: ["dashboard"]
+};
+
 export function FinanceDashboard() {
     const { t, language } = useLanguage();
     const [activeTab, setActiveTab] = useState("dashboard");
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const isMobile = useIsMobile();
     const [selectedPayout, setSelectedPayout] = useState<any>(null);
 
     // User Data
-    const role = useQuery(api.roles.getMyRole);
+    const currentUser = useQuery(api.auth.loggedInUser);
+    const role = (currentUser?.role as keyof typeof ROLE_MENU_ACCESS) || "guest";
+    const allowedMenuIds = ROLE_MENU_ACCESS[role] || [];
     const users = useQuery(api.users.getUsers);
-    const currentUser = users?.find((u: any) => u.role === role);
 
     // Payout Data
     const payoutStats = useQuery(api.wallet.getPayoutStats);
@@ -64,16 +76,20 @@ export function FinanceDashboard() {
             <Sidebar
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                isOpen={isSidebarOpen}
-                onClose={() => setSidebarOpen(false)}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main className="main-content">
+            <main 
+                className="main-content"
+                style={{ 
+                    marginLeft: isMobile ? 0 : (isSidebarCollapsed ? '80px' : '280px'),
+                    transition: "margin-left 0.3s ease"
+                }}
+            >
                 <TopBar
-                    breadcrumb="Finance Dashboard"
-                    onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
                     userName={currentUser?.name || "User"}
-                    userRole={role || "finance"}
+                    userRole={currentUser?.role || "guest"}
                 />
 
                 <div className="dashboard-content">
@@ -265,7 +281,6 @@ export function FinanceDashboard() {
                         </div>
                     </MotionCard>
                 </div>
-            </main>
 
             {/* Payout Detail Modal */}
             {selectedPayout && (
@@ -329,6 +344,15 @@ export function FinanceDashboard() {
                     </div>
                 </Modal>
             )}
+            
+            {isMobile && (
+                <FloatingMobileNav
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    allowedMenuIds={allowedMenuIds}
+                />
+            )}
+            </main>
         </div>
     );
 }

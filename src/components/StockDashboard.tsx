@@ -3,10 +3,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { FloatingMobileNav } from "./FloatingMobileNav";
+import { useIsMobile } from "../hooks/use-mobile";
 import { Modal } from "./ui/modal";
 import { MotionCard, MotionButton, StaggerContainer, StaggerItem } from "./ui/motion";
 import {
-    Check,
     X,
     Package,
     Truck,
@@ -16,22 +17,33 @@ import {
     Trash2,
     AlertTriangle,
     Search,
-    BarChart3,
-    DollarSign,
-    PackageCheck,
-    PackageX
+    DollarSign
 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 
+const ROLE_MENU_ACCESS = {
+    admin: ["dashboard", "projects", "teams", "wallet", "settings"],
+    acting_manager: ["dashboard", "projects", "teams", "wallet", "settings"],
+    lead: ["dashboard", "projects", "teams", "wallet"],
+    engineer: ["dashboard", "tasks", "wallet"],
+    guest: ["dashboard"]
+};
+
 export function StockDashboard() {
-    const { t, language } = useLanguage();
+    const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState("dashboard");
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const isMobile = useIsMobile();
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingMaterial, setEditingMaterial] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState("");
+
+    // User Data
+    const currentUser = useQuery(api.auth.loggedInUser);
+    const role = (currentUser?.role as keyof typeof ROLE_MENU_ACCESS) || "guest";
+    const allowedMenuIds = ROLE_MENU_ACCESS[role] || [];
 
     // Data
     const inventory = useQuery(api.stock.getInventory) || [];
@@ -43,11 +55,10 @@ export function StockDashboard() {
     const addMaterial = useMutation(api.stock.addMaterial);
     const updateMaterial = useMutation(api.stock.updateMaterial);
     const deleteMaterial = useMutation(api.stock.deleteMaterial);
-    const adjustStock = useMutation(api.stock.adjustStock);
 
-    const handleProcess = async (requestId: string, action: string) => {
+    const handleProcess = async (requestId: any, action: string) => {
         try {
-            await processRequest({ requestId: requestId as any, action });
+            await processRequest({ requestId, action });
             toast.success(`Request ${action.toLowerCase()} successfully`);
         } catch (error) {
             toast.error("Failed to process request");
@@ -100,17 +111,23 @@ export function StockDashboard() {
             <Sidebar
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                isOpen={isSidebarOpen}
-                onClose={() => setSidebarOpen(false)}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            <main className="main-content">
+            <main
+                className="main-content"
+                style={{
+                    marginLeft: isMobile ? 0 : (isSidebarCollapsed ? '80px' : '280px'),
+                    transition: "margin-left 0.3s ease"
+                }}
+            >
                 <TopBar
-                    breadcrumb="Stock Management"
-                    onToggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+                    userName={currentUser?.name || "User"}
+                    userRole={currentUser?.role || "guest"}
                 />
 
-                <div className="dashboard-content">
+                <div className="dashboard-content" style={{ padding: '2rem' }}>
                     {/* Stats Overview */}
                     <StaggerContainer className="stats-grid">
                         <StaggerItem>
@@ -168,7 +185,7 @@ export function StockDashboard() {
 
                     {/* Low Stock Alert */}
                     {lowStockItems.length > 0 && (
-                        <MotionCard className="dashboard-card alert-card">
+                        <MotionCard className="dashboard-card alert-card" style={{ marginTop: '2rem' }}>
                             <div className="card-header alert-header">
                                 <div className="card-header__title">
                                     <AlertTriangle size={20} className="text-warning" />
@@ -192,7 +209,7 @@ export function StockDashboard() {
                     )}
 
                     {/* Inventory Section */}
-                    <MotionCard className="dashboard-card">
+                    <MotionCard className="dashboard-card" style={{ marginTop: '2rem' }}>
                         <div className="card-header">
                             <div className="card-header__title">
                                 <Package size={20} />
@@ -277,8 +294,8 @@ export function StockDashboard() {
                         </div>
                     </MotionCard>
 
-                    {/* Pending Requests */}
-                    <MotionCard className="dashboard-card">
+                    {/* Material Requests */}
+                    <MotionCard className="dashboard-card" style={{ marginTop: '2rem' }}>
                         <div className="card-header">
                             <div className="card-header__title">
                                 <Truck size={20} />
@@ -371,24 +388,32 @@ export function StockDashboard() {
                         </div>
                     </MotionCard>
                 </div>
+
+                {/* Modals & Nav */}
+                <AnimatePresence>
+                    {showAddModal && (
+                        <MaterialFormModal
+                            onClose={() => setShowAddModal(false)}
+                            onSubmit={handleAddMaterial}
+                        />
+                    )}
+                    {editingMaterial && (
+                        <MaterialFormModal
+                            material={editingMaterial}
+                            onClose={() => setEditingMaterial(null)}
+                            onSubmit={handleUpdateMaterial}
+                        />
+                    )}
+                </AnimatePresence>
+
+                {isMobile && (
+                    <FloatingMobileNav
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        allowedMenuIds={allowedMenuIds}
+                    />
+                )}
             </main>
-
-            {/* Add Material Modal */}
-            {showAddModal && (
-                <MaterialFormModal
-                    onClose={() => setShowAddModal(false)}
-                    onSubmit={handleAddMaterial}
-                />
-            )}
-
-            {/* Edit Material Modal */}
-            {editingMaterial && (
-                <MaterialFormModal
-                    material={editingMaterial}
-                    onClose={() => setEditingMaterial(null)}
-                    onSubmit={handleUpdateMaterial}
-                />
-            )}
         </div>
     );
 }

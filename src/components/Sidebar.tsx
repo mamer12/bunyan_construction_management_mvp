@@ -7,7 +7,10 @@ import {
     Sparkles,
     Package,
     Settings,
-    Briefcase
+    Briefcase,
+    ShoppingBag,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
@@ -21,6 +24,8 @@ interface SidebarProps {
     onTabChange: (tab: string) => void;
     isOpen?: boolean;
     onClose?: () => void;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
 // Role to display name mapping
@@ -31,21 +36,25 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
     engineer: "Site Engineer",
     finance: "Finance Officer",
     stock: "Stock Manager",
+    sales_agent: "Sales Agent",
+    broker: "Broker",
     guest: "Guest",
 };
 
 // Define which menu items each role can see
 const ROLE_MENU_ACCESS: Record<string, string[]> = {
-    admin: ["dashboard", "management", "projects", "finance", "team", "stock", "settings"],
-    acting_manager: ["dashboard", "management", "projects", "finance", "team"],
+    admin: ["dashboard", "management", "projects", "sales", "finance", "team", "stock", "settings"],
+    acting_manager: ["dashboard", "management", "projects", "sales", "finance", "team"],
     lead: ["dashboard", "projects", "finance", "team"],
     engineer: ["dashboard", "projects"],
     finance: ["dashboard", "finance"],
     stock: ["dashboard", "stock"],
+    sales_agent: ["dashboard", "sales"],
+    broker: ["dashboard", "sales"],
     guest: ["dashboard"],
 };
 
-export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
     const { signOut } = useAuthActions();
     const { t } = useLanguage();
     const isMobile = useIsMobile();
@@ -55,10 +64,13 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
     const users = useQuery(api.users.getUsers);
     const currentUser = users?.find((u: any) => u.role === role);
 
+    const sidebarWidth = isCollapsed ? 80 : 280;
+
     const allMenuItems = [
         { id: "dashboard", label: t("dashboard"), icon: LayoutDashboard },
         { id: "management", label: t("management"), icon: Briefcase },
         { id: "projects", label: t("projects"), icon: Building2 },
+        { id: "sales", label: t("sales") || "Sales", icon: ShoppingBag },
         { id: "finance", label: t("finance"), icon: Banknote },
         { id: "team", label: t("team"), icon: Users },
         { id: "stock", label: t("stock"), icon: Package },
@@ -69,15 +81,16 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
     const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
     const menuItems = allMenuItems.filter(item => allowedMenuIds.includes(item.id));
 
-    const sidebarVariants = {
+    const sidebarVariants: any = {
         hidden: { x: -280, opacity: 0 },
         visible: {
             x: 0,
             opacity: 1,
+            width: sidebarWidth,
             transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 30
+                width: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 }
             }
         },
         exit: {
@@ -87,27 +100,27 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
         }
     };
 
-    const itemVariants = {
+    const itemVariants: any = {
         hidden: { opacity: 0, x: -20 },
         visible: (i: number) => ({
             opacity: 1,
             x: 0,
             transition: {
-                delay: 0.1 + i * 0.05,
+                delay: i * 0.05,
                 duration: 0.3,
                 ease: [0.25, 0.46, 0.45, 0.94]
             }
         })
     };
 
-    const logoVariants = {
+    const logoVariants: any = {
         hidden: { opacity: 0, scale: 0.8 },
         visible: {
             opacity: 1,
             scale: 1,
             transition: {
-                delay: 0.1,
-                duration: 0.4,
+                delay: 0.2,
+                duration: 0.5,
                 ease: [0.25, 0.46, 0.45, 0.94]
             }
         }
@@ -137,16 +150,46 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                 variants={sidebarVariants}
                 initial={false}
                 animate={shouldBeOpen ? "visible" : "hidden"}
+                style={{ width: sidebarWidth }}
             >
+                {/* Collapse Toggle Button - Desktop only */}
+                {!isMobile && onToggleCollapse && (
+                    <motion.button
+                        onClick={onToggleCollapse}
+                        style={{
+                            position: "absolute",
+                            top: "1.5rem",
+                            right: "-12px",
+                            width: 24,
+                            height: 24,
+                            background: "var(--bg-card)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            zIndex: 50,
+                            color: "var(--text-secondary)",
+                            boxShadow: "var(--shadow-md)"
+                        }}
+                        whileHover={{ scale: 1.1, color: "var(--brand-primary)" }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                    </motion.button>
+                )}
+
                 {/* Logo Section */}
                 <motion.div
                     variants={logoVariants}
                     initial="hidden"
                     animate="visible"
                     style={{
-                        padding: "2rem 1.5rem",
+                        padding: isCollapsed ? "2rem 1rem" : "2rem 1.5rem",
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: isCollapsed ? "center" : "flex-start",
                         gap: "1rem",
                         borderBottom: "1px solid rgba(255,255,255,0.1)"
                     }}
@@ -173,49 +216,61 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                     >
                         B
                     </motion.div>
-                    <div>
-                        <h1 style={{
-                            fontSize: "1.5rem",
-                            fontWeight: "800",
-                            lineHeight: 1,
-                            margin: 0,
-                            letterSpacing: "-0.02em"
-                        }}>
-                            Bunyan
-                        </h1>
-                        <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.375rem",
-                            marginTop: "0.25rem"
-                        }}>
-                            <Sparkles size={12} style={{ opacity: 0.7 }} />
-                            <span style={{
-                                fontSize: "0.75rem",
-                                opacity: 0.7,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.1em",
-                                fontWeight: 500
-                            }}>
-                                Enterprise
-                            </span>
-                        </div>
-                    </div>
+                    <AnimatePresence>
+                        {!isCollapsed && (
+                            <motion.div
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: "auto" }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <h1 style={{
+                                    fontSize: "1.5rem",
+                                    fontWeight: "800",
+                                    lineHeight: 1,
+                                    margin: 0,
+                                    letterSpacing: "-0.02em",
+                                    whiteSpace: "nowrap"
+                                }}>
+                                    Bunyan
+                                </h1>
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.375rem",
+                                    marginTop: "0.25rem"
+                                }}>
+                                    <Sparkles size={12} style={{ opacity: 0.7 }} />
+                                    <span style={{
+                                        fontSize: "0.75rem",
+                                        opacity: 0.7,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.1em",
+                                        fontWeight: 500
+                                    }}>
+                                        Enterprise
+                                    </span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
 
                 {/* Navigation */}
                 <nav style={{ flex: 1, padding: "1.5rem 0" }}>
-                    <div style={{
-                        padding: "0 1.5rem",
-                        marginBottom: "0.75rem",
-                        fontSize: "0.7rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.15em",
-                        opacity: 0.5,
-                        fontWeight: 600
-                    }}>
-                        Menu
-                    </div>
+                    {!isCollapsed && (
+                        <div style={{
+                            padding: "0 1.5rem",
+                            marginBottom: "0.75rem",
+                            fontSize: "0.7rem",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.15em",
+                            opacity: 0.5,
+                            fontWeight: 600
+                        }}>
+                            Menu
+                        </div>
+                    )}
                     {menuItems.map((item, index) => (
                         <motion.button
                             key={item.id}
@@ -229,19 +284,25 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             }}
                             className={`sidebar-link ${activeTab === item.id ? "active" : ""}`}
                             style={{
-                                width: "calc(100% - 1.5rem)",
+                                width: isCollapsed ? "48px" : "calc(100% - 1.5rem)",
+                                height: isCollapsed ? "48px" : "auto",
                                 background: "none",
                                 border: "none",
                                 cursor: "pointer",
                                 textAlign: "left",
-                                margin: "0 0.75rem",
+                                margin: isCollapsed ? "0.5rem auto" : "0 0.75rem",
                                 position: "relative",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: isCollapsed ? "center" : "flex-start",
                             }}
                             whileHover={activeTab !== item.id ? {
-                                x: 4,
+                                x: isCollapsed ? 0 : 4,
+                                scale: isCollapsed ? 1.05 : 1,
                                 transition: { duration: 0.15 }
                             } : {}}
                             whileTap={{ scale: 0.98 }}
+                            title={isCollapsed ? item.label : undefined}
                         >
                             <motion.div
                                 style={{
@@ -253,9 +314,23 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                                 }}
                             >
                                 <item.icon size={20} />
-                                <span style={{ fontSize: "0.95rem", fontWeight: activeTab === item.id ? 700 : 500 }}>
-                                    {item.label}
-                                </span>
+                                <AnimatePresence>
+                                    {!isCollapsed && (
+                                        <motion.span
+                                            initial={{ opacity: 0, width: 0 }}
+                                            animate={{ opacity: 1, width: "auto" }}
+                                            exit={{ opacity: 0, width: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            style={{
+                                                fontSize: "0.95rem",
+                                                fontWeight: activeTab === item.id ? 700 : 500,
+                                                whiteSpace: "nowrap"
+                                            }}
+                                        >
+                                            {item.label}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
                             </motion.div>
 
                             {/* Active indicator pill */}
@@ -282,55 +357,57 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
 
                 {/* Bottom Section */}
                 <div style={{
-                    padding: "1.5rem",
+                    padding: isCollapsed ? "1rem" : "1.5rem",
                     borderTop: "1px solid rgba(255,255,255,0.1)"
                 }}>
                     {/* User Info */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.75rem",
-                            padding: "0.75rem",
-                            background: "rgba(255,255,255,0.05)",
-                            borderRadius: "1rem",
-                            marginBottom: "1rem"
-                        }}
-                    >
-                        <div style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: "12px",
-                            background: "linear-gradient(135deg, #34D399 0%, #10B981 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "0.9rem",
-                            fontWeight: 700
-                        }}>
-                            AA
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                    {!isCollapsed && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.75rem",
+                                padding: "0.75rem",
+                                background: "rgba(255,255,255,0.05)",
+                                borderRadius: "1rem",
+                                marginBottom: "1rem"
+                            }}
+                        >
                             <div style={{
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis"
+                                width: 40,
+                                height: 40,
+                                borderRadius: "12px",
+                                background: "linear-gradient(135deg, #34D399 0%, #10B981 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.9rem",
+                                fontWeight: 700
                             }}>
-                                {currentUser?.name || "User"}
+                                AA
                             </div>
-                            <div style={{
-                                fontSize: "0.75rem",
-                                opacity: 0.6
-                            }}>
-                                {ROLE_DISPLAY_NAMES[role || "guest"] || role || "Guest"}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{
+                                    fontSize: "0.875rem",
+                                    fontWeight: 600,
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis"
+                                }}>
+                                    {currentUser?.name || "User"}
+                                </div>
+                                <div style={{
+                                    fontSize: "0.75rem",
+                                    opacity: 0.6
+                                }}>
+                                    {ROLE_DISPLAY_NAMES[role || "guest"] || role || "Guest"}
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    )}
 
                     {/* Sign Out Button */}
                     <motion.button
@@ -340,9 +417,12 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             width: "100%",
                             background: "rgba(239, 68, 68, 0.1)",
                             border: "1px solid rgba(239, 68, 68, 0.2)",
-                            color: "#FCA5A5",
+                            color: "var(--danger)",
                             borderRadius: "1rem",
-                            justifyContent: "center"
+                            justifyContent: "center",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: isCollapsed ? "0" : "0.5rem"
                         }}
                         whileHover={{
                             background: "rgba(239, 68, 68, 0.2)",
@@ -350,9 +430,10 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                             transition: { duration: 0.15 }
                         }}
                         whileTap={{ scale: 0.98 }}
+                        title={isCollapsed ? t("signOut") : undefined}
                     >
                         <LogOut size={18} />
-                        <span style={{ fontWeight: 600 }}>{t("signOut")}</span>
+                        {!isCollapsed && <span style={{ fontWeight: 600 }}>{t("signOut")}</span>}
                     </motion.button>
                 </div>
             </motion.aside>

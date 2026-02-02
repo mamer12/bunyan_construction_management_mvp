@@ -290,7 +290,7 @@ export function RoleAccessManagement() {
                         width: 24,
                         height: 24,
                         borderRadius: "0.375rem",
-                        background: "#ECFDF5",
+                        background: "var(--bg-success)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center"

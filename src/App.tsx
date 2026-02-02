@@ -11,6 +11,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { StockDashboard } from "./components/StockDashboard";
 import { FinanceDashboard } from "./components/FinanceDashboard";
+import { PublicDealViewer } from "./components/Portal/PublicDealViewer";
 
 export default function App() {
   const { user: authUser } = useAuth();
@@ -51,6 +52,21 @@ export default function App() {
 
 function Content() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const [isPublicView, setIsPublicView] = React.useState(false);
+
+  useEffect(() => {
+    // Simple check for public view URL pattern ?view=token or similar
+    // The previous implementation suggested /view/token but without react-router we'll use query params
+    // Let's support ?view=token or ?token=xyz
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('token') || window.location.pathname.startsWith('/view')) {
+      setIsPublicView(true);
+    }
+  }, []);
+
+  if (isPublicView) {
+    return <PublicDealViewer />;
+  }
 
   if (loggedInUser === undefined) {
     return (

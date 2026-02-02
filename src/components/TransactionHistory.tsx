@@ -54,7 +54,7 @@ export function TransactionHistory() {
                 );
             case "PAYOUT_REQUESTED":
                 return (
-                    <div style={{ ...iconStyles, background: "#FFFBEB", color: "var(--warning)" }}>
+                    <div style={{ ...iconStyles, background: "var(--bg-warning)", color: "var(--warning)" }}>
                         <ArrowUpRight size={18} />
                     </div>
                 );
@@ -66,7 +66,7 @@ export function TransactionHistory() {
                 );
             case "PAYOUT_REJECTED":
                 return (
-                    <div style={{ ...iconStyles, background: "#FEF2F2", color: "var(--danger)" }}>
+                    <div style={{ ...iconStyles, background: "var(--bg-danger)", color: "var(--danger)" }}>
                         <ArrowDownLeft size={18} />
                     </div>
                 );

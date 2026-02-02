@@ -5,112 +5,186 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Fresh & Fluid - Emerald Growth Palette */
-  --bg-primary: #FAFDFB;
-  --bg-secondary: #FFFFFF;
-  --bg-sidebar: linear-gradient(180deg, #047857 0%, #065F46 50%, #064E3B 100%);
-  --bg-sidebar-solid: #047857;
+@layer base {
+  :root {
+    /* ============================================
+       EMERALD & CONCRETE PALETTE - LIGHT MODE
+       "Architectural Drawing" - Clean, Professional
+       ============================================ */
+    
+    /* Core Surfaces (HSL for Tailwind compatibility) */
+    --background: 210 40% 98%;      /* slate-50 - Soft white, no glare */
+    --foreground: 222 47% 11%;      /* slate-900 - Deep ink */
 
-  /* Mint / Sage backgrounds */
-  --bg-mint: #ECFDF5;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F0FDF4;
+    --card: 0 0% 100%;              /* Pure white cards */
+    --card-foreground: 222 47% 11%; /* slate-900 */
+ 
+    /* Brand Colors - Emerald */
+    --primary: 158 64% 52%;         /* emerald-600 - Professional green */
+    --primary-foreground: 210 40% 98%; /* White text on primary */
 
-  /* Text Colors */
-  --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --text-inverse: #FFFFFF;
-  --text-muted: #94A3B8;
+    --secondary: 210 40% 96.1%;     /* slate-100 - Subtle grey */
+    --secondary-foreground: 222 47% 11%;
 
-  /* Brand Colors - Deep Emerald */
-  --brand-primary: #059669;
-  --brand-primary-dark: #047857;
-  --brand-primary-light: #10B981;
-  --brand-accent: #34D399;
+    /* Muted Elements */
+    --muted: 210 40% 96.1%;         /* slate-100 */
+    --muted-foreground: 215.4 16.3% 46.9%; /* slate-500 */
 
-  /* Status Colors */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
+    --accent: 210 40% 96.1%;        /* slate-100 */
+    --accent-foreground: 222 47% 11%;
 
-  /* UI Elements */
-  --border: #E2E8F0;
-  --border-light: #F1F5F9;
-  --border-emerald: rgba(5, 150, 105, 0.2);
+    /* Borders & Inputs */
+    --border: 214.3 31.8% 91.4%;    /* slate-200 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 158 64% 52%;             /* emerald-600 for focus rings */
 
-  /* Glass Effect */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-shadow: 0 8px 32px rgba(5, 150, 105, 0.1);
+    /* Legacy Variables (for backward compatibility) */
+    --bg-primary: #F8FAFC;          /* slate-50 */
+    --bg-secondary: #FFFFFF;
+    --bg-sidebar: linear-gradient(180deg, #059669 0%, #047857 50%, #065F46 100%);
+    --bg-sidebar-solid: #059669;
+    --bg-surface: #F1F5F9;          /* slate-100 */
 
-  /* Shadows - Soft Emerald Tint */
-  --shadow-sm: 0 1px 2px 0 rgb(5 150 105 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(5 150 105 / 0.1), 0 2px 4px -2px rgb(5 150 105 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(5 150 105 / 0.1), 0 4px 6px -4px rgb(5 150 105 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(5 150 105 / 0.1), 0 8px 10px -6px rgb(5 150 105 / 0.1);
-  --shadow-emerald: 0 4px 14px 0 rgb(5 150 105 / 0.25);
+    /* Mint / Sage backgrounds */
+    --bg-mint: #ECFDF5;             /* emerald-50 */
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F0FDF4;
 
-  /* Radius - Rounded & Modern */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
-  --radius-full: 9999px;
-}
+    /* Text Colors */
+    --text-primary: #0F172A;        /* slate-900 */
+    --text-secondary: #475569;      /* slate-600 - Readable body text */
+    --text-inverse: #FFFFFF;
+    --text-muted: #94A3B8;          /* slate-400 */
 
-/* ============================================
-   DARK THEME
-   ============================================ */
-[data-theme="dark"] {
-  /* Dark backgrounds */
-  --bg-primary: #0F1419;
-  --bg-secondary: #15202B;
-  --bg-sidebar: linear-gradient(180deg, #1E3A2F 0%, #152923 50%, #0F1C19 100%);
-  --bg-sidebar-solid: #1E3A2F;
+    /* Brand Colors - Emerald */
+    --brand-primary: #059669;       /* emerald-600 */
+    --brand-primary-dark: #047857;  /* emerald-700 */
+    --brand-primary-light: #10B981; /* emerald-500 */
+    --brand-accent: #34D399;        /* emerald-400 */
 
-  /* Dark card backgrounds */
-  --bg-mint: #1A2F28;
-  --bg-card: #192734;
-  --bg-card-hover: #1E3340;
+    /* Status Colors */
+    --success: #10B981;             /* emerald-500 */
+    --warning: #F59E0B;             /* amber-500 */
+    --danger: #EF4444;              /* red-500 */
+    --info: #3B82F6;                /* blue-500 */
 
-  /* Dark text colors */
-  --text-primary: #F7F9F9;
-  --text-secondary: #8B98A5;
-  --text-inverse: #FFFFFF;
-  --text-muted: #6E767D;
+    /* UI Elements */
+    --border-legacy: #E2E8F0;       /* slate-200 */
+    --border-light: #F1F5F9;        /* slate-100 */
+    --border-emerald: rgba(5, 150, 105, 0.2);
 
-  /* Brand colors stay vibrant */
-  --brand-primary: #10B981;
-  --brand-primary-dark: #059669;
-  --brand-primary-light: #34D399;
-  --brand-accent: #6EE7B7;
+    /* Glass Effect */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px rgba(5, 150, 105, 0.1);
 
-  /* Status colors - slightly adjusted for dark */
-  --success: #10B981;
-  --warning: #FBBF24;
-  --danger: #F87171;
-  --info: #60A5FA;
+    /* Shadows - Soft Emerald Tint */
+    --shadow-sm: 0 1px 2px 0 rgb(5 150 105 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(5 150 105 / 0.1), 0 2px 4px -2px rgb(5 150 105 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(5 150 105 / 0.1), 0 4px 6px -4px rgb(5 150 105 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(5 150 105 / 0.1), 0 8px 10px -6px rgb(5 150 105 / 0.1);
+    --shadow-emerald: 0 4px 14px 0 rgb(5 150 105 / 0.25);
 
-  /* Dark borders */
-  --border: #38444D;
-  --border-light: #2F3B47;
-  --border-emerald: rgba(16, 185, 129, 0.3);
+    /* Radius - Rounded & Modern */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
+    --radius-full: 9999px;
 
-  /* Dark glass effect */
-  --glass-bg: rgba(25, 39, 52, 0.8);
-  --glass-border: rgba(56, 68, 77, 0.5);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    /* Status Backgrounds */
+    --bg-success: #ECFDF5;          /* emerald-50 */
+    --bg-warning: #FFFBEB;          /* amber-50 */
+    --bg-danger: #FEF2F2;           /* red-50 */
+    --bg-info: #EFF6FF;             /* blue-50 */
+  }
 
-  /* Dark shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
-  --shadow-emerald: 0 4px 14px 0 rgb(16 185 129 / 0.2);
+  /* ============================================
+     EMERALD & CONCRETE PALETTE - DARK MODE
+     "Night Shift on Site" - Premium Deep Slate
+     ============================================ */
+  .dark {
+    /* Core Surfaces */
+    --background: 222 47% 11%;      /* slate-950 - Deep navy-black (not void) */
+    --foreground: 210 40% 98%;      /* slate-50 - Almost white */
+ 
+    --card: 222 47% 11%;            /* slate-900 - Distinct from background */
+    --card-foreground: 210 40% 98%;
+ 
+    /* Brand Colors - Brighter Emerald for visibility */
+    --primary: 142 71% 45%;         /* emerald-500 - Pops against dark */
+    --primary-foreground: 144.9 80.4% 10%; /* Dark green text */
+ 
+    --secondary: 217.2 32.6% 17.5%; /* slate-800 - Deep steel */
+    --secondary-foreground: 210 40% 98%;
+ 
+    /* Muted Elements */
+    --muted: 217.2 32.6% 17.5%;     /* slate-800 */
+    --muted-foreground: 215 20.2% 65.1%; /* slate-400 - Low contrast */
+ 
+    --accent: 217.2 32.6% 17.5%;    /* slate-800 */
+    --accent-foreground: 210 40% 98%;
+ 
+    /* Borders & Inputs */
+    --border: 217.2 32.6% 17.5%;    /* slate-800 */
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142 71% 45%;             /* emerald-500 for focus rings */
+
+    /* Legacy Variables */
+    --bg-primary: #020617;           /* slate-950 */
+    --bg-secondary: #0F172A;         /* slate-900 */
+    --bg-sidebar: linear-gradient(180deg, #064E3B 0%, #065F46 50%, #047857 100%);
+    --bg-sidebar-solid: #064E3B;
+    --bg-surface: #1E293B;           /* slate-800 */
+
+    /* Dark card backgrounds */
+    --bg-mint: #022C22;              /* Dark emerald tint */
+    --bg-card: #0F172A;              /* slate-900 */
+    --bg-card-hover: #1E293B;        /* slate-800 */
+
+    /* Dark text colors */
+    --text-primary: #F8FAFC;         /* slate-50 */
+    --text-secondary: #94A3B8;       /* slate-400 - Reduced eye strain */
+    --text-inverse: #020617;         /* slate-950 */
+    --text-muted: #64748B;           /* slate-500 */
+
+    /* Brand colors - Brighter for dark mode */
+    --brand-primary: #10B981;        /* emerald-500 - Glowing accent */
+    --brand-primary-dark: #059669;   /* emerald-600 */
+    --brand-primary-light: #34D399;  /* emerald-400 */
+    --brand-accent: #6EE7B7;         /* emerald-300 */
+
+    /* Status colors - Adjusted for dark */
+    --success: #10B981;              /* emerald-500 */
+    --warning: #FBBF24;              /* amber-400 */
+    --danger: #F87171;               /* red-400 */
+    --info: #60A5FA;                 /* blue-400 */
+
+    /* Dark borders */
+    --border-legacy: #1E293B;        /* slate-800 */
+    --border-light: #334155;         /* slate-700 */
+    --border-emerald: rgba(16, 185, 129, 0.3);
+
+    /* Dark glass effect */
+    --glass-bg: rgba(15, 23, 42, 0.8);
+    --glass-border: rgba(30, 41, 59, 0.5);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+    /* Dark shadows - Deeper for depth */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+    --shadow-emerald: 0 4px 14px 0 rgb(16 185 129 / 0.3);
+
+    /* Status Backgrounds - Dark mode */
+    --bg-success: #022C22;          /* dark emerald */
+    --bg-warning: #422006;          /* dark amber */
+    --bg-danger: #450A0A;           /* dark red */
+    --bg-info: #1E3A8A;             /* dark blue */
+  }
 }
 
 /* ============================================
@@ -308,9 +382,17 @@ body {
   top: 0;
   height: 100vh;
   z-index: 40;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.main-content {
+  flex: 1;
+  background: var(--bg-primary);
+  overflow-y: auto;
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-overlay {
@@ -323,6 +405,7 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
+    width: 280px;
     transform: translateX(-100%);
     box-shadow: var(--shadow-xl);
   }
@@ -338,6 +421,10 @@ body {
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 30;
     backdrop-filter: blur(4px);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
   }
 }
 
@@ -364,7 +451,7 @@ body {
 
 .sidebar-link.active {
   color: var(--brand-primary-dark);
-  background: white;
+  background: var(--bg-card);
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -518,7 +605,7 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #D1FAE5;
+  background: var(--bg-card-hover);
 }
 
 .btn-accent {
@@ -532,7 +619,7 @@ body {
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  background: var(--danger);
   color: white;
 }
 
@@ -552,7 +639,7 @@ body {
 }
 
 .btn-ghost-danger:hover {
-  background: #FEF2F2;
+  background: var(--bg-danger);
 }
 
 .btn-icon {
@@ -577,33 +664,33 @@ body {
 }
 
 .badge-success {
-  background: #ECFDF5;
-  color: #047857;
-  border: 1px solid #A7F3D0;
+  background: var(--bg-success);
+  color: var(--success);
+  border: 1px solid var(--border-emerald);
 }
 
 .badge-warning {
-  background: #FFFBEB;
-  color: #B45309;
-  border: 1px solid #FDE68A;
+  background: var(--bg-warning);
+  color: var(--warning);
+  border: 1px solid var(--border);
 }
 
 .badge-danger {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+  background: var(--bg-danger);
+  color: var(--danger);
+  border: 1px solid var(--border);
 }
 
 .badge-neutral {
-  background: #F1F5F9;
-  color: #475569;
-  border: 1px solid #E2E8F0;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .badge-info {
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border: 1px solid #BFDBFE;
+  background: var(--bg-info);
+  color: var(--info);
+  border: 1px solid var(--border);
 }
 
 .badge-emerald {
@@ -638,13 +725,13 @@ body {
 }
 
 .stat-icon.orange {
-  background: #FFF7ED;
-  color: #EA580C;
+  background: var(--bg-warning);
+  color: var(--warning);
 }
 
 .stat-icon.blue {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--bg-info);
+  color: var(--info);
 }
 
 .stat-icon.green {
@@ -911,7 +998,8 @@ body {
   border-radius: var(--radius-lg);
   font-family: inherit;
   font-size: 0.95rem;
-  background: white;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
@@ -1054,33 +1142,33 @@ tr:hover td {
    ============================================ */
 
 .badge-pending {
-  background: #FEF3C7;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background: var(--bg-warning);
+  color: var(--warning);
+  border: 1px solid var(--border);
 }
 
 .badge-in-progress {
-  background: #DBEAFE;
-  color: #1E40AF;
-  border: 1px solid #BFDBFE;
+  background: var(--bg-info);
+  color: var(--info);
+  border: 1px solid var(--border);
 }
 
 .badge-submitted {
-  background: #F3E8FF;
-  color: #6B21A8;
-  border: 1px solid #E9D5FF;
+  background: var(--bg-info);
+  color: var(--info);
+  border: 1px solid var(--border);
 }
 
 .badge-approved {
-  background: #ECFDF5;
-  color: #047857;
-  border: 1px solid #A7F3D0;
+  background: var(--bg-success);
+  color: var(--success);
+  border: 1px solid var(--border-emerald);
 }
 
 .badge-rejected {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+  background: var(--bg-danger);
+  color: var(--danger);
+  border: 1px solid var(--border);
 }
 
 /* ============================================
@@ -1876,7 +1964,8 @@ tr:hover td {
 }
 
 .btn-success:hover {
-  background: #059669;
+  background: var(--brand-primary-dark);
+  opacity: 0.9;
 }
 
 .btn-danger {
@@ -1889,7 +1978,7 @@ tr:hover td {
 }
 
 .btn-danger:hover {
-  background: #DC2626;
+  opacity: 0.9;
 }
 
 /* ============================================

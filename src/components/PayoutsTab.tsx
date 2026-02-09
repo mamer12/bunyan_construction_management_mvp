@@ -1,22 +1,28 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { usePaginatedQuery, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { generatePayoutInvoice } from "../utils/pdfGenerator";
 import { Download, Banknote, Clock, CheckCircle2, XCircle, Smartphone, Building2, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { LoadMoreButton } from "./ui/LoadMoreButton";
+import { Id } from "../../convex/_generated/dataModel";
 
 export function PayoutsTab() {
-    const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+    const [statusFilter, setStatusFilter] = useState<"PENDING" | "PAID" | "REJECTED" | undefined>(undefined);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     const stats = useQuery(api.wallet.getPayoutStats);
-    const payouts = useQuery(api.wallet.getAllPayouts, { status: statusFilter });
+    const { results: payouts, status: paginationStatus, loadMore } = usePaginatedQuery(
+        api.wallet.listPayouts,
+        statusFilter ? { status: statusFilter } : {},
+        { initialNumItems: 20 }
+    );
     const processPayout = useMutation(api.wallet.processPayout);
 
     const handleProcess = async (payoutId: string, action: "pay" | "reject") => {
         setProcessingId(payoutId);
         try {
-            await processPayout({ payoutId: payoutId as any, action });
+            await processPayout({ payoutId: payoutId as Id<"payouts">, action });
             toast.success(action === "pay" ? "Payout marked as paid!" : "Payout rejected");
         } catch (error) {
             toast.error(error.message || "Failed to process payout");
@@ -214,6 +220,7 @@ export function PayoutsTab() {
                         ))}
                     </div>
                 )}
+                <LoadMoreButton status={paginationStatus} loadMore={loadMore} />
             </div>
         </div>
     );

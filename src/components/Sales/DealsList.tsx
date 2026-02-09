@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { usePaginatedQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { DownloadContractButton } from '../PDF';
 import { TableContainer, DataTable, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
 import { motion } from 'framer-motion';
+import { LoadMoreButton } from '../ui/LoadMoreButton';
 import {
     Search,
     Filter,
@@ -23,9 +24,13 @@ import { Id } from '../../../convex/_generated/dataModel';
 export function DealsList() {
     const { language } = useLanguage();
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<"reserved" | "draft" | "contract_signed" | "completed" | "cancelled" | 'all'>('all');
 
-    const deals = useQuery(api.deals.getDeals, statusFilter !== 'all' ? { status: statusFilter } : {});
+    const { results: deals, status: paginationStatus, loadMore } = usePaginatedQuery(
+        api.deals.listDeals,
+        statusFilter !== 'all' ? { status: statusFilter } : {},
+        { initialNumItems: 20 }
+    );
 
     // Magic Link Mutations
     const generateToken = useMutation(api.portal.generatePublicAccessToken);
@@ -119,7 +124,7 @@ export function DealsList() {
                         <Filter size={16} className="text-slate-400" />
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
                             className="border border-slate-200 rounded-lg py-2 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800"
                         >
                             <option value="all">All Status</option>
@@ -235,6 +240,7 @@ export function DealsList() {
                         </TableBody>
                     </DataTable>
                 </TableContainer>
+                <LoadMoreButton status={paginationStatus} loadMore={loadMore} />
             </div>
         </div>
     );

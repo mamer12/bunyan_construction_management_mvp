@@ -14,43 +14,43 @@ export function SignInForm() {
       style={{ background: "linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 50%, #FFFFFF 100%)" }}
     >
       {/* Background Decorative Elements */}
-      <motion.div 
+      <motion.div
         className="absolute top-0 left-0 w-96 h-96 rounded-full"
         style={{ background: "rgba(5, 150, 105, 0.08)", filter: "blur(80px)" }}
         initial={{ x: -200, y: -200 }}
-        animate={{ 
+        animate={{
           x: [-200, -180, -200],
           y: [-200, -180, -200]
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div 
+      <motion.div
         className="absolute top-20 right-0 w-80 h-80 rounded-full"
         style={{ background: "rgba(16, 185, 129, 0.1)", filter: "blur(60px)" }}
         initial={{ x: 100 }}
-        animate={{ 
+        animate={{
           x: [100, 80, 100],
           y: [0, 20, 0]
         }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div 
+      <motion.div
         className="absolute -bottom-32 left-20 w-96 h-96 rounded-full"
         style={{ background: "rgba(52, 211, 153, 0.08)", filter: "blur(80px)" }}
-        animate={{ 
+        animate={{
           x: [0, 30, 0],
           y: [0, -20, 0]
         }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <motion.div 
+      <motion.div
         className="max-w-md w-full relative z-10"
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        <div 
+        <div
           className="rounded-3xl overflow-hidden"
           style={{
             background: "rgba(255, 255, 255, 0.9)",
@@ -61,13 +61,13 @@ export function SignInForm() {
         >
           <div className="p-8">
             {/* Logo Section */}
-            <motion.div 
+            <motion.div
               className="flex flex-col items-center mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <motion.div 
+              <motion.div
                 className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
                 style={{
                   background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
@@ -78,7 +78,7 @@ export function SignInForm() {
               >
                 <Building2 className="text-white" size={36} />
               </motion.div>
-              <h1 
+              <h1
                 className="text-3xl font-bold"
                 style={{ color: "var(--brand-primary-dark)" }}
               >
@@ -103,13 +103,17 @@ export function SignInForm() {
                   let toastTitle = "";
                   if (error.message.includes("Invalid password")) {
                     toastTitle = "Invalid password. Please try again.";
+                  } else if (error.message.includes("InvalidAccountId") || error.message.includes("account not found")) {
+                    toastTitle = "Account not found. Please click 'Sign up' below to create your account!";
                   } else {
                     toastTitle =
                       flow === "signIn"
-                        ? "Could not sign in, did you mean to sign up?"
-                        : "Could not sign up, did you mean to sign in?";
+                        ? "Could not sign in. Did you mean to sign up?"
+                        : "Could not sign up. Is this email already registered?";
                   }
-                  toast.error(toastTitle);
+                  toast.error(toastTitle, {
+                    duration: 5000,
+                  });
                   setSubmitting(false);
                 });
               }}
@@ -119,7 +123,7 @@ export function SignInForm() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <label 
+                <label
                   className="block text-sm font-semibold mb-1.5 ml-1"
                   style={{ color: "var(--text-primary)" }}
                 >
@@ -153,7 +157,7 @@ export function SignInForm() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.35 }}
               >
-                <label 
+                <label
                   className="block text-sm font-semibold mb-1.5 ml-1"
                   style={{ color: "var(--text-primary)" }}
                 >
@@ -193,14 +197,14 @@ export function SignInForm() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   boxShadow: "0 6px 20px rgba(5, 150, 105, 0.4)"
                 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {submitting ? (
-                  <motion.div 
+                  <motion.div
                     className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -219,7 +223,7 @@ export function SignInForm() {
               </motion.button>
             </form>
 
-            <motion.div 
+            <motion.div
               className="mt-8 text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -240,7 +244,7 @@ export function SignInForm() {
 
               <div className="relative flex py-4 items-center">
                 <div className="flex-grow border-t" style={{ borderColor: "var(--border-light)" }}></div>
-                <span 
+                <span
                   className="flex-shrink-0 mx-4 text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--text-muted)" }}
                 >
@@ -257,7 +261,7 @@ export function SignInForm() {
                   color: "var(--text-primary)"
                 }}
                 onClick={() => void signIn("anonymous")}
-                whileHover={{ 
+                whileHover={{
                   background: "var(--bg-mint)",
                   borderColor: "var(--border-emerald)"
                 }}
@@ -269,16 +273,50 @@ export function SignInForm() {
             </motion.div>
           </div>
 
-          <div 
-            className="p-4 text-center"
-            style={{ 
-              background: "var(--bg-mint)", 
-              borderTop: "1px solid rgba(5, 150, 105, 0.1)" 
+          <div
+            className="p-6 text-center"
+            style={{
+              background: "var(--bg-mint)",
+              borderTop: "1px solid rgba(5, 150, 105, 0.1)"
             }}
           >
-            <p className="text-xs" style={{ color: "var(--brand-primary-dark)" }}>
-              <strong>Tip:</strong> Use "lead" in email for Lead Dashboard.
+            <p className="text-xs font-bold mb-3" style={{ color: "var(--brand-primary-dark)" }}>
+              DEV QUICK-START:
             </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[
+                { label: "Admin", email: "admin@bunyan.test" },
+                { label: "Manager", email: "manager@bunyan.test" },
+                { label: "Engineer", email: "engineer@bunyan.test" },
+                { label: "Finance", email: "finance@bunyan.test" }
+              ].map(devUser => (
+                <button
+                  key={devUser.email}
+                  type="button"
+                  onClick={() => {
+                    setFlow("signUp");
+                    const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
+                    const passInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+                    if (emailInput) {
+                      emailInput.value = devUser.email;
+                      // For React to pick up manual value changes
+                      const event = new Event('input', { bubbles: true });
+                      emailInput.dispatchEvent(event);
+                    }
+                    if (passInput) {
+                      passInput.value = "password123";
+                      const event = new Event('input', { bubbles: true });
+                      passInput.dispatchEvent(event);
+                    }
+                    toast.info(`Selected ${devUser.label}. Click 'Create Account' to start!`);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border border-emerald-200 hover:border-emerald-400"
+                  style={{ background: "white", color: "var(--brand-primary-dark)" }}
+                >
+                  {devUser.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </motion.div>

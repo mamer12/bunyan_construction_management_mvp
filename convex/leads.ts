@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { requireAuth } from "./lib/auth";
 import { leadStatus, leadSource, activityType } from "./lib/validators";
 
@@ -141,6 +142,45 @@ export const getLeads = query({
         return enrichedLeads.sort((a, b) => b.createdAt - a.createdAt);
     },
 });
+
+export const listLeads = query({
+    args: {
+        paginationOpts: paginationOptsValidator,
+        status: v.optional(leadStatus),
+    },
+    handler: async (ctx, args) => {
+        let baseQuery = ctx.db.query("leads").order("desc");
+
+        if (args.status) {
+            baseQuery = ctx.db
+                .query("leads")
+                .withIndex("by_status", (q) => q.eq("status", args.status!))
+                .order("desc");
+        }
+
+        const results = await baseQuery.paginate(args.paginationOpts);
+
+        // Enrich page items with assigned user info
+        const enrichedPage = await Promise.all(
+            results.page.map(async (lead) => {
+                let assignedUser = null;
+                if (lead.assignedTo) {
+                    assignedUser = await ctx.db.get(lead.assignedTo);
+                }
+                return {
+                    ...lead,
+                    assignedUserName: assignedUser?.name,
+                };
+            })
+        );
+
+        return {
+            ...results,
+            page: enrichedPage,
+        };
+    },
+});
+
 
 export const getLeadDetails = query({
     args: { leadId: v.id("leads") },

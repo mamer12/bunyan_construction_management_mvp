@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { requireAuth, requireRole } from "./lib/auth";
 import { resolveUserName } from "./lib/users";
 import { payoutStatus } from "./lib/validators";
@@ -196,6 +197,44 @@ export const getAllPayouts = query({
         return payoutsWithUser;
     },
 });
+
+export const listPayouts = query({
+    args: {
+        paginationOpts: paginationOptsValidator,
+        status: v.optional(payoutStatus),
+    },
+    handler: async (ctx, args) => {
+        await requireAuth(ctx);
+
+        let baseQuery = ctx.db.query("payouts").order("desc");
+
+        if (args.status) {
+            baseQuery = ctx.db
+                .query("payouts")
+                .withIndex("by_status", (q) => q.eq("status", args.status!))
+                .order("desc");
+        }
+
+        const results = await baseQuery.paginate(args.paginationOpts);
+
+        const enrichedPage = await Promise.all(
+            results.page.map(async (payout) => {
+                const engineerName = await resolveUserName(ctx, payout.userId);
+                return {
+                    ...payout,
+                    engineerName,
+                    engineerEmail: payout.userId,
+                };
+            })
+        );
+
+        return {
+            ...results,
+            page: enrichedPage,
+        };
+    },
+});
+
 
 export const getPayoutStats = query({
     args: {},

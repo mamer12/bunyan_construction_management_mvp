@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { usePaginatedQuery, useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Sidebar } from "./Sidebar";
@@ -8,6 +9,7 @@ import { FloatingMobileNav } from "./FloatingMobileNav";
 import { useIsMobile } from "../hooks/use-mobile";
 import { Modal } from "./ui/modal";
 import { MotionCard, MotionButton, StaggerContainer, StaggerItem } from "./ui/motion";
+import { LoadMoreButton } from "./ui/LoadMoreButton";
 import {
     DollarSign,
     Clock,
@@ -32,7 +34,10 @@ const ROLE_MENU_ACCESS = {
 
 export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const { language } = useLanguage();
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const location = useLocation();
+    const navigateTo = useNavigate();
+    const activeTab = location.pathname.split('/')[1] || 'dashboard';
+    const setActiveTab = (tab: string) => navigateTo(`/${tab}`);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const isMobile = useIsMobile();
     const [selectedPayout, setSelectedPayout] = useState<Record<string, any> | null>(null);
@@ -45,7 +50,11 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
     // Payout Data
     const payoutStats = useQuery(api.wallet.getPayoutStats);
     const pendingPayouts = useQuery(api.wallet.getPendingPayouts) || [];
-    const allPayouts = useQuery(api.wallet.getAllPayouts, {}) || [];
+    const { results: allPayouts, status: payoutPaginationStatus, loadMore: loadMorePayouts } = usePaginatedQuery(
+        api.wallet.listPayouts,
+        {},
+        { initialNumItems: 20 }
+    );
     const processPayout = useMutation(api.wallet.processPayout);
 
     const handleProcess = async (payoutId: string, action: "pay" | "reject") => {
@@ -223,7 +232,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                                         </td>
                                     </tr>
                                 ) : (
-                                    allPayouts.slice(0, 20).map((payout) => (
+                                    allPayouts.map((payout) => (
                                         <tr key={payout._id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
@@ -258,6 +267,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                             </tbody>
                         </table>
                     </div>
+                    <LoadMoreButton status={payoutPaginationStatus} loadMore={loadMorePayouts} />
                 </div>
             </MotionCard>
         </div>
@@ -281,8 +291,6 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
@@ -306,11 +314,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                 )}
 
                 {isMobile && (
-                    <FloatingMobileNav
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        allowedMenuIds={allowedMenuIds}
-                    />
+                    <FloatingMobileNav />
                 )}
             </main>
         </div>

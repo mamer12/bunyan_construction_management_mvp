@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
     Building2,
@@ -12,9 +13,9 @@ import {
 } from "lucide-react";
 
 interface FloatingMobileNavProps {
-    activeTab: string;
-    onTabChange: (tab: string) => void;
-    allowedMenuIds: string[];
+    activeTab?: string;
+    onTabChange?: (tab: string) => void;
+    allowedMenuIds?: string[];
 }
 
 const ALL_MOBILE_ITEMS = [
@@ -42,7 +43,13 @@ function getScrollTop(): number {
     return window.scrollY ?? document.documentElement?.scrollTop ?? 0;
 }
 
-export function FloatingMobileNav({ activeTab, onTabChange }: FloatingMobileNavProps) {
+export function FloatingMobileNav({ activeTab: activeTabProp, onTabChange: onTabChangeProp }: FloatingMobileNavProps) {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const pathSegment = location.pathname.split('/')[1] || 'dashboard';
+    const activeTab = activeTabProp ?? pathSegment;
+    const onTabChange = onTabChangeProp ?? ((tab: string) => navigate(`/${tab}`));
+
     const [expanded, setExpanded] = useState(true);
     const lastScrollY = useRef(0);
     const ticking = useRef(false);

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { X, Banknote, Smartphone, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { calculateWithdrawalAmount, validatePayoutAmount, formatCurrency } from "../utils/wallet";
 
 interface PayoutModalProps {
     onClose: () => void;
@@ -31,12 +32,10 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
         e.preventDefault();
 
         const numAmount = parseFloat(amount);
-        if (!numAmount || numAmount <= 0) {
-            toast.error("Please enter a valid amount");
-            return;
-        }
-        if (numAmount > maxAmount) {
-            toast.error("Amount exceeds available balance");
+        const validation = validatePayoutAmount(numAmount, maxAmount);
+
+        if (!validation.valid) {
+            toast.error(validation.error || "Invalid amount");
             return;
         }
 
@@ -50,7 +49,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
             toast.success("Payout request submitted!");
             onClose();
         } catch (error) {
-            toast.error(error.message || "Failed to request payout");
+            toast.error(error instanceof Error ? error.message : "Failed to request payout");
         } finally {
             setLoading(false);
         }
@@ -70,7 +69,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
                         Available Balance
                     </div>
                     <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--success)" }}>
-                        ${maxAmount.toLocaleString()}
+                        ${formatCurrency(maxAmount)}
                     </div>
                 </div>
 
@@ -108,7 +107,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
                         <button
                             type="button"
                             className="btn btn-ghost"
-                            onClick={() => setAmount(String(maxAmount * 0.25))}
+                            onClick={() => setAmount(String(calculateWithdrawalAmount(maxAmount, 25)))}
                             style={{ flex: 1, fontSize: "0.75rem" }}
                         >
                             25%
@@ -116,7 +115,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
                         <button
                             type="button"
                             className="btn btn-ghost"
-                            onClick={() => setAmount(String(maxAmount * 0.5))}
+                            onClick={() => setAmount(String(calculateWithdrawalAmount(maxAmount, 50)))}
                             style={{ flex: 1, fontSize: "0.75rem" }}
                         >
                             50%

@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, getUserByAuthId } from "./lib/auth";
 
 // ============================================
 // AUDIT LOG MANAGEMENT
@@ -17,12 +17,12 @@ export const createAuditLog = mutation({
     handler: async (ctx, args) => {
         const userId = await requireAuth(ctx);
 
-        const user = await ctx.db.get(userId);
+        const user = await getUserByAuthId(ctx, userId);
 
         await ctx.db.insert("audit_logs", {
             userId,
             userEmail: user?.email,
-            action: args.action,
+            action: args.action as any,
             entityType: args.entityType,
             entityId: args.entityId,
             changes: args.changes,

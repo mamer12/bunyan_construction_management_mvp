@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 import { requireAuth } from "./lib/auth";
 import { getUserByAuthId } from "./lib/users";
 import { dealStatus, paymentPlan } from "./lib/validators";
@@ -191,6 +192,51 @@ export const getDeals = query({
         return enrichedDeals.sort((a, b) => b.createdAt - a.createdAt);
     },
 });
+
+export const listDeals = query({
+    args: {
+        paginationOpts: paginationOptsValidator,
+        status: v.optional(dealStatus),
+    },
+    handler: async (ctx, args) => {
+        let baseQuery = ctx.db.query("deals").order("desc");
+
+        if (args.status) {
+            baseQuery = ctx.db
+                .query("deals")
+                .withIndex("by_status", (q) => q.eq("status", args.status!))
+                .order("desc");
+        }
+
+        const results = await baseQuery.paginate(args.paginationOpts);
+
+        // Enrich page items with unit/lead/project info
+        const enrichedPage = await Promise.all(
+            results.page.map(async (deal) => {
+                const unit = await ctx.db.get(deal.unitId);
+                const lead = await ctx.db.get(deal.leadId);
+                let project = null;
+                if (unit?.projectId) {
+                    project = await ctx.db.get(unit.projectId);
+                }
+
+                return {
+                    ...deal,
+                    unitName: unit?.name,
+                    projectName: project?.name,
+                    clientName: lead?.name,
+                    clientPhone: lead?.phone,
+                };
+            })
+        );
+
+        return {
+            ...results,
+            page: enrichedPage,
+        };
+    },
+});
+
 
 export const getDealDetails = query({
     args: { dealId: v.id("deals") },

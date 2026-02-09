@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Doc } from "../../convex/_generated/dataModel";
@@ -53,7 +54,10 @@ interface ProjectMetrics {
 export function ManagementDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const { t, language } = useLanguage();
     const [expandedProject, setExpandedProject] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const location = useLocation();
+    const navigateTo = useNavigate();
+    const activeTab = location.pathname.split('/')[1] || 'dashboard';
+    const setActiveTab = (tab: string) => navigateTo(`/${tab}`);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const isMobile = useIsMobile();
@@ -86,9 +90,9 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     const payouts = useQuery(api.wallet.getAllPayouts, {}) || [];
 
     // Calculate project-level metrics
-    const projectMetrics: ProjectMetrics[] = projects.map((project) => {
-        const projectUnits = units.filter((u) => u.projectId === project._id);
-        const unitIds = projectUnits.map((u) => u._id);
+    const projectMetrics: ProjectMetrics[] = projects.map((project: any) => {
+        const projectUnits = units.filter((u: any) => u.projectId === project._id);
+        const unitIds = projectUnits.map((u: any) => u._id);
         const projectTasks = allTasks.filter((t) => unitIds.includes(t.unitId));
 
         const completedTasks = projectTasks.filter((t) => t.status === "APPROVED").length;
@@ -116,19 +120,19 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
 
     // Overall metrics
     const totalProjects = projects.length;
-    const totalActiveProjects = projectMetrics.filter(p => p.inProgressTasks > 0 || p.pendingTasks > 0).length;
-    const totalBudget = projects.reduce((sum: number, p) => sum + (p.totalBudget || 0), 0);
-    const totalSpent = projects.reduce((sum: number, p) => sum + (p.budgetSpent || 0), 0);
+    const totalActiveProjects = projectMetrics.filter((p: ProjectMetrics) => p.inProgressTasks > 0 || p.pendingTasks > 0).length;
+    const totalBudget = projects.reduce((sum: number, p: any) => sum + (p.totalBudget || 0), 0);
+    const totalSpent = projects.reduce((sum: number, p: any) => sum + (p.budgetSpent || 0), 0);
     const overallCompletionRate = allTasks.length > 0
         ? Math.round((allTasks.filter((t) => t.status === "APPROVED").length / allTasks.length) * 100)
         : 0;
 
     // Stock metrics
-    const lowStockItems = materials.filter((m) => (m.currentStock || 0) <= (m.minimumStock || 0)).length;
-    const totalStockValue = materials.reduce((sum: number, m) => sum + ((m.currentStock || 0) * (m.pricePerUnit || 0)), 0);
+    const lowStockItems = materials.filter((m: any) => (m.currentStock || 0) <= (m.minimumStock || 0)).length;
+    const totalStockValue = materials.reduce((sum: number, m: any) => sum + ((m.currentStock || 0) * (m.pricePerUnit || 0)), 0);
 
     // Finance metrics
-    const pendingPayoutsAmount = payouts.filter((p) => p.status === "PENDING").reduce((sum: number, p) => sum + (p.amount || 0), 0);
+    const pendingPayoutsAmount = payouts.filter((p: any) => p.status === "PENDING").reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-US', {
@@ -217,7 +221,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
 
                         {/* Top Stats Grid */}
                         <BentoGrid columns={4} className="w-full gap-4 md:gap-5">
-                            {overviewStats.map((stat, index) => (
+                            {overviewStats.map((stat: any, index: number) => (
                                 <MotionCard key={stat.label} delay={index * 0.1} className="relative overflow-hidden group min-w-0">
                                     <div className={cn("absolute top-0 right-0 w-24 h-24 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 opacity-20", stat.bg)} />
                                     <div className="p-5 relative z-10 min-w-0">
@@ -261,7 +265,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                                             <p className="text-slate-500 font-semibold text-sm">{language === 'ar' ? 'لا توجد مشاريع نشطة' : 'No active projects'}</p>
                                         </div>
                                     ) : (
-                                        projects.map((project, index: number) => {
+                                        projects.map((project: any, index: number) => {
                                             const isExpanded = expandedProject === project._id;
                                             const completionRate = project.totalTasksCount > 0
                                                 ? Math.round((project.completedTasksCount / project.totalTasksCount) * 100)
@@ -407,8 +411,6 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 isCollapsed={isSidebarCollapsed}
@@ -431,11 +433,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
             </main>
 
             {isMobile && (
-                <FloatingMobileNav
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    allowedMenuIds={allowedMenuIds}
-                />
+                <FloatingMobileNav />
             )}
         </div>
     );

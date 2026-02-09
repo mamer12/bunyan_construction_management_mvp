@@ -18,10 +18,11 @@ import { api } from "../../convex/_generated/api";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useIsMobile } from "../hooks/use-mobile";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface SidebarProps {
-    activeTab: string;
-    onTabChange: (tab: string) => void;
+    activeTab?: string;
+    onTabChange?: (tab: string) => void;
     isOpen?: boolean;
     onClose?: () => void;
     isCollapsed?: boolean;
@@ -54,10 +55,17 @@ const ROLE_MENU_ACCESS: Record<string, string[]> = {
     guest: ["dashboard"],
 };
 
-export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ activeTab: activeTabProp, onTabChange: onTabChangeProp, isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
     const { signOut } = useAuthActions();
     const { t } = useLanguage();
     const isMobile = useIsMobile();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Derive activeTab from URL if prop not provided
+    const pathSegment = location.pathname.split('/')[1] || 'dashboard';
+    const activeTab = activeTabProp ?? pathSegment;
+    const onTabChange = onTabChangeProp ?? ((tab: string) => navigate(`/${tab}`));
 
     // Fetch actual user data
     const role = useQuery(api.roles.getMyRole);

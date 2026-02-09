@@ -66,3 +66,13 @@ export async function resolveAssigneeId(
     // Not registered yet — store email as placeholder
     return email;
 }
+
+/**
+ * Gets a user by their Auth ID.
+ */
+export async function getUserByAuthId(ctx: QueryCtx | MutationCtx, userId: string) {
+    return await ctx.db
+        .query("users")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .unique();
+}

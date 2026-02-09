@@ -94,7 +94,8 @@ export const transactionType = v.union(
     v.literal("TASK_APPROVED"),
     v.literal("PAYOUT_REQUESTED"),
     v.literal("PAYOUT_COMPLETED"),
-    v.literal("PAYOUT_REJECTED")
+    v.literal("PAYOUT_REJECTED"),
+    v.literal("PAYOUT_PAID")
 );
 
 // ============================================
@@ -144,7 +145,8 @@ export const auditAction = v.union(
     v.literal("update"),
     v.literal("delete"),
     v.literal("status_change"),
-    v.literal("payment_recorded")
+    v.literal("payment_recorded"),
+    v.literal("generate_public_link")
 );
 
 export const notificationType = v.union(

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -39,7 +40,10 @@ import { TableContainer, DataTable, TableHeader, TableBody, TableRow, TableHead,
 
 export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const { t, language } = useLanguage();
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const location = useLocation();
+    const navigate = useNavigate();
+    const activeTab = location.pathname.split('/')[1] || 'dashboard';
+    const setActiveTab = (tab: string) => navigate(`/${tab}`);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -52,8 +56,8 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 
     const tasksForReview = (useQuery(api.tasks.getTasksForReview) || []).filter((t): t is NonNullable<typeof t> => t != null);
     const allTasks = (useQuery(api.tasks.getAllTasks, {}) || []).filter((t): t is NonNullable<typeof t> => t != null);
-    const engineers = useQuery(api.engineers.getMyEngineers) || [];
-    const units = useQuery(api.units.getAllUnits) || [];
+    const engineers = (useQuery(api.engineers.getMyEngineers) || []).filter((e): e is NonNullable<typeof e> => e != null);
+    const units = (useQuery(api.units.getAllUnits) || []).filter((u): u is NonNullable<typeof u> => u != null);
 
     const reviewTask = useMutation(api.tasks.reviewTask);
 
@@ -292,8 +296,6 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
                 isOpen={isSidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 isCollapsed={isSidebarCollapsed}
@@ -337,8 +339,6 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 
                 {isMobile && (
                     <FloatingMobileNav
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
                         allowedMenuIds={allowedMenuIds}
                     />
                 )}

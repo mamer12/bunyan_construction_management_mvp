@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import {
@@ -49,16 +50,15 @@ interface Task {
     description?: string;
     status: TaskStatus;
     amount: number;
-    points: number;
-    projectId: string;
-    projectName: string;
     unitId: string;
-    unitNumber: string;
+    unit: string;
+    project: string;
+    location: string;
     assignedTo: string;
-    engineerName: string;
     submittedAt?: number;
     updatedAt?: number;
     photoUrl?: string;
+    attachmentUrls: string[];
     reviewComment?: string;
 }
 
@@ -67,10 +67,14 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
     const { signOut } = useAuthActions();
     const isMobile = useIsMobile();
 
-    const [activeTab, setActiveTab] = useState("dashboard");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+    const location = useLocation();
+    const navigateTo = useNavigate();
+    const activeTab = location.pathname.split('/')[1] || 'dashboard';
+    const setActiveTab = (tab: string) => navigateTo(`/${tab}`);
 
     // Data Queries
     const currentUser = useQuery(api.auth.loggedInUser);
@@ -82,10 +86,10 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
     const startTask = useMutation(api.tasks.startTask);
     const submitTaskMutation = useMutation(api.tasks.submitTask);
 
-    const pendingTasks = tasks.filter((t: Task) => t.status === "PENDING");
-    const inProgressTasks = tasks.filter((t: Task) => t.status === "IN_PROGRESS");
-    const completedTasks = tasks.filter((t: Task) => t.status === "APPROVED");
-    const rejectedTasks = tasks.filter((t: Task) => t.status === "REJECTED");
+    const pendingTasks = (tasks || []).filter((t: any) => t?.status === "PENDING") as Task[];
+    const inProgressTasks = (tasks || []).filter((t: any) => t?.status === "IN_PROGRESS") as Task[];
+    const completedTasks = (tasks || []).filter((t: any) => t?.status === "APPROVED") as Task[];
+    const rejectedTasks = (tasks || []).filter((t: any) => t?.status === "REJECTED") as Task[];
 
     const stats = [
         { label: t('pending') || 'Pending', value: pendingTasks.length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -115,7 +119,7 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
                                 </div>
                                 <div className="px-3">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Performance Points</p>
-                                    <p className="text-sm font-bold text-emerald-600">{wallet.points} XP</p>
+                                    <p className="text-sm font-bold text-emerald-600">${wallet.totalEarned.toLocaleString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -148,10 +152,10 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
                                 <div className="p-5">
                                     <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-all hover:border-emerald-200 group">
                                         <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg transition-transform group-hover:scale-110">
-                                            {tasks[0]?.projectName?.charAt(0) || "S"}
+                                            {tasks[0]?.project?.charAt(0) || "S"}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-xs font-bold text-slate-800">{tasks[0]?.projectName || "No Project Assigned"}</p>
+                                            <p className="text-xs font-bold text-slate-800">{tasks[0]?.project || "No Project Assigned"}</p>
                                             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
                                                 <MapPin size={10} className="text-emerald-500" />
                                                 Main Civil Works
@@ -193,8 +197,8 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
                                 My Tasks
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {tasks.slice(0, 6).map((task: Task, i: number) => (
-                                    <TaskCard key={task._id} task={task} delay={0.7 + (i * 0.05)} onClick={() => setSelectedTask(task)} />
+                                {(tasks || []).filter(Boolean).slice(0, 6).map((task: any, i: number) => (
+                                    <TaskCard key={task._id} task={task as Task} delay={0.7 + (i * 0.05)} onClick={() => setSelectedTask(task as Task)} t={t} />
                                 ))}
                             </div>
                         </div>
@@ -227,8 +231,6 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 isCollapsed={isSidebarCollapsed}
@@ -249,18 +251,14 @@ export function EngineerDashboard({ showHeader = true }: { showHeader?: boolean 
                 </div>
 
                 {isMobile && (
-                    <FloatingMobileNav
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        allowedMenuIds={['dashboard', 'projects']}
-                    />
+                    <FloatingMobileNav />
                 )}
             </main>
         </div>
     );
 }
 
-function TaskCard({ task, delay, onClick }: { task: Task; delay: number; onClick: () => void }) {
+function TaskCard({ task, delay, onClick, t }: { task: Task; delay: number; onClick: () => void; t: any }) {
     const statusColors = {
         PENDING: "bg-amber-500",
         IN_PROGRESS: "bg-blue-500",
@@ -284,7 +282,7 @@ function TaskCard({ task, delay, onClick }: { task: Task; delay: number; onClick
                     {task.title}
                 </h4>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
-                    {task.projectName} • Unit {task.unitNumber}
+                    {task.project} • Unit {task.unit}
                 </p>
 
                 <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
@@ -293,7 +291,7 @@ function TaskCard({ task, delay, onClick }: { task: Task; delay: number; onClick
                         Details
                     </div>
                     <div className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
-                        +{task.points} XP
+                        {task.amount} AED
                     </div>
                 </div>
             </div>

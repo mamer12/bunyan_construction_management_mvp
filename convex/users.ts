@@ -19,7 +19,16 @@ export const ensureUser = mutation({
         const existing = await ctx.db
             .query("users")
             .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
+            .first() || await ctx.db
+                .query("users")
+                .withIndex("by_email", (q) => q.eq("email", args.email))
+                .first();
+
+        if (existing && (!existing.userId || (typeof existing.userId === 'string' && existing.userId.startsWith('seed_')))) {
+            // Claim existing seeded user or guest entry
+            await ctx.db.patch(existing._id, { userId });
+            return existing.role;
+        }
 
         if (!existing) {
             let role = "guest";

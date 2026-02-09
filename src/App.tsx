@@ -1,5 +1,6 @@
 import { Authenticated, Unauthenticated, useQuery, useMutation } from "convex/react";
 import React, { useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -42,7 +43,12 @@ export default function App() {
                 }
               }}
             />
-            <Content />
+            <Routes>
+              {/* Public portal route — no auth required */}
+              <Route path="/view/*" element={<PublicDealViewer />} />
+              {/* All other routes require auth */}
+              <Route path="/*" element={<Content />} />
+            </Routes>
           </NotificationProvider>
         </LanguageProvider>
       </ThemeProvider>
@@ -52,19 +58,11 @@ export default function App() {
 
 function Content() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const [isPublicView, setIsPublicView] = React.useState(false);
+  const location = useLocation();
 
-  useEffect(() => {
-    // Simple check for public view URL pattern ?view=token or similar
-    // The previous implementation suggested /view/token but without react-router we'll use query params
-    // Let's support ?view=token or ?token=xyz
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('token') || window.location.pathname.startsWith('/view')) {
-      setIsPublicView(true);
-    }
-  }, []);
-
-  if (isPublicView) {
+  // Support ?token= query param for public portal
+  const params = new URLSearchParams(location.search);
+  if (params.get('token')) {
     return <PublicDealViewer />;
   }
 
@@ -90,6 +88,7 @@ function Content() {
 
 function MainApp() {
   const role = useQuery(api.roles.getMyRole);
+  const location = useLocation();
 
   if (role === undefined) {
     return (
@@ -99,7 +98,13 @@ function MainApp() {
     );
   }
 
-  // Routing Logic
+  // Redirect root to /dashboard
+  if (location.pathname === "/") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Role-based dashboard shell selection
+  // Each dashboard reads the URL path to render the correct content panel
   if (role === "engineer") {
     return <EngineerDashboard />;
   }
@@ -112,7 +117,7 @@ function MainApp() {
     return <FinanceDashboard />;
   }
 
-  // Admin, Acting Manager, Lead all see the LeadDashboard for now
+  // Admin, Acting Manager, Lead all see the LeadDashboard
   return <LeadDashboard />;
 }
 

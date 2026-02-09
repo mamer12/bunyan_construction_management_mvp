@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { FloatingMobileNav } from "./FloatingMobileNav";
@@ -33,7 +35,10 @@ const ROLE_MENU_ACCESS = {
 
 export function StockDashboard() {
     const { language } = useLanguage();
-    const [activeTab, setActiveTab] = useState("dashboard");
+    const location = useLocation();
+    const navigateTo = useNavigate();
+    const activeTab = location.pathname.split('/')[1] || 'dashboard';
+    const setActiveTab = (tab: string) => navigateTo(`/${tab}`);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const isMobile = useIsMobile();
     const [showAddModal, setShowAddModal] = useState(false);
@@ -56,45 +61,57 @@ export function StockDashboard() {
     const updateMaterial = useMutation(api.stock.updateMaterial);
     const deleteMaterial = useMutation(api.stock.deleteMaterial);
 
-    const handleProcess = async (requestId: string, action: string) => {
+    const handleProcess = async (requestId: Id<"material_requests">, action: "FULFILL" | "REJECT") => {
         try {
             await processRequest({ requestId, action });
             toast.success(`Request ${action.toLowerCase()} successfully`);
         } catch (error) {
-            toast.error("Failed to process request");
+            toast.error(error instanceof Error ? error.message : "Failed to process request");
         }
     };
 
-    const handleAddMaterial = async (data: Record<string, any>) => {
+    const handleAddMaterial = async (data: {
+        name: string;
+        unit: string;
+        currentStock: number;
+        minimumStock?: number;
+        pricePerUnit?: number;
+    }) => {
         try {
             await addMaterial(data);
             toast.success("Material added successfully");
             setShowAddModal(false);
         } catch (error) {
-            toast.error(error.message || "Failed to add material");
+            toast.error(error instanceof Error ? error.message : "Failed to add material");
         }
     };
 
-    const handleUpdateMaterial = async (data: Record<string, any>) => {
+    const handleUpdateMaterial = async (data: {
+        name: string;
+        unit: string;
+        currentStock: number;
+        minimumStock?: number;
+        pricePerUnit?: number;
+    }) => {
         try {
             await updateMaterial({
-                materialId: editingMaterial._id,
+                materialId: editingMaterial._id as Id<"materials">,
                 ...data
             });
             toast.success("Material updated successfully");
             setEditingMaterial(null);
         } catch (error) {
-            toast.error("Failed to update material");
+            toast.error(error instanceof Error ? error.message : "Failed to update material");
         }
     };
 
-    const handleDeleteMaterial = async (materialId: string) => {
+    const handleDeleteMaterial = async (materialId: Id<"materials">) => {
         if (!confirm("Are you sure you want to delete this material?")) return;
         try {
-            await deleteMaterial({ materialId: materialId as any });
+            await deleteMaterial({ materialId });
             toast.success("Material deleted successfully");
         } catch (error) {
-            toast.error(error.message || "Failed to delete material");
+            toast.error(error instanceof Error ? error.message : "Failed to delete material");
         }
     };
 
@@ -109,8 +126,6 @@ export function StockDashboard() {
     return (
         <div className="layout-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <Sidebar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
@@ -155,7 +170,7 @@ export function StockDashboard() {
                                 </div>
                                 <div className="stat-card__content">
                                     <span className="stat-card__value">
-                                        {requests.filter((r) => r.status === "PENDING").length}
+                                        {requests.filter((r: any) => r.status === "PENDING").length}
                                     </span>
                                     <span className="stat-card__label">Pending Requests</span>
                                 </div>
@@ -189,7 +204,7 @@ export function StockDashboard() {
                             </div>
                             <div className="card-body">
                                 <div className="low-stock-grid">
-                                    {lowStockItems.map((item) => (
+                                    {lowStockItems.map((item: any) => (
                                         <div key={item._id} className="low-stock-item">
                                             <span className="name">{item.name}</span>
                                             <span className="stock">
@@ -238,7 +253,7 @@ export function StockDashboard() {
                                 </div>
                             ) : (
                                 <div className="inventory-grid">
-                                    {filteredInventory.map((item) => (
+                                    {filteredInventory.map((item: any) => (
                                         <motion.div
                                             key={item._id}
                                             className={`inventory-card ${item.minimumStock && item.currentStock <= item.minimumStock
@@ -296,7 +311,7 @@ export function StockDashboard() {
                                 <h3>Material Requests</h3>
                             </div>
                             <span className="badge badge--warning">
-                                {requests.filter((r) => r.status === "PENDING").length} pending
+                                {requests.filter((r: any) => r.status === "PENDING").length} pending
                             </span>
                         </div>
 
@@ -320,7 +335,7 @@ export function StockDashboard() {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            requests.map((req) => (
+                                            requests.map((req: any) => (
                                                 <tr key={req._id}>
                                                     <td>
                                                         <span className="font-medium">Project</span>
@@ -333,9 +348,9 @@ export function StockDashboard() {
                                                     </td>
                                                     <td>
                                                         <div className="space-y-1">
-                                                            {req.items.map((item, i: number) => {
+                                                            {req.items.map((item: any, i: number) => {
                                                                 const material = inventory.find(
-                                                                    (m) => m._id === item.materialId
+                                                                    (m: any) => m._id === item.materialId
                                                                 );
                                                                 return (
                                                                     <div key={i} className="text-sm">
@@ -401,11 +416,7 @@ export function StockDashboard() {
                 </AnimatePresence>
 
                 {isMobile && (
-                    <FloatingMobileNav
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        allowedMenuIds={allowedMenuIds}
-                    />
+                    <FloatingMobileNav />
                 )}
             </main>
         </div>
@@ -418,9 +429,15 @@ function MaterialFormModal({
     onClose,
     onSubmit
 }: {
-    material?: Record<string, any>;
+    material?: any;
     onClose: () => void;
-    onSubmit: (data: Record<string, any>) => void;
+    onSubmit: (data: {
+        name: string;
+        unit: string;
+        currentStock: number;
+        minimumStock?: number;
+        pricePerUnit?: number;
+    }) => void;
 }) {
     const [name, setName] = useState(material?.name || "");
     const [unit, setUnit] = useState(material?.unit || "pcs");

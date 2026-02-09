@@ -53,8 +53,8 @@ export function SettingsView() {
 
     // Filter users - exclude auth-created duplicate entries (those without role)
     const filteredUsers = users
-        .filter((u: any) => u.role) // Only show users with roles
-        .filter((u: any) =>
+        .filter((u) => u.role) // Only show users with roles
+        .filter((u) =>
             u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.email?.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -64,7 +64,7 @@ export function SettingsView() {
             await updateUserRole({ userId: userId as any, role: newRole });
             toast.success(language === 'ar' ? "تم تحديث الدور بنجاح" : "Role updated successfully");
             setEditingUser(null);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to update role");
         }
     };
@@ -78,7 +78,7 @@ export function SettingsView() {
                     ? (language === 'ar' ? "تم تفعيل المستخدم" : "User activated")
                     : (language === 'ar' ? "تم إلغاء تفعيل المستخدم" : "User deactivated")
             );
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to update status");
         }
     };
@@ -88,7 +88,7 @@ export function SettingsView() {
             await deleteUser({ userId: userId as any });
             toast.success(language === 'ar' ? "تم حذف المستخدم" : "User deleted successfully");
             setShowDeleteConfirm(null);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to delete user");
         }
     };
@@ -253,7 +253,7 @@ export function SettingsView() {
                                     </div>
                                     <div className="stat-card__content">
                                         <span className="stat-card__value">
-                                            {filteredUsers.filter((u: any) => u.status === "active").length}
+                                            {filteredUsers.filter((u) => u.status === "active").length}
                                         </span>
                                         <span className="stat-card__label">{t("activeUsers")}</span>
                                     </div>
@@ -266,7 +266,7 @@ export function SettingsView() {
                                     </div>
                                     <div className="stat-card__content">
                                         <span className="stat-card__value">
-                                            {filteredUsers.filter((u: any) => u.status !== "active").length}
+                                            {filteredUsers.filter((u) => u.status !== "active").length}
                                         </span>
                                         <span className="stat-card__label">{t("inactiveUsers")}</span>
                                     </div>
@@ -308,7 +308,7 @@ export function SettingsView() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredUsers.map((user: any) => (
+                                        {filteredUsers.map((user) => (
                                             <motion.tr
                                                 key={user._id}
                                                 initial={{ opacity: 0 }}
@@ -445,7 +445,7 @@ function EditUserModal({
     onSave,
     language
 }: {
-    user: any;
+    user: Record<string, any>;
     onClose: () => void;
     onSave: (userId: string, role: string) => void;
     language: string;

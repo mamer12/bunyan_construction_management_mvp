@@ -159,7 +159,7 @@ export function PublicDealViewer() {
                         {/* Vertical line */}
                         <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-gray-100 -z-0" />
 
-                        {data.milestones.map((milestone: any, i: number) => (
+                        {data.milestones.map((milestone, i: number) => (
                             <motion.div
                                 key={i}
                                 initial={{ opacity: 0, x: -10 }}

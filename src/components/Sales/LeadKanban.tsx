@@ -358,7 +358,7 @@ function NewLeadModal({
             toast.success(language === 'ar' ? 'تم إضافة العميل المحتمل' : 'Lead added successfully');
             onClose();
             setFormData({ name: '', phone: '', email: '', source: 'walk-in', budget: '', notes: '' });
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || 'Failed to add lead');
         } finally {
             setIsSubmitting(false);

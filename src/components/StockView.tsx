@@ -45,17 +45,17 @@ export function StockView() {
         }
     };
 
-    const handleAddMaterial = async (data: any) => {
+    const handleAddMaterial = async (data: Record<string, any>) => {
         try {
             await addMaterial(data);
             toast.success("Material added successfully");
             setShowAddModal(false);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to add material");
         }
     };
 
-    const handleUpdateMaterial = async (data: any) => {
+    const handleUpdateMaterial = async (data: Record<string, any>) => {
         try {
             await updateMaterial({
                 materialId: editingMaterial._id,
@@ -78,12 +78,12 @@ export function StockView() {
         }
     };
 
-    const filteredInventory = inventory.filter((item: any) =>
+    const filteredInventory = inventory.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const lowStockItems = inventory.filter(
-        (m: any) => m.minimumStock && m.currentStock <= m.minimumStock
+        (m) => m.minimumStock && m.currentStock <= m.minimumStock
     );
 
     return (
@@ -121,7 +121,7 @@ export function StockView() {
                         </div>
                         <div className="stat-card__content">
                             <span className="stat-card__value">
-                                {requests.filter((r: any) => r.status === "PENDING").length}
+                                {requests.filter((r) => r.status === "PENDING").length}
                             </span>
                             <span className="stat-card__label">Pending Requests</span>
                         </div>
@@ -155,7 +155,7 @@ export function StockView() {
                     </div>
                     <div className="card-body">
                         <div className="low-stock-grid">
-                            {lowStockItems.map((item: any) => (
+                            {lowStockItems.map((item) => (
                                 <div key={item._id} className="low-stock-item">
                                     <span className="name">{item.name}</span>
                                     <span className="stock">
@@ -209,7 +209,7 @@ export function StockView() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredInventory.map((item: any) => (
+                                {filteredInventory.map((item) => (
                                     <motion.tr
                                         key={item._id}
                                         initial={{ opacity: 0 }}
@@ -264,11 +264,11 @@ export function StockView() {
                         <h3>Material Requests</h3>
                     </div>
                     <span className="badge badge--info">
-                        {requests.filter((r: any) => r.status === "PENDING").length} pending
+                        {requests.filter((r) => r.status === "PENDING").length} pending
                     </span>
                 </div>
                 <div className="card-body">
-                    {requests.filter((r: any) => r.status === "PENDING").length === 0 ? (
+                    {requests.filter((r) => r.status === "PENDING").length === 0 ? (
                         <div className="empty-state">
                             <Clock size={40} opacity={0.3} />
                             <p>No pending requests</p>
@@ -276,8 +276,8 @@ export function StockView() {
                     ) : (
                         <div className="requests-list">
                             {requests
-                                .filter((r: any) => r.status === "PENDING")
-                                .map((request: any) => (
+                                .filter((r) => r.status === "PENDING")
+                                .map((request) => (
                                     <div key={request._id} className="request-item">
                                         <div className="request-info">
                                             <div className="request-material">{request.materialName}</div>
@@ -337,9 +337,9 @@ function MaterialFormModal({
     onClose,
     onSubmit
 }: {
-    material?: any;
+    material?: Record<string, any>;
     onClose: () => void;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: Record<string, any>) => void;
 }) {
     const [name, setName] = useState(material?.name || "");
     const [unit, setUnit] = useState(material?.unit || "pcs");

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Doc } from "../../convex/_generated/dataModel";
 import {
     Building2,
     TrendingUp,
@@ -77,7 +78,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
 
     // Fetch all data
-    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
+    const allTasks = (useQuery(api.tasks.getAllTasks, {}) || []).filter((t): t is NonNullable<typeof t> => t != null);
     const projects = useQuery(api.projects.getProjects) || [];
     const units = useQuery(api.units.getAllUnits) || [];
     const engineers = useQuery(api.engineers.getMyEngineers) || [];
@@ -85,18 +86,18 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     const payouts = useQuery(api.wallet.getAllPayouts, {}) || [];
 
     // Calculate project-level metrics
-    const projectMetrics: ProjectMetrics[] = projects.map((project: any) => {
-        const projectUnits = units.filter((u: any) => u.projectId === project._id);
-        const unitIds = projectUnits.map((u: any) => u._id);
-        const projectTasks = allTasks.filter((t: any) => unitIds.includes(t.unitId));
+    const projectMetrics: ProjectMetrics[] = projects.map((project) => {
+        const projectUnits = units.filter((u) => u.projectId === project._id);
+        const unitIds = projectUnits.map((u) => u._id);
+        const projectTasks = allTasks.filter((t) => unitIds.includes(t.unitId));
 
-        const completedTasks = projectTasks.filter((t: any) => t.status === "APPROVED").length;
-        const inProgressTasks = projectTasks.filter((t: any) => t.status === "IN_PROGRESS").length;
-        const pendingTasks = projectTasks.filter((t: any) => t.status === "PENDING" || t.status === "SUBMITTED").length;
-        const totalSpent = projectTasks.filter((t: any) => t.status === "APPROVED").reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+        const completedTasks = projectTasks.filter((t) => t.status === "APPROVED").length;
+        const inProgressTasks = projectTasks.filter((t) => t.status === "IN_PROGRESS").length;
+        const pendingTasks = projectTasks.filter((t) => t.status === "PENDING" || t.status === "SUBMITTED").length;
+        const totalSpent = projectTasks.filter((t) => t.status === "APPROVED").reduce((sum: number, t) => sum + (t.amount || 0), 0);
 
         // Get unique engineers assigned to this project
-        const projectEngineers = [...new Set(projectTasks.map((t: any) => t.assignedTo))];
+        const projectEngineers = [...new Set(projectTasks.map((t) => t.assignedTo))];
 
         return {
             projectId: project._id,
@@ -116,18 +117,18 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     // Overall metrics
     const totalProjects = projects.length;
     const totalActiveProjects = projectMetrics.filter(p => p.inProgressTasks > 0 || p.pendingTasks > 0).length;
-    const totalBudget = projects.reduce((sum, p: any) => sum + (p.totalBudget || 0), 0);
-    const totalSpent = projects.reduce((sum, p: any) => sum + (p.budgetSpent || 0), 0);
+    const totalBudget = projects.reduce((sum: number, p) => sum + (p.totalBudget || 0), 0);
+    const totalSpent = projects.reduce((sum: number, p) => sum + (p.budgetSpent || 0), 0);
     const overallCompletionRate = allTasks.length > 0
-        ? Math.round((allTasks.filter((t: any) => t.status === "APPROVED").length / allTasks.length) * 100)
+        ? Math.round((allTasks.filter((t) => t.status === "APPROVED").length / allTasks.length) * 100)
         : 0;
 
     // Stock metrics
-    const lowStockItems = materials.filter((m: any) => (m.currentStock || 0) <= (m.minimumStock || 0)).length;
-    const totalStockValue = materials.reduce((sum: number, m: any) => sum + ((m.currentStock || 0) * (m.pricePerUnit || 0)), 0);
+    const lowStockItems = materials.filter((m) => (m.currentStock || 0) <= (m.minimumStock || 0)).length;
+    const totalStockValue = materials.reduce((sum: number, m) => sum + ((m.currentStock || 0) * (m.pricePerUnit || 0)), 0);
 
     // Finance metrics
-    const pendingPayoutsAmount = payouts.filter((p: any) => p.status === "PENDING").reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    const pendingPayoutsAmount = payouts.filter((p) => p.status === "PENDING").reduce((sum: number, p) => sum + (p.amount || 0), 0);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-US', {
@@ -260,7 +261,7 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
                                             <p className="text-slate-500 font-semibold text-sm">{language === 'ar' ? 'لا توجد مشاريع نشطة' : 'No active projects'}</p>
                                         </div>
                                     ) : (
-                                        projects.map((project: any, index) => {
+                                        projects.map((project, index: number) => {
                                             const isExpanded = expandedProject === project._id;
                                             const completionRate = project.totalTasksCount > 0
                                                 ? Math.round((project.completedTasksCount / project.totalTasksCount) * 100)

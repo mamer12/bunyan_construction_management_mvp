@@ -22,7 +22,7 @@ export function FinanceOverview() {
     const { t, language } = useLanguage();
 
     // Fetch finance data
-    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
+    const allTasks = (useQuery(api.tasks.getAllTasks, {}) || []).filter((t): t is NonNullable<typeof t> => t != null);
     const payouts = useQuery(api.wallet.getAllPayouts, {}) || [];
     const payoutStats = useQuery(api.wallet.getPayoutStats) || {
         pending: 0,
@@ -32,12 +32,12 @@ export function FinanceOverview() {
     };
 
     // Calculate key metrics
-    const approvedTasks = allTasks.filter((t: any) => t.status === "APPROVED");
-    const totalPaidToEngineers = approvedTasks.reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-    const totalPendingTasks = allTasks.filter((t: any) => t.status === "PENDING" || t.status === "IN_PROGRESS").length;
+    const approvedTasks = allTasks.filter((t) => t.status === "APPROVED");
+    const totalPaidToEngineers = approvedTasks.reduce((sum: number, t) => sum + (t.amount || 0), 0);
+    const totalPendingTasks = allTasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS").length;
 
-    const pendingPayouts = payouts.filter((p: any) => p.status === "PENDING");
-    const totalPendingPayoutAmount = pendingPayouts.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    const pendingPayouts = payouts.filter((p) => p.status === "PENDING");
+    const totalPendingPayoutAmount = pendingPayouts.reduce((sum: number, p) => sum + (p.amount || 0), 0);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ', {
@@ -182,11 +182,11 @@ export function FinanceOverview() {
                     </div>
                     <div style={{ padding: "1.25rem" }}>
                         {[
-                            { status: 'APPROVED', label: language === 'ar' ? 'معتمد' : 'Approved', color: '#059669', count: allTasks.filter((t: any) => t.status === 'APPROVED').length },
-                            { status: 'SUBMITTED', label: language === 'ar' ? 'مقدم' : 'Submitted', color: '#3B82F6', count: allTasks.filter((t: any) => t.status === 'SUBMITTED').length },
-                            { status: 'IN_PROGRESS', label: language === 'ar' ? 'قيد التنفيذ' : 'In Progress', color: '#F59E0B', count: allTasks.filter((t: any) => t.status === 'IN_PROGRESS').length },
-                            { status: 'PENDING', label: language === 'ar' ? 'معلق' : 'Pending', color: '#6B7280', count: allTasks.filter((t: any) => t.status === 'PENDING').length },
-                            { status: 'REJECTED', label: language === 'ar' ? 'مرفوض' : 'Rejected', color: '#DC2626', count: allTasks.filter((t: any) => t.status === 'REJECTED').length },
+                            { status: 'APPROVED', label: language === 'ar' ? 'معتمد' : 'Approved', color: '#059669', count: allTasks.filter((t) => t.status === 'APPROVED').length },
+                            { status: 'SUBMITTED', label: language === 'ar' ? 'مقدم' : 'Submitted', color: '#3B82F6', count: allTasks.filter((t) => t.status === 'SUBMITTED').length },
+                            { status: 'IN_PROGRESS', label: language === 'ar' ? 'قيد التنفيذ' : 'In Progress', color: '#F59E0B', count: allTasks.filter((t) => t.status === 'IN_PROGRESS').length },
+                            { status: 'PENDING', label: language === 'ar' ? 'معلق' : 'Pending', color: '#6B7280', count: allTasks.filter((t) => t.status === 'PENDING').length },
+                            { status: 'REJECTED', label: language === 'ar' ? 'مرفوض' : 'Rejected', color: '#DC2626', count: allTasks.filter((t) => t.status === 'REJECTED').length },
                         ].map((item) => {
                             const percentage = allTasks.length > 0 ? (item.count / allTasks.length) * 100 : 0;
                             return (
@@ -241,7 +241,7 @@ export function FinanceOverview() {
                                 {language === 'ar' ? 'لا توجد طلبات سحب' : 'No payout requests yet'}
                             </div>
                         ) : (
-                            payouts.slice(0, 5).map((payout: any) => (
+                            payouts.slice(0, 5).map((payout) => (
                                 <div
                                     key={payout._id}
                                     style={{
@@ -258,7 +258,7 @@ export function FinanceOverview() {
                                             color: "var(--text-primary)",
                                             fontSize: "0.875rem"
                                         }}>
-                                            {payout.engineer?.name || payout.engineer?.email || 'Unknown'}
+                                            {payout.engineerName || payout.engineerEmail || 'Unknown'}
                                         </p>
                                         <p style={{
                                             fontSize: "0.75rem",
@@ -274,11 +274,11 @@ export function FinanceOverview() {
                                         }}>
                                             {formatCurrency(payout.amount)}
                                         </p>
-                                        <span className={`badge badge--${payout.status === 'APPROVED' ? 'success' :
+                                        <span className={`badge badge--${payout.status === 'PAID' ? 'success' :
                                             payout.status === 'REJECTED' ? 'danger' : 'warning'
                                             }`} style={{ fontSize: "0.65rem" }}>
                                             {payout.status === 'PENDING' && (language === 'ar' ? 'معلق' : 'Pending')}
-                                            {payout.status === 'APPROVED' && (language === 'ar' ? 'معتمد' : 'Approved')}
+                                            {payout.status === 'PAID' && (language === 'ar' ? 'معتمد' : 'Paid')}
                                             {payout.status === 'REJECTED' && (language === 'ar' ? 'مرفوض' : 'Rejected')}
                                         </span>
                                     </div>

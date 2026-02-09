@@ -31,7 +31,7 @@ export function MaterialRequestModal({ projectId, unitId, onClose }: MaterialReq
         setItems(items.filter((_, i) => i !== index));
     };
 
-    const updateItem = (index: number, field: "materialId" | "quantity", value: any) => {
+    const updateItem = (index: number, field: "materialId" | "quantity", value: string | number) => {
         const newItems = [...items];
         newItems[index] = { ...newItems[index], [field]: value };
         setItems(newItems);
@@ -82,7 +82,7 @@ export function MaterialRequestModal({ projectId, unitId, onClose }: MaterialReq
                                     required
                                 >
                                     <option value="">Select Material</option>
-                                    {inventory.map((mat: any) => (
+                                    {inventory.map((mat) => (
                                         <option key={mat._id} value={mat._id}>
                                             {mat.name} ({mat.currentStock} {mat.unit} available)
                                         </option>

@@ -56,7 +56,7 @@ export function StockDashboard() {
     const updateMaterial = useMutation(api.stock.updateMaterial);
     const deleteMaterial = useMutation(api.stock.deleteMaterial);
 
-    const handleProcess = async (requestId: any, action: string) => {
+    const handleProcess = async (requestId: string, action: string) => {
         try {
             await processRequest({ requestId, action });
             toast.success(`Request ${action.toLowerCase()} successfully`);
@@ -65,17 +65,17 @@ export function StockDashboard() {
         }
     };
 
-    const handleAddMaterial = async (data: any) => {
+    const handleAddMaterial = async (data: Record<string, any>) => {
         try {
             await addMaterial(data);
             toast.success("Material added successfully");
             setShowAddModal(false);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to add material");
         }
     };
 
-    const handleUpdateMaterial = async (data: any) => {
+    const handleUpdateMaterial = async (data: Record<string, any>) => {
         try {
             await updateMaterial({
                 materialId: editingMaterial._id,
@@ -93,17 +93,17 @@ export function StockDashboard() {
         try {
             await deleteMaterial({ materialId: materialId as any });
             toast.success("Material deleted successfully");
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to delete material");
         }
     };
 
-    const filteredInventory = inventory.filter((item: any) =>
+    const filteredInventory = inventory.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const lowStockItems = inventory.filter(
-        (m: any) => m.minimumStock && m.currentStock <= m.minimumStock
+        (m) => m.minimumStock && m.currentStock <= m.minimumStock
     );
 
     return (
@@ -155,7 +155,7 @@ export function StockDashboard() {
                                 </div>
                                 <div className="stat-card__content">
                                     <span className="stat-card__value">
-                                        {requests.filter((r: any) => r.status === "PENDING").length}
+                                        {requests.filter((r) => r.status === "PENDING").length}
                                     </span>
                                     <span className="stat-card__label">Pending Requests</span>
                                 </div>
@@ -189,7 +189,7 @@ export function StockDashboard() {
                             </div>
                             <div className="card-body">
                                 <div className="low-stock-grid">
-                                    {lowStockItems.map((item: any) => (
+                                    {lowStockItems.map((item) => (
                                         <div key={item._id} className="low-stock-item">
                                             <span className="name">{item.name}</span>
                                             <span className="stock">
@@ -238,7 +238,7 @@ export function StockDashboard() {
                                 </div>
                             ) : (
                                 <div className="inventory-grid">
-                                    {filteredInventory.map((item: any) => (
+                                    {filteredInventory.map((item) => (
                                         <motion.div
                                             key={item._id}
                                             className={`inventory-card ${item.minimumStock && item.currentStock <= item.minimumStock
@@ -296,7 +296,7 @@ export function StockDashboard() {
                                 <h3>Material Requests</h3>
                             </div>
                             <span className="badge badge--warning">
-                                {requests.filter((r: any) => r.status === "PENDING").length} pending
+                                {requests.filter((r) => r.status === "PENDING").length} pending
                             </span>
                         </div>
 
@@ -320,7 +320,7 @@ export function StockDashboard() {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            requests.map((req: any) => (
+                                            requests.map((req) => (
                                                 <tr key={req._id}>
                                                     <td>
                                                         <span className="font-medium">Project</span>
@@ -333,9 +333,9 @@ export function StockDashboard() {
                                                     </td>
                                                     <td>
                                                         <div className="space-y-1">
-                                                            {req.items.map((item: any, i: number) => {
+                                                            {req.items.map((item, i: number) => {
                                                                 const material = inventory.find(
-                                                                    (m: any) => m._id === item.materialId
+                                                                    (m) => m._id === item.materialId
                                                                 );
                                                                 return (
                                                                     <div key={i} className="text-sm">
@@ -418,9 +418,9 @@ function MaterialFormModal({
     onClose,
     onSubmit
 }: {
-    material?: any;
+    material?: Record<string, any>;
     onClose: () => void;
-    onSubmit: (data: any) => void;
+    onSubmit: (data: Record<string, any>) => void;
 }) {
     const [name, setName] = useState(material?.name || "");
     const [unit, setUnit] = useState(material?.unit || "pcs");

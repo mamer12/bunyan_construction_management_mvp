@@ -84,7 +84,7 @@ export function RoleManagement() {
             toast.success(language === 'ar' ? 'تم إنشاء الدور بنجاح' : 'Role created successfully');
             setIsCreating(false);
             setNewRole({ name: "", displayName: "", displayNameAr: "", permissions: ["dashboard"], color: "#6B7280" });
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || 'Failed to create role');
         }
     };
@@ -102,12 +102,12 @@ export function RoleManagement() {
             });
             toast.success(language === 'ar' ? 'تم تحديث الدور بنجاح' : 'Role updated successfully');
             setEditingRole(null);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || 'Failed to update role');
         }
     };
 
-    const handleDeleteRole = async (roleId: any) => {
+    const handleDeleteRole = async (roleId: string) => {
         if (!confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الدور?' : 'Are you sure you want to delete this role?')) {
             return;
         }
@@ -115,7 +115,7 @@ export function RoleManagement() {
         try {
             await deleteRole({ roleId });
             toast.success(language === 'ar' ? 'تم حذف الدور' : 'Role deleted');
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || 'Failed to delete role');
         }
     };
@@ -124,7 +124,7 @@ export function RoleManagement() {
         try {
             const result = await seedRoles({});
             toast.success(`Created ${result.created} system roles`);
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message);
         }
     };
@@ -178,7 +178,7 @@ export function RoleManagement() {
 
             {/* Roles Grid */}
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {customRoles.map((role: any, index: number) => (
+                {customRoles.map((role, index: number) => (
                     <StaggerItem key={role._id}>
                         <MotionCard delay={index * 0.05}>
                             <div style={{ padding: "1.25rem" }}>
@@ -243,7 +243,7 @@ export function RoleManagement() {
                                     gap: "0.25rem"
                                 }}>
                                     <Users size={12} />
-                                    {users.filter((u: any) => u.roles?.includes(role.name) || u.role === role.name).length} {language === 'ar' ? 'مستخدم' : 'users'}
+                                    {users.filter((u) => u.roles?.includes(role.name) || u.role === role.name).length} {language === 'ar' ? 'مستخدم' : 'users'}
                                 </div>
 
                                 {/* Actions */}
@@ -519,11 +519,11 @@ function UserRoleAssignmentModal({
     assignUserRoles,
     language
 }: {
-    role: any;
-    users: any[];
-    allRoles: any[];
+    role: Record<string, any>;
+    users: Record<string, any>[];
+    allRoles: Record<string, any>[];
     onClose: () => void;
-    assignUserRoles: any;
+    assignUserRoles: Record<string, any>;
     language: string;
 }) {
     const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -533,7 +533,7 @@ function UserRoleAssignmentModal({
     // Initialize user roles
     useState(() => {
         const map: Record<string, string[]> = {};
-        users.forEach((u: any) => {
+        users.forEach((u) => {
             map[u._id] = u.roles || (u.role ? [u.role] : []);
         });
         setUserRolesMap(map);
@@ -557,12 +557,12 @@ function UserRoleAssignmentModal({
                 roles: userRolesMap[userId] || []
             });
             toast.success(language === 'ar' ? 'تم تحديث أدوار المستخدم' : 'User roles updated');
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message);
         }
     };
 
-    const filteredUsers = users.filter((u: any) => u.role); // Only show users with roles
+    const filteredUsers = users.filter((u) => u.role); // Only show users with roles
 
     return (
         <Modal
@@ -578,7 +578,7 @@ function UserRoleAssignmentModal({
                 </p>
 
                 <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                    {filteredUsers.map((user: any) => {
+                    {filteredUsers.map((user) => {
                         const isExpanded = expandedUser === user._id;
                         const currentRoles = userRolesMap[user._id] || user.roles || (user.role ? [user.role] : []);
 
@@ -635,7 +635,7 @@ function UserRoleAssignmentModal({
                                                     {language === 'ar' ? 'اختر الأدوار:' : 'Select roles:'}
                                                 </p>
                                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
-                                                    {allRoles.map((r: any) => {
+                                                    {allRoles.map((r) => {
                                                         const isSelected = (userRolesMap[user._id] || currentRoles).includes(r.name);
                                                         return (
                                                             <button

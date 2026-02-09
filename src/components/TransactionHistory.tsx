@@ -9,16 +9,16 @@ export function TransactionHistory() {
 
     if (!transactions) {
         return (
-            <motion.div 
+            <motion.div
                 className="bento-card span-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
             >
                 <div style={{ padding: "1.5rem" }}>
-                    <h2 style={{ 
-                        fontSize: "1rem", 
-                        fontWeight: 700, 
+                    <h2 style={{
+                        fontSize: "1rem",
+                        fontWeight: 700,
                         marginBottom: "1rem",
                         display: "flex",
                         alignItems: "center",
@@ -86,19 +86,19 @@ export function TransactionHistory() {
     };
 
     return (
-        <motion.div 
+        <motion.div
             className="bento-card span-2"
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.15, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-            whileHover={{ 
+            whileHover={{
                 y: -4,
                 boxShadow: "0 12px 24px rgba(5, 150, 105, 0.1)"
             }}
         >
             <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--border-light)" }}>
-                <h2 style={{ 
-                    fontSize: "1rem", 
+                <h2 style={{
+                    fontSize: "1rem",
                     fontWeight: 700,
                     margin: 0,
                     display: "flex",
@@ -113,11 +113,11 @@ export function TransactionHistory() {
             {transactions.length === 0 ? (
                 <div className="empty-state" style={{ padding: "2rem" }}>
                     <motion.div
-                        animate={{ 
+                        animate={{
                             opacity: [0.5, 0.8, 0.5]
                         }}
-                        transition={{ 
-                            duration: 2, 
+                        transition={{
+                            duration: 2,
                             repeat: Infinity,
                             ease: "easeInOut"
                         }}
@@ -128,8 +128,8 @@ export function TransactionHistory() {
                 </div>
             ) : (
                 <div style={{ maxHeight: 280, overflowY: "auto" }}>
-                    {transactions.map((tx: any, index: number) => (
-                        <MotionListItem 
+                    {transactions.map((tx, index: number) => (
+                        <MotionListItem
                             key={tx._id}
                             index={index}
                         >
@@ -145,17 +145,17 @@ export function TransactionHistory() {
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
                                     {getTransactionIcon(tx.type)}
                                     <div>
-                                        <div style={{ 
-                                            fontSize: "0.875rem", 
-                                            fontWeight: 600, 
+                                        <div style={{
+                                            fontSize: "0.875rem",
+                                            fontWeight: 600,
                                             color: "var(--text-primary)",
                                             marginBottom: "0.125rem"
                                         }}>
                                             {tx.description}
                                         </div>
-                                        <div style={{ 
-                                            fontSize: "0.75rem", 
-                                            color: "var(--text-muted)" 
+                                        <div style={{
+                                            fontSize: "0.75rem",
+                                            color: "var(--text-muted)"
                                         }}>
                                             {new Date(tx.createdAt).toLocaleDateString("en-US", {
                                                 month: "short",

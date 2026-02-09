@@ -18,7 +18,7 @@ export function PayoutsTab() {
         try {
             await processPayout({ payoutId: payoutId as any, action });
             toast.success(action === "pay" ? "Payout marked as paid!" : "Payout rejected");
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to process payout");
         } finally {
             setProcessingId(null);
@@ -118,7 +118,7 @@ export function PayoutsTab() {
                     </div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column" }}>
-                        {payouts.map((payout: any) => (
+                        {payouts.map((payout) => (
                             <div
                                 key={payout._id}
                                 style={{

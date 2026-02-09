@@ -15,7 +15,7 @@ import {
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useIsMobile } from "../hooks/use-mobile";
 
@@ -61,8 +61,8 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isColl
 
     // Fetch actual user data
     const role = useQuery(api.roles.getMyRole);
-    const users = useQuery(api.users.getUsers);
-    const currentUser = users?.find((u: any) => u.role === role);
+    const users = useQuery(api.users.getUsers, {});
+    const currentUser = users?.find((u) => u.role === role);
 
     const sidebarWidth = isCollapsed ? 80 : 280;
 
@@ -81,7 +81,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isColl
     const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
     const menuItems = allMenuItems.filter(item => allowedMenuIds.includes(item.id));
 
-    const sidebarVariants: any = {
+    const sidebarVariants: Variants = {
         hidden: { x: -280, opacity: 0 },
         visible: {
             x: 0,
@@ -100,7 +100,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isColl
         }
     };
 
-    const itemVariants: any = {
+    const itemVariants: Variants = {
         hidden: { opacity: 0, x: -20 },
         visible: (i: number) => ({
             opacity: 1,
@@ -113,7 +113,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose, isColl
         })
     };
 
-    const logoVariants: any = {
+    const logoVariants: Variants = {
         hidden: { opacity: 0, scale: 0.8 },
         visible: {
             opacity: 1,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import {
     ClipboardList,
     Users,
@@ -49,8 +50,8 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const role = useQuery(api.roles.getMyRole);
     const currentUser = useQuery(api.auth.loggedInUser);
 
-    const tasksForReview = useQuery(api.tasks.getTasksForReview) || [];
-    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
+    const tasksForReview = (useQuery(api.tasks.getTasksForReview) || []).filter((t): t is NonNullable<typeof t> => t != null);
+    const allTasks = (useQuery(api.tasks.getAllTasks, {}) || []).filter((t): t is NonNullable<typeof t> => t != null);
     const engineers = useQuery(api.engineers.getMyEngineers) || [];
     const units = useQuery(api.units.getAllUnits) || [];
 
@@ -58,7 +59,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 
     const handleReview = async (taskId: string, action: "approve" | "reject", comment?: string) => {
         try {
-            await reviewTask({ taskId: taskId as any, action, comment });
+            await reviewTask({ taskId: taskId as Id<"tasks">, action, comment });
             toast.success(action === "approve" ? "Task approved!" : "Task rejected");
             setSelectedTask(null);
         } catch (error) {
@@ -80,7 +81,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 
     const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
 
-    const completedTasks = allTasks.filter((t: any) => t.status === "APPROVED").length;
+    const completedTasks = allTasks.filter((t) => t.status === "APPROVED").length;
     const totalTasks = allTasks.length;
     const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -147,7 +148,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : (
-                                                    tasksForReview.map((task: any) => (
+                                                    tasksForReview.map((task) => (
                                                         <TableRow
                                                             key={task._id}
                                                             className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
@@ -194,7 +195,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                                             </div>
                                         ) : (
                                             <ul className="divide-y divide-slate-100">
-                                                {allTasks.slice(0, 5).map((task: any) => (
+                                                {allTasks.slice(0, 5).map((task) => (
                                                     <li key={task._id} className="flex gap-3 items-center py-3 px-4 hover:bg-slate-50/50 transition-colors min-w-0">
                                                         <div className={cn(
                                                             "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
@@ -209,7 +210,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm font-semibold text-slate-800 truncate">{task.title}</p>
                                                             <p className="text-xs text-slate-500 truncate">
-                                                                {task.engineerName} · {new Date(task.updatedAt || Date.now()).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                                {task.engineerName} · {new Date(task._creationTime || Date.now()).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                                                             </p>
                                                         </div>
                                                         <span className={cn(
@@ -347,7 +348,7 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
 }
 
 function TaskReviewModal({ task, onClose, onReview }: {
-    task: any;
+    task: Record<string, any>;
     onClose: () => void;
     onReview: (taskId: string, action: "approve" | "reject", comment?: string) => void;
 }) {

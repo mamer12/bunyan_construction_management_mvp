@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateTaskModalProps {
-    units: any[];
-    engineers: any[];
+    units: Record<string, any>[];
+    engineers: Record<string, any>[];
     onClose: () => void;
 }
 
@@ -45,7 +46,7 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
 
         try {
             // Upload attachments
-            const storageIds: any[] = [];
+            const storageIds: Id<"_storage">[] = [];
             for (const file of attachments) {
                 const uploadUrl = await generateUploadUrl();
                 const result = await fetch(uploadUrl, {
@@ -123,7 +124,7 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
                                     required
                                 >
                                     <option value="">Select unit...</option>
-                                    {units.map((unit: any) => (
+                                    {units.map((unit) => (
                                         <option key={unit._id} value={unit._id}>
                                             {unit.name} - {unit.project}
                                         </option>
@@ -156,7 +157,7 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
                                 required
                             >
                                 <option value="">Select engineer...</option>
-                                {engineers.map((eng: any) => (
+                                {engineers.map((eng) => (
                                     <option key={eng._id} value={eng.email}>
                                         {eng.name} ({eng.email})
                                     </option>

@@ -679,7 +679,7 @@ export function UnitGrid({ onCreateDeal }: { onCreateDeal?: (unitId: string) => 
                     }}
                 >
                     <option value="all">{labels.allProjects[language as 'en' | 'ar']}</option>
-                    {projects?.map((project: any) => (
+                    {projects?.map((project) => (
                         <option key={project._id} value={project._id}>
                             {project.name}
                         </option>

@@ -40,7 +40,7 @@ export function ProjectsView() {
 
             <StaggerContainer className="w-full">
                 <BentoGrid columns={3} className="w-full gap-5 md:gap-6">
-                    {projects.map((project: any, index: number) => (
+                    {projects.map((project, index: number) => (
                         <StaggerItem key={project._id}>
                             <ProjectCard
                                 project={project}

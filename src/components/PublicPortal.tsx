@@ -77,7 +77,7 @@ export function PublicPortal() {
         });
     };
 
-    const paidInstallments = data.installmentSchedule.filter((i: any) => i.status === 'paid').length;
+    const paidInstallments = data.installmentSchedule.filter((i) => i.status === 'paid').length;
     const totalInstallments = data.installmentSchedule.length;
 
     return (
@@ -350,7 +350,7 @@ export function PublicPortal() {
                         flexDirection: 'column',
                         gap: '0.75rem',
                     }}>
-                        {data.installmentSchedule.map((installment: any) => (
+                        {data.installmentSchedule.map((installment) => (
                             <div
                                 key={installment.number}
                                 style={{

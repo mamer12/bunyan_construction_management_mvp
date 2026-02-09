@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { FloatingMobileNav } from "./FloatingMobileNav";
@@ -34,7 +35,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
     const [activeTab, setActiveTab] = useState("dashboard");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const isMobile = useIsMobile();
-    const [selectedPayout, setSelectedPayout] = useState<any>(null);
+    const [selectedPayout, setSelectedPayout] = useState<Record<string, any> | null>(null);
 
     // User Data
     const currentUser = useQuery(api.auth.loggedInUser);
@@ -49,7 +50,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
 
     const handleProcess = async (payoutId: string, action: "pay" | "reject") => {
         try {
-            await processPayout({ payoutId: payoutId as any, action });
+            await processPayout({ payoutId: payoutId as Id<"payouts">, action });
             toast.success(`Payout ${action === "pay" ? "approved" : "rejected"} successfully`);
             setSelectedPayout(null);
         } catch (error) {
@@ -60,7 +61,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
     // Calculate stats
     const stats = {
         pendingCount: pendingPayouts.length,
-        pendingAmount: pendingPayouts.reduce((sum, p: any) => sum + p.amount, 0),
+        pendingAmount: pendingPayouts.reduce((sum, p) => sum + p.amount, 0),
         totalPaid: payoutStats?.paidAmount || 0,
         totalPayouts: allPayouts.length,
     };
@@ -138,7 +139,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                         </div>
                     ) : (
                         <div className="grid gap-3">
-                            {pendingPayouts.map((payout: any) => (
+                            {pendingPayouts.map((payout) => (
                                 <motion.div
                                     key={payout._id}
                                     className="p-4 rounded-xl border border-slate-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/30 transition-all cursor-pointer flex items-center justify-between"
@@ -147,10 +148,10 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
-                                            {payout.userName?.charAt(0) || "U"}
+                                            {payout.engineerName?.charAt(0) || "U"}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-slate-800">{payout.userName || "Unknown User"}</p>
+                                            <p className="font-semibold text-slate-800">{payout.engineerName || "Unknown User"}</p>
                                             <div className="flex items-center gap-1.5 text-xs text-slate-500">
                                                 <CreditCard size={12} />
                                                 {payout.paymentMethod || "Not specified"}
@@ -222,14 +223,14 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
                                         </td>
                                     </tr>
                                 ) : (
-                                    allPayouts.slice(0, 20).map((payout: any) => (
+                                    allPayouts.slice(0, 20).map((payout) => (
                                         <tr key={payout._id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                        {payout.userName?.charAt(0) || "U"}
+                                                        {payout.engineerName?.charAt(0) || "U"}
                                                     </div>
-                                                    <span className="font-medium text-slate-700">{payout.userName || "Unknown"}</span>
+                                                    <span className="font-medium text-slate-700">{payout.engineerName || "Unknown"}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 font-bold text-slate-900">${payout.amount.toLocaleString()}</td>
@@ -317,7 +318,7 @@ export function FinanceDashboard({ showHeader = true }: { showHeader?: boolean }
 }
 
 function PayoutDetailModal({ payout, onClose, handleProcess }: {
-    payout: any,
+    payout: Record<string, any>,
     onClose: () => void,
     handleProcess: (id: string, action: "pay" | "reject") => void
 }) {

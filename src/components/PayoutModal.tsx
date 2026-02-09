@@ -49,7 +49,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
             });
             toast.success("Payout request submitted!");
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to request payout");
         } finally {
             setLoading(false);

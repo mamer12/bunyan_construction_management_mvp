@@ -454,7 +454,7 @@ export function BentoGrid({ children, className = "", columns = 4 }: BentoGridPr
 // ============================================
 
 interface ProjectCardProps {
-  project: any;
+  project: Record<string, any>;
   onClick?: () => void;
   delay?: number;
 }

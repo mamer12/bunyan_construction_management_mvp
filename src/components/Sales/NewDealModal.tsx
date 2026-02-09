@@ -92,7 +92,7 @@ export function NewDealModal({ isOpen, onClose, preSelectedUnitId, preSelectedLe
 
     // Get milestone tasks for selected unit
     const selectedUnit = units?.find((u) => u._id === selectedUnitId);
-    const milestoneTasks = tasks?.filter((t: any) => t.isMilestone) || [];
+    const milestoneTasks = tasks?.filter((t) => t.isMilestone) || [];
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-US', {
@@ -149,7 +149,7 @@ export function NewDealModal({ isOpen, onClose, preSelectedUnitId, preSelectedLe
 
             toast.success(language === 'ar' ? 'تم إنشاء الصفقة بنجاح' : 'Deal created successfully');
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || 'Failed to create deal');
         } finally {
             setIsSubmitting(false);

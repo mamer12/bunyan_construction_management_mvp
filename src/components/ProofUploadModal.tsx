@@ -7,7 +7,7 @@ import { Camera, MapPin, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProofUploadModalProps {
-  task: any;
+  task: Record<string, any>;
   onClose: () => void;
 }
 

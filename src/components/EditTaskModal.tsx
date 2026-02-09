@@ -56,7 +56,7 @@ export function EditTaskModal({ task, engineers, onClose }: EditTaskModalProps) 
             });
             toast.success(language === 'ar' ? "تم تحديث المهمة" : "Task updated successfully");
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to update task");
         } finally {
             setIsSubmitting(false);
@@ -69,7 +69,7 @@ export function EditTaskModal({ task, engineers, onClose }: EditTaskModalProps) 
             await deleteTask({ taskId: task._id });
             toast.success(language === 'ar' ? "تم حذف المهمة" : "Task deleted successfully");
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to delete task");
         } finally {
             setIsSubmitting(false);
@@ -157,10 +157,10 @@ export function EditTaskModal({ task, engineers, onClose }: EditTaskModalProps) 
             <div className="form-group" style={{ marginTop: "0.5rem" }}>
                 <label className="label">{t("status")}</label>
                 <span className={`badge badge--${task.status === 'APPROVED' ? 'success' :
-                        task.status === 'REJECTED' ? 'danger' :
-                            task.status === 'IN_PROGRESS' ? 'primary' :
-                                task.status === 'SUBMITTED' ? 'info' :
-                                    'warning'
+                    task.status === 'REJECTED' ? 'danger' :
+                        task.status === 'IN_PROGRESS' ? 'primary' :
+                            task.status === 'SUBMITTED' ? 'info' :
+                                'warning'
                     }`}>
                     {task.status}
                 </span>

@@ -27,7 +27,7 @@ export function TeamsView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {engineers.map((eng: any) => (
+                {engineers.map((eng) => (
                     <div key={eng._id} className="bento-card group hover:border-blue-200 transition-colors">
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
@@ -104,7 +104,7 @@ function AddEngineerModal({ onClose }: { onClose: () => void }) {
             });
             toast.success("Engineer added successfully");
             onClose();
-        } catch (error: any) {
+        } catch (error) {
             toast.error(error.message || "Failed to add engineer");
         } finally {
             setLoading(false);

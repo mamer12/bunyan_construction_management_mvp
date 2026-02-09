@@ -1,6 +1,12 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAuth, requireAdmin } from "./lib/auth";
+import { userRole, userStatus } from "./lib/validators";
+import { VALID_SYSTEM_ROLES } from "./lib/constants";
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
 
 export const ensureUser = mutation({
     args: {
@@ -8,8 +14,7 @@ export const ensureUser = mutation({
         name: v.string(),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        const userId = await requireAuth(ctx);
 
         const existing = await ctx.db
             .query("users")
@@ -17,10 +22,8 @@ export const ensureUser = mutation({
             .first();
 
         if (!existing) {
-            // Determine role based on email for test accounts
             let role = "guest";
 
-            // Check for test account emails
             const email = args.email.toLowerCase();
             if (email.includes("admin@bunyan") || email.includes("admin")) {
                 role = "admin";
@@ -35,7 +38,6 @@ export const ensureUser = mutation({
             } else if (email.includes("stock@bunyan") || email.includes("stock")) {
                 role = "stock";
             } else {
-                // Check if this email is in the engineers table (added by a lead)
                 const engineerEntry = await ctx.db
                     .query("engineers")
                     .filter((q) => q.eq(q.field("email"), args.email))
@@ -44,7 +46,6 @@ export const ensureUser = mutation({
                 if (engineerEntry) {
                     role = "engineer";
                 } else {
-                    // First non-test user becomes admin, others are guest
                     const anyUser = await ctx.db.query("users").first();
                     role = anyUser ? "guest" : "admin";
                 }
@@ -59,18 +60,14 @@ export const ensureUser = mutation({
                 joinedAt: Date.now(),
             });
 
-            // IMPORTANT: Link the engineer entry if it exists
-            // This connects their Auth ID to tasks assigned by lead
+            // Link engineer entry if exists
             const engineerEntry = await ctx.db
                 .query("engineers")
                 .filter((q) => q.eq(q.field("email"), args.email))
                 .first();
 
             if (engineerEntry) {
-                await ctx.db.patch(engineerEntry._id, {
-                    userId: userId,
-                });
-                console.log(`Linked engineer ${args.email} to Auth ID ${userId}`);
+                await ctx.db.patch(engineerEntry._id, { userId });
             }
 
             return role;
@@ -81,123 +78,57 @@ export const ensureUser = mutation({
 
 export const setUserRole = mutation({
     args: {
-        targetUserId: v.string(), // This is the Convex ID of the USER doc, or Auth ID? Schema says userId is Auth ID. let's use Auth ID for lookup or User Doc ID. 
-        // Usually easier to update by Document ID. Let's accept Document ID or email.
-        // Let's use Document ID of the 'users' table for safety.
         userId: v.id("users"),
-        role: v.string(),
+        role: userRole,
     },
     handler: async (ctx, args) => {
-        const currentUserId = await getAuthUserId(ctx);
-        if (!currentUserId) throw new Error("Not authenticated");
-
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-            .first();
-
-        if (!currentUser || currentUser.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can set roles");
-        }
-
-        await ctx.db.patch(args.userId, {
-            role: args.role,
-        });
+        await requireAdmin(ctx);
+        await ctx.db.patch(args.userId, { role: args.role });
     },
 });
 
 export const getUsers = query({
-    args: {},
-    handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
-
-        // In a real app, restrict this to Admin/Lead
-        return await ctx.db.query("users").collect();
+    args: {
+        limit: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        await requireAuth(ctx);
+        const pageSize = args.limit ?? 100;
+        return await ctx.db.query("users").take(pageSize);
     },
 });
 
-// Update user role (Admin only)
 export const updateUserRole = mutation({
     args: {
         userId: v.id("users"),
-        role: v.string(),
+        role: userRole,
     },
     handler: async (ctx, args) => {
-        const currentUserId = await getAuthUserId(ctx);
-        if (!currentUserId) throw new Error("Not authenticated");
-
-        // Check if current user is admin
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-            .first();
-
-        if (!currentUser || currentUser.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can change user roles");
-        }
-
-        // Validate role
-        const validRoles = ["admin", "acting_manager", "lead", "engineer", "finance", "stock", "guest"];
-        if (!validRoles.includes(args.role)) {
-            throw new Error("Invalid role");
-        }
-
+        await requireAdmin(ctx);
         await ctx.db.patch(args.userId, { role: args.role });
         return { success: true };
     },
 });
 
-// Update user status (Admin only)
 export const updateUserStatus = mutation({
     args: {
         userId: v.id("users"),
-        status: v.string(),
+        status: userStatus,
     },
     handler: async (ctx, args) => {
-        const currentUserId = await getAuthUserId(ctx);
-        if (!currentUserId) throw new Error("Not authenticated");
-
-        // Check if current user is admin
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-            .first();
-
-        if (!currentUser || currentUser.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can change user status");
-        }
-
-        // Validate status
-        if (!["active", "inactive"].includes(args.status)) {
-            throw new Error("Invalid status");
-        }
-
+        await requireAdmin(ctx);
         await ctx.db.patch(args.userId, { status: args.status });
         return { success: true };
     },
 });
 
-// Delete user (Admin only)
 export const deleteUser = mutation({
     args: {
         userId: v.id("users"),
     },
     handler: async (ctx, args) => {
-        const currentUserId = await getAuthUserId(ctx);
-        if (!currentUserId) throw new Error("Not authenticated");
+        const currentUserId = await requireAdmin(ctx);
 
-        // Check if current user is admin
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-            .first();
-
-        if (!currentUser || currentUser.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can delete users");
-        }
-
-        // Prevent deleting yourself
         const targetUser = await ctx.db.get(args.userId);
         if (targetUser?.userId === currentUserId) {
             throw new Error("Cannot delete your own account");
@@ -208,26 +139,13 @@ export const deleteUser = mutation({
     },
 });
 
-// Clean up duplicate user entries (Admin only)
 export const cleanupDuplicateUsers = mutation({
     args: {},
     handler: async (ctx) => {
-        const currentUserId = await getAuthUserId(ctx);
-        if (!currentUserId) throw new Error("Not authenticated");
-
-        // Check if current user is admin
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-            .first();
-
-        if (!currentUser || currentUser.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can run cleanup");
-        }
+        await requireAdmin(ctx);
 
         const allUsers = await ctx.db.query("users").collect();
 
-        // Group by userId
         const usersByAuthId: Record<string, typeof allUsers> = {};
         for (const user of allUsers) {
             if (user.userId) {
@@ -239,14 +157,11 @@ export const cleanupDuplicateUsers = mutation({
         }
 
         let cleaned = 0;
-        // For each group with duplicates, keep the one with role and delete others
         for (const authId in usersByAuthId) {
             const duplicates = usersByAuthId[authId];
             if (duplicates.length > 1) {
-                // Find the "main" entry (one with role)
-                const mainEntry = duplicates.find(u => u.role && u.email);
+                const mainEntry = duplicates.find((u) => u.role && u.email);
                 if (mainEntry) {
-                    // Delete the others
                     for (const dup of duplicates) {
                         if (dup._id !== mainEntry._id) {
                             await ctx.db.delete(dup._id);
@@ -263,7 +178,6 @@ export const cleanupDuplicateUsers = mutation({
 
 // ============= CUSTOM ROLE MANAGEMENT =============
 
-// Get all custom roles
 export const getCustomRoles = query({
     args: {},
     handler: async (ctx) => {
@@ -271,7 +185,6 @@ export const getCustomRoles = query({
     },
 });
 
-// Create a custom role (Admin only)
 export const createCustomRole = mutation({
     args: {
         name: v.string(),
@@ -281,21 +194,8 @@ export const createCustomRole = mutation({
         color: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        const userId = await requireAdmin(ctx);
 
-        // Check admin permission
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
-
-        const userRoles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-        if (!userRoles.includes("admin")) {
-            throw new Error("Only admins can create roles");
-        }
-
-        // Check if role name already exists
         const existingRole = await ctx.db
             .query("custom_roles")
             .withIndex("by_name", (q) => q.eq("name", args.name))
@@ -305,8 +205,8 @@ export const createCustomRole = mutation({
             throw new Error("Role with this name already exists");
         }
 
-        const roleId = await ctx.db.insert("custom_roles", {
-            name: args.name.toLowerCase().replace(/\s+/g, '_'),
+        return await ctx.db.insert("custom_roles", {
+            name: args.name.toLowerCase().replace(/\s+/g, "_"),
             displayName: args.displayName,
             displayNameAr: args.displayNameAr,
             permissions: args.permissions,
@@ -315,12 +215,9 @@ export const createCustomRole = mutation({
             createdAt: Date.now(),
             createdBy: userId,
         });
-
-        return roleId;
     },
 });
 
-// Update a custom role (Admin only)
 export const updateCustomRole = mutation({
     args: {
         roleId: v.id("custom_roles"),
@@ -330,29 +227,22 @@ export const updateCustomRole = mutation({
         color: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
-
-        // Check admin permission
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
-
-        const userRoles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-        if (!userRoles.includes("admin")) {
-            throw new Error("Only admins can update roles");
-        }
+        await requireAdmin(ctx);
 
         const role = await ctx.db.get(args.roleId);
         if (!role) throw new Error("Role not found");
 
-        // Can't change name of system roles
         if (role.isSystem) {
             throw new Error("Cannot modify system roles");
         }
 
-        const updates: Record<string, any> = {};
+        const updates: {
+            displayName?: string;
+            displayNameAr?: string;
+            permissions?: string[];
+            color?: string;
+        } = {};
+
         if (args.displayName !== undefined) updates.displayName = args.displayName;
         if (args.displayNameAr !== undefined) updates.displayNameAr = args.displayNameAr;
         if (args.permissions !== undefined) updates.permissions = args.permissions;
@@ -363,25 +253,12 @@ export const updateCustomRole = mutation({
     },
 });
 
-// Delete a custom role (Admin only)
 export const deleteCustomRole = mutation({
     args: {
         roleId: v.id("custom_roles"),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
-
-        // Check admin permission
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
-
-        const userRoles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-        if (!userRoles.includes("admin")) {
-            throw new Error("Only admins can delete roles");
-        }
+        await requireAdmin(ctx);
 
         const role = await ctx.db.get(args.roleId);
         if (!role) throw new Error("Role not found");
@@ -394,10 +271,9 @@ export const deleteCustomRole = mutation({
         const usersWithRole = await ctx.db.query("users").collect();
         for (const user of usersWithRole) {
             if (user.roles?.includes(role.name)) {
-                const newRoles = user.roles.filter(r => r !== role.name);
+                const newRoles = user.roles.filter((r) => r !== role.name);
                 await ctx.db.patch(user._id, { roles: newRoles });
             }
-            // Also check legacy role field
             if (user.role === role.name) {
                 await ctx.db.patch(user._id, { role: undefined });
             }
@@ -408,31 +284,17 @@ export const deleteCustomRole = mutation({
     },
 });
 
-// Assign multiple roles to a user (Admin only)
 export const assignUserRoles = mutation({
     args: {
         userId: v.id("users"),
         roles: v.array(v.string()),
     },
     handler: async (ctx, args) => {
-        const authUserId = await getAuthUserId(ctx);
-        if (!authUserId) throw new Error("Not authenticated");
-
-        // Check admin permission
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_user", (q) => q.eq("userId", authUserId))
-            .first();
-
-        const currentUserRoles = currentUser?.roles || (currentUser?.role ? [currentUser.role] : []);
-        if (!currentUserRoles.includes("admin")) {
-            throw new Error("Only admins can assign roles");
-        }
+        await requireAdmin(ctx);
 
         const targetUser = await ctx.db.get(args.userId);
         if (!targetUser) throw new Error("User not found");
 
-        // Update both roles array and legacy role field (use first role for backward compatibility)
         await ctx.db.patch(args.userId, {
             roles: args.roles,
             role: args.roles.length > 0 ? args.roles[0] : undefined,
@@ -442,7 +304,6 @@ export const assignUserRoles = mutation({
     },
 });
 
-// Seed system roles (call once to initialize built-in roles)
 export const seedSystemRoles = mutation({
     args: {},
     handler: async (ctx) => {

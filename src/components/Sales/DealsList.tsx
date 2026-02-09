@@ -25,7 +25,7 @@ export function DealsList() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
-    const deals = useQuery(api.crm.getDeals, statusFilter !== 'all' ? { status: statusFilter } : {});
+    const deals = useQuery(api.deals.getDeals, statusFilter !== 'all' ? { status: statusFilter } : {});
 
     // Magic Link Mutations
     const generateToken = useMutation(api.portal.generatePublicAccessToken);
@@ -149,92 +149,92 @@ export function DealsList() {
                             {filteredDeals?.map((deal) => (
                                 <TableRow key={deal._id} className="hover:bg-slate-50/50 transition-colors group">
                                     <TableCell className="py-3 px-4 font-medium min-w-0">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
-                                        <span className="truncate">{deal.unitName}</span>
-                                    </div>
-                                    <div className="text-xs mt-1 truncate text-slate-400">{deal.projectName}</div>
-                                </TableCell>
-                                <TableCell className="py-3 px-4 font-medium min-w-0">
-                                    <span className="truncate block">{deal.clientName}</span>
-                                </TableCell>
-                                <TableCell className="py-3 px-4 font-medium text-slate-900">
-                                    {formatCurrency(deal.finalPrice)}
-                                </TableCell>
-                                <TableCell className="py-3 px-4">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                        style={{ backgroundColor: `${statusColors[deal.status]}20`, color: statusColors[deal.status] }}
-                                    >
-                                        {deal.status}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="py-3 px-4 text-slate-500 text-sm">
-                                    {formatDate(deal.createdAt)}
-                                </TableCell>
-                                <TableCell className="py-3 px-4">
-                                    {deal.publicAccessEnabled && deal.publicAccessToken ? (
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    const link = `${window.location.origin}/view?token=${deal.publicAccessToken}`;
-                                                    copyToClipboard(link);
-                                                }}
-                                                className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-100"
-                                            >
-                                                <Copy size={12} />
-                                                {labels.copy[language as 'en' | 'ar']}
-                                            </button>
-                                            <button
-                                                onClick={() => window.open(`/view?token=${deal.publicAccessToken}`, '_blank')}
-                                                className="text-slate-400 hover:text-slate-600"
-                                                title="View"
-                                            >
-                                                <ExternalLink size={14} />
-                                            </button>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                            <span className="truncate">{deal.unitName}</span>
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleGenerateLink(deal._id)}
-                                            className="text-xs flex items-center gap-1 text-slate-500 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-2 py-1 rounded border border-slate-200 hover:border-emerald-200 transition-colors"
+                                        <div className="text-xs mt-1 truncate text-slate-400">{deal.projectName}</div>
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4 font-medium min-w-0">
+                                        <span className="truncate block">{deal.clientName}</span>
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4 font-medium text-slate-900">
+                                        {formatCurrency(deal.finalPrice)}
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                            style={{ backgroundColor: `${statusColors[deal.status]}20`, color: statusColors[deal.status] }}
                                         >
-                                            {statusColors[deal.status] === '#10B981' || statusColors[deal.status] === '#3B82F6' ? (
-                                                <>
-                                                    <Eye size={12} />
-                                                    {labels.createLink[language as 'en' | 'ar']}
-                                                </>
-                                            ) : (
-                                                <span className="opacity-50 cursor-not-allowed">Not available</span>
-                                            )}
-                                        </button>
-                                    )}
-                                </TableCell>
-                                <TableCell className="py-3 px-4 text-end">
-                                    <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <DownloadContractButton dealId={deal._id} variant="icon" />
-
-                                        {deal.publicAccessEnabled && (
+                                            {deal.status}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4 text-slate-500 text-sm">
+                                        {formatDate(deal.createdAt)}
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4">
+                                        {deal.publicAccessEnabled && deal.publicAccessToken ? (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const link = `${window.location.origin}/view?token=${deal.publicAccessToken}`;
+                                                        copyToClipboard(link);
+                                                    }}
+                                                    className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-100"
+                                                >
+                                                    <Copy size={12} />
+                                                    {labels.copy[language as 'en' | 'ar']}
+                                                </button>
+                                                <button
+                                                    onClick={() => window.open(`/view?token=${deal.publicAccessToken}`, '_blank')}
+                                                    className="text-slate-400 hover:text-slate-600"
+                                                    title="View"
+                                                >
+                                                    <ExternalLink size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
                                             <button
-                                                onClick={() => handleDisableLink(deal._id)}
-                                                className="p-2 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                                title={labels.disable[language as 'en' | 'ar']}
+                                                onClick={() => handleGenerateLink(deal._id)}
+                                                className="text-xs flex items-center gap-1 text-slate-500 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-2 py-1 rounded border border-slate-200 hover:border-emerald-200 transition-colors"
                                             >
-                                                <EyeOff size={18} />
+                                                {statusColors[deal.status] === '#10B981' || statusColors[deal.status] === '#3B82F6' ? (
+                                                    <>
+                                                        <Eye size={12} />
+                                                        {labels.createLink[language as 'en' | 'ar']}
+                                                    </>
+                                                ) : (
+                                                    <span className="opacity-50 cursor-not-allowed">Not available</span>
+                                                )}
                                             </button>
                                         )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {filteredDeals?.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={7} className="py-8 text-center text-slate-400 text-sm">
-                                    No deals found matching your criteria.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </DataTable>
-            </TableContainer>
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4 text-end">
+                                        <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <DownloadContractButton dealId={deal._id} variant="icon" />
+
+                                            {deal.publicAccessEnabled && (
+                                                <button
+                                                    onClick={() => handleDisableLink(deal._id)}
+                                                    className="p-2 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                                    title={labels.disable[language as 'en' | 'ar']}
+                                                >
+                                                    <EyeOff size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {filteredDeals?.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="py-8 text-center text-slate-400 text-sm">
+                                        No deals found matching your criteria.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </DataTable>
+                </TableContainer>
             </div>
         </div>
     );

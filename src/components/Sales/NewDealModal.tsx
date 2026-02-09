@@ -65,13 +65,13 @@ export function NewDealModal({ isOpen, onClose, preSelectedUnitId, preSelectedLe
     const [notes, setNotes] = useState('');
 
     // Queries
-    const units = useQuery(api.crm.getUnitsForSales, {}) as Unit[] | undefined;
-    const leads = useQuery(api.crm.getLeads, {}) as Lead[] | undefined;
+    const units = useQuery(api.unitSales.getUnitsForSales, {}) as Unit[] | undefined;
+    const leads = useQuery(api.leads.getLeads, {}) as Lead[] | undefined;
     const tasks = useQuery(api.tasks.getAllTasks, {});
 
     // Mutations
-    const createDeal = useMutation(api.crm.createDeal);
-    const generateInstallments = useMutation(api.crm.generateInstallmentPlan);
+    const createDeal = useMutation(api.deals.createDeal);
+    const generateInstallments = useMutation(api.installments.generateInstallmentPlan);
 
     // Initialize with pre-selected values
     useEffect(() => {

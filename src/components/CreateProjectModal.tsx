@@ -13,7 +13,7 @@ import { Modal } from "./ui/modal";
 
 export function CreateProjectModal({ onClose }: CreateProjectModalProps) {
     const { t, language } = useLanguage();
-    const createProject = useMutation(api.tasks.createProject);
+    const createProject = useMutation(api.projects.createProject);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({

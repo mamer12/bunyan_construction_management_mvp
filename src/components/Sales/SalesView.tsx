@@ -241,7 +241,7 @@ export function SalesView() {
     const [showNewDealModal, setShowNewDealModal] = useState(false);
     const [preSelectedUnitId, setPreSelectedUnitId] = useState<string | undefined>();
 
-    const stats = useQuery(api.crm.getSalesStats, {});
+    const stats = useQuery(api.unitSales.getSalesStats, {});
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-US', {

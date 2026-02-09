@@ -8,13 +8,13 @@ import { CheckCircle, XCircle, Clock, MapPin, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 
 export function DeveloperDashboard() {
-  const units = useQuery(api.tasks.getAllUnits) || [];
+  const units = useQuery(api.units.getAllUnits) || [];
   const tasksForReview = useQuery(api.tasks.getTasksForReview) || [];
-  const approveTask = useMutation(api.tasks.approveTask);
+  const reviewTask = useMutation(api.tasks.reviewTask);
 
   const handleApprove = async (taskId: string, approved: boolean) => {
     try {
-      await approveTask({ taskId: taskId as any, approved });
+      await reviewTask({ taskId: taskId as any, action: approved ? "approve" : "reject" });
       toast.success(approved ? "Task approved!" : "Task rejected!");
     } catch (error) {
       toast.error("Failed to update task");
@@ -50,7 +50,7 @@ export function DeveloperDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -131,20 +131,20 @@ export function DeveloperDashboard() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {task.photoUrl && (
                         <div className="ml-4">
-                          <img 
-                            src={task.photoUrl} 
+                          <img
+                            src={task.photoUrl}
                             alt="Proof of work"
                             className="w-20 h-20 object-cover rounded-lg border border-slate-200"
                           />
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex space-x-2 mt-4">
-                      <Button 
+                      <Button
                         onClick={() => handleApprove(task._id, true)}
                         className="bg-green-600 hover:bg-green-700 text-white"
                         size="sm"
@@ -152,7 +152,7 @@ export function DeveloperDashboard() {
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Approve
                       </Button>
-                      <Button 
+                      <Button
                         onClick={() => handleApprove(task._id, false)}
                         variant="outline"
                         className="border-red-200 text-red-600 hover:bg-red-50"
@@ -193,7 +193,7 @@ export function DeveloperDashboard() {
                       <td className="py-3 px-4 text-slate-600">{unit.project}</td>
                       <td className="py-3 px-4 text-slate-600">{unit.location}</td>
                       <td className="py-3 px-4">
-                        <Badge 
+                        <Badge
                           variant={unit.status === "FINISHED" ? "default" : "secondary"}
                           className={unit.status === "FINISHED" ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}
                         >
@@ -203,10 +203,10 @@ export function DeveloperDashboard() {
                       <td className="py-3 px-4">
                         <div className="flex items-center space-x-2">
                           <div className="flex-1 bg-slate-200 rounded-full h-2">
-                            <div 
-                              className="bg-orange-600 h-2 rounded-full" 
-                              style={{ 
-                                width: `${unit.taskCount > 0 ? (unit.completedTasks / unit.taskCount) * 100 : 0}%` 
+                            <div
+                              className="bg-orange-600 h-2 rounded-full"
+                              style={{
+                                width: `${unit.taskCount > 0 ? (unit.completedTasks / unit.taskCount) * 100 : 0}%`
                               }}
                             />
                           </div>

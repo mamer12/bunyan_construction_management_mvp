@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export function TeamsView() {
-    const engineers = useQuery(api.tasks.getMyEngineers) || [];
+    const engineers = useQuery(api.engineers.getMyEngineers) || [];
     const { t } = useLanguage();
     const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -90,7 +90,7 @@ export function TeamsView() {
 import { Modal } from "./ui/modal";
 
 function AddEngineerModal({ onClose }: { onClose: () => void }) {
-    const addEngineer = useMutation(api.tasks.addEngineer);
+    const addEngineer = useMutation(api.engineers.addEngineer);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "" });
 

@@ -1,6 +1,8 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAuth, requireRole } from "./lib/auth";
+import { resolveUserName } from "./lib/users";
+import { payoutStatus } from "./lib/validators";
 
 // ============================================
 // WALLET QUERIES
@@ -9,8 +11,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const getMyWallet = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return null;
+        const userId = await requireAuth(ctx);
 
         const wallet = await ctx.db
             .query("wallets")
@@ -18,7 +19,6 @@ export const getMyWallet = query({
             .first();
 
         if (!wallet) {
-            // Return default empty wallet
             return {
                 userId,
                 availableBalance: 0,
@@ -37,32 +37,26 @@ export const getMyTransactions = query({
         limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
+        const userId = await requireAuth(ctx);
 
-        const transactions = await ctx.db
+        return await ctx.db
             .query("transactions")
             .withIndex("by_user", (q) => q.eq("userId", userId))
             .order("desc")
             .take(args.limit || 20);
-
-        return transactions;
     },
 });
 
 export const getMyPayouts = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
+        const userId = await requireAuth(ctx);
 
-        const payouts = await ctx.db
+        return await ctx.db
             .query("payouts")
             .withIndex("by_user", (q) => q.eq("userId", userId))
             .order("desc")
             .collect();
-
-        return payouts;
     },
 });
 
@@ -77,10 +71,8 @@ export const requestPayout = mutation({
         notes: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        const userId = await requireAuth(ctx);
 
-        // Get wallet
         const wallet = await ctx.db
             .query("wallets")
             .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -98,7 +90,6 @@ export const requestPayout = mutation({
             throw new Error("Insufficient balance");
         }
 
-        // Check for existing pending payout
         const pendingPayout = await ctx.db
             .query("payouts")
             .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -109,7 +100,6 @@ export const requestPayout = mutation({
             throw new Error("You already have a pending payout request");
         }
 
-        // Create payout request
         const payoutId = await ctx.db.insert("payouts", {
             userId,
             amount: args.amount,
@@ -119,12 +109,10 @@ export const requestPayout = mutation({
             notes: args.notes,
         });
 
-        // Deduct from available balance (move to "in transit")
         await ctx.db.patch(wallet._id, {
             availableBalance: wallet.availableBalance - args.amount,
         });
 
-        // Add transaction record
         await ctx.db.insert("transactions", {
             userId,
             type: "PAYOUT_REQUESTED",
@@ -145,8 +133,7 @@ export const requestPayout = mutation({
 export const getPendingPayouts = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
+        await requireAuth(ctx);
 
         const payouts = await ctx.db
             .query("payouts")
@@ -154,18 +141,14 @@ export const getPendingPayouts = query({
             .order("desc")
             .collect();
 
-        // Get user info for each payout
         const payoutsWithUser = await Promise.all(
             payouts.map(async (payout) => {
-                const engineer = await ctx.db
-                    .query("engineers")
-                    .withIndex("by_user", (q) => q.eq("userId", payout.userId))
-                    .first();
+                const engineerName = await resolveUserName(ctx, payout.userId);
 
                 return {
                     ...payout,
-                    engineerName: engineer?.name || "Unknown",
-                    engineerEmail: engineer?.email || payout.userId,
+                    engineerName,
+                    engineerEmail: payout.userId,
                 };
             })
         );
@@ -176,37 +159,36 @@ export const getPendingPayouts = query({
 
 export const getAllPayouts = query({
     args: {
-        status: v.optional(v.string()),
+        status: v.optional(payoutStatus),
+        limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
+        await requireAuth(ctx);
 
+        const pageSize = args.limit ?? 50;
         let payouts;
+
         if (args.status) {
             payouts = await ctx.db
                 .query("payouts")
                 .withIndex("by_status", (q) => q.eq("status", args.status!))
                 .order("desc")
-                .collect();
+                .take(pageSize);
         } else {
             payouts = await ctx.db
                 .query("payouts")
                 .order("desc")
-                .collect();
+                .take(pageSize);
         }
 
         const payoutsWithUser = await Promise.all(
             payouts.map(async (payout) => {
-                const engineer = await ctx.db
-                    .query("engineers")
-                    .withIndex("by_user", (q) => q.eq("userId", payout.userId))
-                    .first();
+                const engineerName = await resolveUserName(ctx, payout.userId);
 
                 return {
                     ...payout,
-                    engineerName: engineer?.name || "Unknown",
-                    engineerEmail: engineer?.email || payout.userId,
+                    engineerName,
+                    engineerEmail: payout.userId,
                 };
             })
         );
@@ -218,19 +200,19 @@ export const getAllPayouts = query({
 export const getPayoutStats = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return null;
+        await requireAuth(ctx);
 
         const allPayouts = await ctx.db.query("payouts").collect();
 
         const pending = allPayouts.filter((p) => p.status === "PENDING");
         const paid = allPayouts.filter((p) => p.status === "PAID");
 
-        // This month's payouts
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
-        const paidThisMonth = paid.filter((p) => p.processedAt && p.processedAt >= startOfMonth.getTime());
+        const paidThisMonth = paid.filter(
+            (p) => p.processedAt && p.processedAt >= startOfMonth.getTime()
+        );
 
         return {
             pendingCount: pending.length,
@@ -254,8 +236,7 @@ export const processPayout = mutation({
         notes: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        const userId = await requireAuth(ctx);
 
         const payout = await ctx.db.get(args.payoutId);
         if (!payout) throw new Error("Payout not found");
@@ -267,7 +248,6 @@ export const processPayout = mutation({
             .first();
 
         if (args.action === "pay") {
-            // Mark as paid
             await ctx.db.patch(args.payoutId, {
                 status: "PAID",
                 processedAt: Date.now(),
@@ -275,24 +255,21 @@ export const processPayout = mutation({
                 notes: args.notes || payout.notes,
             });
 
-            // Update wallet
             if (wallet) {
                 await ctx.db.patch(wallet._id, {
                     totalWithdrawn: wallet.totalWithdrawn + payout.amount,
                 });
             }
 
-            // Add transaction
             await ctx.db.insert("transactions", {
                 userId: payout.userId,
-                type: "PAYOUT_PAID",
-                amount: 0, // Already deducted when requested
+                type: "PAYOUT_COMPLETED",
+                amount: 0,
                 payoutId: args.payoutId,
                 createdAt: Date.now(),
-                description: `Payout of $${payout.amount} completed via ${payout.paymentMethod}`,
+                description: `Payout of ${payout.amount} completed via ${payout.paymentMethod}`,
             });
         } else {
-            // Reject - refund to available balance
             await ctx.db.patch(args.payoutId, {
                 status: "REJECTED",
                 processedAt: Date.now(),
@@ -300,14 +277,12 @@ export const processPayout = mutation({
                 notes: args.notes || "Rejected by admin",
             });
 
-            // Refund to wallet
             if (wallet) {
                 await ctx.db.patch(wallet._id, {
                     availableBalance: wallet.availableBalance + payout.amount,
                 });
             }
 
-            // Add transaction
             await ctx.db.insert("transactions", {
                 userId: payout.userId,
                 type: "PAYOUT_REJECTED",
@@ -334,14 +309,12 @@ export const creditWallet = mutation({
         description: v.string(),
     },
     handler: async (ctx, args) => {
-        // Get or create wallet
         let wallet = await ctx.db
             .query("wallets")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .first();
 
         if (!wallet) {
-            // Create new wallet
             await ctx.db.insert("wallets", {
                 userId: args.userId,
                 availableBalance: args.amount,
@@ -350,14 +323,12 @@ export const creditWallet = mutation({
                 totalWithdrawn: 0,
             });
         } else {
-            // Update existing wallet
             await ctx.db.patch(wallet._id, {
                 availableBalance: wallet.availableBalance + args.amount,
                 totalEarned: wallet.totalEarned + args.amount,
             });
         }
 
-        // Add transaction record
         await ctx.db.insert("transactions", {
             userId: args.userId,
             type: "TASK_APPROVED",

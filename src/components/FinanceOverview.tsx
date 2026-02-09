@@ -22,7 +22,7 @@ export function FinanceOverview() {
     const { t, language } = useLanguage();
 
     // Fetch finance data
-    const allTasks = useQuery(api.tasks.getAllTasks) || [];
+    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
     const payouts = useQuery(api.wallet.getAllPayouts, {}) || [];
     const payoutStats = useQuery(api.wallet.getPayoutStats) || {
         pending: 0,

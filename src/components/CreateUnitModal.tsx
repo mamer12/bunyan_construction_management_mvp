@@ -15,7 +15,7 @@ import { Modal } from "./ui/modal";
 
 export function CreateUnitModal({ projectId, onClose }: CreateUnitModalProps) {
     const { t } = useLanguage();
-    const createUnit = useMutation(api.tasks.createUnit);
+    const createUnit = useMutation(api.units.createUnit);
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState("");
 

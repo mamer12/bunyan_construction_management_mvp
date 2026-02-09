@@ -530,9 +530,9 @@ export function UnitGrid({ onCreateDeal }: { onCreateDeal?: (unitId: string) => 
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [selectedProject, setSelectedProject] = useState<string>('all');
 
-    const units = useQuery(api.crm.getUnitsForSales, {}) as Unit[] | undefined;
-    const projects = useQuery(api.tasks.getProjects, {});
-    const releaseExpired = useMutation(api.crm.releaseExpiredReservations);
+    const units = useQuery(api.unitSales.getUnitsForSales, {}) as Unit[] | undefined;
+    const projects = useQuery(api.projects.getProjects, {});
+    const releaseExpired = useMutation(api.unitSales.releaseExpiredReservations);
 
     // Filter units
     const filteredUnits = units?.filter((unit) => {

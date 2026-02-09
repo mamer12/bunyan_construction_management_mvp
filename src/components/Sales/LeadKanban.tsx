@@ -307,7 +307,7 @@ function NewLeadModal({
     onClose: () => void;
     language: string;
 }) {
-    const createLead = useMutation(api.crm.createLead);
+    const createLead = useMutation(api.leads.createLead);
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -575,8 +575,8 @@ export function LeadKanban({ onLeadSelect }: { onLeadSelect?: (lead: Lead) => vo
     const [showNewModal, setShowNewModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const leads = useQuery(api.crm.getLeads, {}) as Lead[] | undefined;
-    const updateLeadStatus = useMutation(api.crm.updateLeadStatus);
+    const leads = useQuery(api.leads.getLeads, {}) as Lead[] | undefined;
+    const updateLeadStatus = useMutation(api.leads.updateLeadStatus);
 
     const columns = [
         { status: 'new', title: 'New', titleAr: 'جديد', color: '#3B82F6' },

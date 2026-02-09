@@ -29,8 +29,8 @@ interface InvoiceButtonProps {
 
 export function DownloadInvoiceButton({ taskId, variant = 'button' }: InvoiceButtonProps) {
     const [loading, setLoading] = useState(false);
-    const invoiceData = useQuery(api.portal.getInvoiceData, { taskId: taskId as Id<"tasks"> });
-    const recordDocument = useMutation(api.portal.recordDocument);
+    const invoiceData = useQuery(api.settings.getInvoiceData, { taskId: taskId as Id<"tasks"> });
+    const recordDocument = useMutation(api.settings.recordDocument);
 
     const handleDownload = async () => {
         if (!invoiceData) {
@@ -121,8 +121,8 @@ interface ContractButtonProps {
 
 export function DownloadContractButton({ dealId, variant = 'button' }: ContractButtonProps) {
     const [loading, setLoading] = useState(false);
-    const contractData = useQuery(api.portal.getContractData, { dealId: dealId as Id<"deals"> });
-    const recordDocument = useMutation(api.portal.recordDocument);
+    const contractData = useQuery(api.settings.getContractData, { dealId: dealId as Id<"deals"> });
+    const recordDocument = useMutation(api.settings.recordDocument);
 
     const handleDownload = async () => {
         if (!contractData) {
@@ -214,8 +214,8 @@ interface ReceiptButtonProps {
 
 export function DownloadReceiptButton({ installmentId, variant = 'button' }: ReceiptButtonProps) {
     const [loading, setLoading] = useState(false);
-    const receiptData = useQuery(api.portal.getReceiptData, { installmentId: installmentId as Id<"installments"> });
-    const recordDocument = useMutation(api.portal.recordDocument);
+    const receiptData = useQuery(api.settings.getReceiptData, { installmentId: installmentId as Id<"installments"> });
+    const recordDocument = useMutation(api.settings.recordDocument);
 
     const handleDownload = async () => {
         if (!receiptData) {

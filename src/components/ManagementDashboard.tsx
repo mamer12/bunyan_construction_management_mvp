@@ -77,10 +77,10 @@ export function ManagementDashboard({ showHeader = true }: { showHeader?: boolea
     const allowedMenuIds = ROLE_MENU_ACCESS[role || "guest"] || ROLE_MENU_ACCESS.guest;
 
     // Fetch all data
-    const allTasks = useQuery(api.tasks.getAllTasks) || [];
-    const projects = useQuery(api.tasks.getProjects) || [];
-    const units = useQuery(api.tasks.getAllUnits) || [];
-    const engineers = useQuery(api.tasks.getMyEngineers) || [];
+    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
+    const projects = useQuery(api.projects.getProjects) || [];
+    const units = useQuery(api.units.getAllUnits) || [];
+    const engineers = useQuery(api.engineers.getMyEngineers) || [];
     const materials = useQuery(api.stock.getInventory) || [];
     const payouts = useQuery(api.wallet.getAllPayouts, {}) || [];
 

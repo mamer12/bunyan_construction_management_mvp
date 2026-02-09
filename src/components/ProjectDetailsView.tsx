@@ -16,10 +16,10 @@ export function ProjectDetailsView({ projectId, onBack }: ProjectDetailsViewProp
     // Ideally we'd have getProject(id), but for now we filter from getProjects or we assume we passed the project object.
     // Let's rely on the lists for now or add a getProject query later. 
     // Actually, let's just use getProjects and find it to save adding more queries unless needed.
-    const projects = useQuery(api.tasks.getProjects) || [];
+    const projects = useQuery(api.projects.getProjects) || [];
     const project = projects.find(p => p._id === projectId);
 
-    const units = useQuery(api.tasks.getProjectUnits, { projectId }) || [];
+    const units = useQuery(api.units.getProjectUnits, { projectId }) || [];
     const [showCreateUnitModal, setShowCreateUnitModal] = useState(false);
 
     if (!project) {

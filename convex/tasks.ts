@@ -1,6 +1,8 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAuth, requireManagement, getUserByAuthId } from "./lib/auth";
+import { resolveUserName, resolveAssigneeId } from "./lib/users";
+import { MILESTONE_GRACE_PERIOD_MS } from "./lib/constants";
 
 // ============================================
 // UPLOAD HELPERS
@@ -9,54 +11,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAuth(ctx);
     return await ctx.storage.generateUploadUrl();
-  },
-});
-
-// ============================================
-// ENGINEER MANAGEMENT
-// ============================================
-
-export const addEngineer = mutation({
-  args: {
-    name: v.string(),
-    email: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    // Check if engineer with this email already exists
-    const existing = await ctx.db
-      .query("engineers")
-      .filter((q) => q.eq(q.field("email"), args.email))
-      .first();
-
-    if (existing) {
-      throw new Error("Engineer with this email already exists");
-    }
-
-    return await ctx.db.insert("engineers", {
-      userId: "", // Will be set when engineer signs up
-      name: args.name,
-      email: args.email,
-      leadId: userId,
-    });
-  },
-});
-
-export const getMyEngineers = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    return await ctx.db
-      .query("engineers")
-      .withIndex("by_lead", (q) => q.eq("leadId", userId))
-      .collect();
   },
 });
 
@@ -74,39 +30,8 @@ export const createTask = mutation({
     attachments: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    // First, check if there's a user with this email (registered user)
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.assignedTo))
-      .first();
-
-    if (user && user.userId) {
-      // User already registered, use their Auth ID
-      return await ctx.db.insert("tasks", {
-        unitId: args.unitId,
-        title: args.title,
-        description: args.description,
-        amount: args.amount,
-        status: "PENDING",
-        assignedTo: user.userId,
-        assignedBy: userId,
-        attachments: args.attachments,
-      });
-    }
-
-    // Check engineers table
-    const engineer = await ctx.db
-      .query("engineers")
-      .filter((q) => q.eq(q.field("email"), args.assignedTo))
-      .first();
-
-    // Use engineer's userId only if it's not empty, otherwise use email
-    const assigneeId = (engineer?.userId && engineer.userId.length > 0)
-      ? engineer.userId
-      : args.assignedTo;
+    const userId = await requireAuth(ctx);
+    const assigneeId = await resolveAssigneeId(ctx, args.assignedTo);
 
     return await ctx.db.insert("tasks", {
       unitId: args.unitId,
@@ -128,26 +53,28 @@ export const reviewTask = mutation({
     comment: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Prevent reviewing already finalized tasks
     if (task.status === "APPROVED" || task.status === "REJECTED") {
       throw new Error(`Task has already been ${task.status.toLowerCase()}. Cannot change status.`);
     }
 
-    // Only allow reviewing SUBMITTED tasks
     if (task.status !== "SUBMITTED") {
       throw new Error("Task must be submitted before it can be reviewed");
     }
 
-    const user = await ctx.db.get(userId);
+    const user = await getUserByAuthId(ctx, userId);
     const authorName = user?.email || "Lead";
 
-    const updates: any = {
+    const updates: {
+      status: "APPROVED" | "REJECTED";
+      reviewedAt: number;
+      rejectionReason?: string;
+      comments?: Array<{ text: string; authorId: string; authorName: string; createdAt: number }>;
+    } = {
       status: args.action === "approve" ? "APPROVED" : "REJECTED",
       reviewedAt: Date.now(),
     };
@@ -156,7 +83,6 @@ export const reviewTask = mutation({
       updates.rejectionReason = args.comment;
     }
 
-    // Add comment if provided
     if (args.comment) {
       const existingComments = task.comments || [];
       updates.comments = [
@@ -174,14 +100,12 @@ export const reviewTask = mutation({
 
     // CREDIT WALLET when task is approved
     if (args.action === "approve") {
-      // Get or create wallet for the engineer
       let wallet = await ctx.db
         .query("wallets")
         .withIndex("by_user", (q) => q.eq("userId", task.assignedTo))
         .first();
 
       if (!wallet) {
-        // Create new wallet
         await ctx.db.insert("wallets", {
           userId: task.assignedTo,
           availableBalance: task.amount,
@@ -190,7 +114,6 @@ export const reviewTask = mutation({
           totalWithdrawn: 0,
         });
       } else {
-        // Update existing wallet
         await ctx.db.patch(wallet._id, {
           availableBalance: wallet.availableBalance + task.amount,
           totalEarned: wallet.totalEarned + task.amount,
@@ -207,27 +130,21 @@ export const reviewTask = mutation({
         description: `Task approved: ${task.title}`,
       });
 
-      // === MILESTONE TRIGGER: Update linked installments ===
+      // MILESTONE TRIGGER: Update linked installments
       if (task.isMilestone) {
-        // Find all installments linked to this task
         const linkedInstallments = await ctx.db
           .query("installments")
           .withIndex("by_linked_task", (q) => q.eq("linkedConstructionTaskId", args.taskId))
           .collect();
 
         const now = Date.now();
-        const gracePeriod = 7 * 24 * 60 * 60 * 1000; // 7 days grace period
 
         for (const installment of linkedInstallments) {
-          // Update due date to now + grace period
           await ctx.db.patch(installment._id, {
-            dueDate: now + gracePeriod,
+            dueDate: now + MILESTONE_GRACE_PERIOD_MS,
             originalDueDate: installment.dueDate,
           });
         }
-
-        // Note: In production, you'd also want to trigger notifications here
-        // to the sales team about the milestone completion
       }
     }
 
@@ -241,13 +158,12 @@ export const addComment = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    const user = await ctx.db.get(userId);
+    const user = await getUserByAuthId(ctx, userId);
     const authorName = user?.email || "User";
 
     const existingComments = task.comments || [];
@@ -267,7 +183,6 @@ export const addComment = mutation({
   },
 });
 
-// Update task (Lead/Admin only, only PENDING tasks)
 export const updateTask = mutation({
   args: {
     taskId: v.id("tasks"),
@@ -277,56 +192,28 @@ export const updateTask = mutation({
     assignedTo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireManagement(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Check if user is admin or lead
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!user || !["admin", "lead", "acting_manager"].includes(user.role || "")) {
-      throw new Error("Only leads and admins can edit tasks");
-    }
-
-    // Only PENDING tasks can be edited
     if (task.status !== "PENDING") {
       throw new Error("Only pending tasks can be edited. This task is " + task.status.toLowerCase());
     }
 
-    // Build update object
-    const updates: any = {};
+    const updates: {
+      title?: string;
+      description?: string;
+      amount?: number;
+      assignedTo?: string;
+    } = {};
+
     if (args.title) updates.title = args.title;
     if (args.description !== undefined) updates.description = args.description;
     if (args.amount) updates.amount = args.amount;
 
-    // Handle reassignment
     if (args.assignedTo) {
-      // Check if new assignee is a registered user
-      const newUser = await ctx.db
-        .query("users")
-        .withIndex("by_email", (q) => q.eq("email", args.assignedTo))
-        .first();
-
-      if (newUser && newUser.userId) {
-        updates.assignedTo = newUser.userId;
-      } else {
-        // Check engineers table
-        const engineer = await ctx.db
-          .query("engineers")
-          .filter((q) => q.eq(q.field("email"), args.assignedTo))
-          .first();
-
-        if (engineer?.userId) {
-          updates.assignedTo = engineer.userId;
-        } else {
-          updates.assignedTo = args.assignedTo; // Store email for now
-        }
-      }
+      updates.assignedTo = await resolveAssigneeId(ctx, args.assignedTo);
     }
 
     await ctx.db.patch(args.taskId, updates);
@@ -334,39 +221,25 @@ export const updateTask = mutation({
   },
 });
 
-// Delete task (Lead/Admin only, only PENDING tasks)
 export const deleteTask = mutation({
   args: {
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireManagement(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Check if user is admin or lead
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    if (!user || !["admin", "lead", "acting_manager"].includes(user.role || "")) {
-      throw new Error("Only leads and admins can delete tasks");
-    }
-
-    // Only PENDING tasks can be deleted
     if (task.status !== "PENDING") {
       throw new Error("Only pending tasks can be deleted. This task is " + task.status.toLowerCase());
     }
 
-    // Delete any uploaded attachments
     if (task.attachments && task.attachments.length > 0) {
       for (const storageId of task.attachments) {
         try {
           await ctx.storage.delete(storageId);
-        } catch (e) {
+        } catch (_) {
           // Ignore storage deletion errors
         }
       }
@@ -386,26 +259,19 @@ export const startTask = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Get user's email for authorization check
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const user = await getUserByAuthId(ctx, userId);
 
-    // Check authorization: either by Auth ID or by email
     const isAuthorized =
       task.assignedTo === userId ||
       (user?.email && task.assignedTo === user.email);
 
     if (!isAuthorized) throw new Error("Not authorized");
 
-    // Status validation: Only PENDING or REJECTED tasks can be started
     if (task.status !== "PENDING" && task.status !== "REJECTED") {
       if (task.status === "APPROVED") {
         throw new Error("This task has already been approved and cannot be restarted");
@@ -418,14 +284,12 @@ export const startTask = mutation({
       }
     }
 
-    // Update task - also update assignedTo to use Auth ID if it was email
-    const updates: any = { status: "IN_PROGRESS" };
+    const updates: { status: "IN_PROGRESS"; assignedTo?: string } = { status: "IN_PROGRESS" };
     if (task.assignedTo !== userId && user?.email && task.assignedTo === user.email) {
-      updates.assignedTo = userId; // Migrate from email to Auth ID
+      updates.assignedTo = userId;
     }
 
     await ctx.db.patch(args.taskId, updates);
-
     return { success: true };
   },
 });
@@ -437,26 +301,19 @@ export const submitTask = mutation({
     gps: v.optional(v.object({ lat: v.number(), lng: v.number() })),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Get user's email for authorization check
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const user = await getUserByAuthId(ctx, userId);
 
-    // Check authorization: either by Auth ID or by email
     const isAuthorized =
       task.assignedTo === userId ||
       (user?.email && task.assignedTo === user.email);
 
     if (!isAuthorized) throw new Error("Not authorized");
 
-    // Status validation: Only IN_PROGRESS tasks can be submitted
     if (task.status !== "IN_PROGRESS") {
       if (task.status === "PENDING") {
         throw new Error("Task must be started before it can be submitted");
@@ -471,8 +328,13 @@ export const submitTask = mutation({
       }
     }
 
-    // Update task - also migrate assignedTo to Auth ID if needed
-    const updates: any = {
+    const updates: {
+      proofPhotoId: typeof args.storageId;
+      proofGps: typeof args.gps;
+      submittedAt: number;
+      status: "SUBMITTED";
+      assignedTo?: string;
+    } = {
       proofPhotoId: args.storageId,
       proofGps: args.gps,
       submittedAt: Date.now(),
@@ -483,7 +345,6 @@ export const submitTask = mutation({
     }
 
     await ctx.db.patch(args.taskId, updates);
-
     return { success: true };
   },
 });
@@ -495,32 +356,20 @@ export const submitTask = mutation({
 export const getMyTasks = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    const userId = await requireAuth(ctx);
 
-    // Get user's email for fallback search
-    // Need to filter for entries with email since Auth creates minimal entries
-    const users = await ctx.db
-      .query("users")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const user = await getUserByAuthId(ctx, userId);
 
-    // Find the user entry with an email (not the Auth-created one)
-    const user = users.find(u => u.email && u.role);
-
-    // Also check engineers table for email
     const engineer = await ctx.db
       .query("engineers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    // Query tasks by Auth ID
     let tasks = await ctx.db
       .query("tasks")
       .withIndex("by_assignee", (q) => q.eq("assignedTo", userId))
       .collect();
 
-    // Also always try searching by email (in case tasks were assigned by email)
     const email = user?.email || engineer?.email;
     if (email) {
       const tasksByEmail = await ctx.db
@@ -528,8 +377,7 @@ export const getMyTasks = query({
         .filter((q) => q.eq(q.field("assignedTo"), email))
         .collect();
 
-      // Merge tasks, avoiding duplicates
-      const existingIds = new Set(tasks.map(t => t._id));
+      const existingIds = new Set(tasks.map((t) => t._id));
       for (const task of tasksByEmail) {
         if (!existingIds.has(task._id)) {
           tasks.push(task);
@@ -550,7 +398,6 @@ export const getMyTasks = query({
           photoUrl = await ctx.storage.getUrl(task.proofPhotoId);
         }
 
-        // Get attachment URLs
         const attachmentUrls = await Promise.all(
           (task.attachments || []).map((id) => ctx.storage.getUrl(id))
         );
@@ -573,13 +420,11 @@ export const getMyTasks = query({
 export const getTasksForReview = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+    await requireAuth(ctx);
 
-    // Get all tasks created by this lead that are submitted
     const tasks = await ctx.db
       .query("tasks")
-      .filter((q) => q.eq(q.field("status"), "SUBMITTED"))
+      .withIndex("by_status", (q) => q.eq("status", "SUBMITTED"))
       .collect();
 
     const tasksWithDetails = await Promise.all(
@@ -599,41 +444,7 @@ export const getTasksForReview = query({
           (task.attachments || []).map((id) => ctx.storage.getUrl(id))
         );
 
-        // Get engineer info - check users table first, then engineers table
-        let engineerName = "Unknown";
-
-        // First, try to find in users table by userId
-        const user = await ctx.db
-          .query("users")
-          .withIndex("by_user", (q) => q.eq("userId", task.assignedTo))
-          .first();
-
-        if (user?.name) {
-          engineerName = user.name;
-        } else {
-          // Try engineers table
-          const engineer = await ctx.db
-            .query("engineers")
-            .filter((q) => q.eq(q.field("userId"), task.assignedTo))
-            .first();
-
-          if (engineer?.name) {
-            engineerName = engineer.name;
-          } else {
-            // Try to find by email (if assignedTo is an email)
-            const userByEmail = await ctx.db
-              .query("users")
-              .withIndex("by_email", (q) => q.eq("email", task.assignedTo))
-              .first();
-
-            if (userByEmail?.name) {
-              engineerName = userByEmail.name;
-            } else if (task.assignedTo && task.assignedTo.includes("@")) {
-              // If it's an email, show the email
-              engineerName = task.assignedTo;
-            }
-          }
-        }
+        const engineerName = await resolveUserName(ctx, task.assignedTo);
 
         return {
           ...task,
@@ -652,12 +463,14 @@ export const getTasksForReview = query({
 });
 
 export const getAllTasks = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
 
-    const tasks = await ctx.db.query("tasks").collect();
+    const pageSize = args.limit ?? 100;
+    const tasks = await ctx.db.query("tasks").take(pageSize);
 
     const tasksWithDetails = await Promise.all(
       tasks.map(async (task) => {
@@ -676,41 +489,7 @@ export const getAllTasks = query({
           (task.attachments || []).map((id) => ctx.storage.getUrl(id))
         );
 
-        // Get engineer info - check users table first, then engineers table
-        let engineerName = "Unknown";
-
-        // First, try to find in users table by userId
-        const user = await ctx.db
-          .query("users")
-          .withIndex("by_user", (q) => q.eq("userId", task.assignedTo))
-          .first();
-
-        if (user?.name) {
-          engineerName = user.name;
-        } else {
-          // Try engineers table
-          const engineer = await ctx.db
-            .query("engineers")
-            .filter((q) => q.eq(q.field("userId"), task.assignedTo))
-            .first();
-
-          if (engineer?.name) {
-            engineerName = engineer.name;
-          } else {
-            // Try to find by email (if assignedTo is an email)
-            const userByEmail = await ctx.db
-              .query("users")
-              .withIndex("by_email", (q) => q.eq("email", task.assignedTo))
-              .first();
-
-            if (userByEmail?.name) {
-              engineerName = userByEmail.name;
-            } else if (task.assignedTo && task.assignedTo.includes("@")) {
-              // If it's an email, show the email
-              engineerName = task.assignedTo;
-            }
-          }
-        }
+        const engineerName = await resolveUserName(ctx, task.assignedTo);
 
         return {
           ...task,
@@ -728,152 +507,6 @@ export const getAllTasks = query({
   },
 });
 
-export const createUnit = mutation({
-  args: {
-    projectId: v.id("projects"),
-    name: v.string(),
-    contractorId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    return await ctx.db.insert("units", {
-      projectId: args.projectId,
-      name: args.name,
-      status: "UNDER_CONSTRUCTION",
-      contractorId: args.contractorId,
-    });
-  },
-});
-
-export const getProjectUnits = query({
-  args: {
-    projectId: v.id("projects"),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const units = await ctx.db
-      .query("units")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
-
-    const unitsWithStats = await Promise.all(
-      units.map(async (unit) => {
-        const tasks = await ctx.db
-          .query("tasks")
-          .withIndex("by_unit", (q) => q.eq("unitId", unit._id))
-          .collect();
-
-        const completedTasks = tasks.filter(t => t.status === "APPROVED").length;
-        const totalAmount = tasks.reduce((sum, t) => sum + t.amount, 0);
-
-        return {
-          ...unit,
-          totalTasks: tasks.length,
-          completedTasks,
-          totalAmount,
-        };
-      })
-    );
-
-    return unitsWithStats;
-  },
-});
-
-export const getAllUnits = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const units = await ctx.db.query("units").collect();
-
-    const unitsWithDetails = await Promise.all(
-      units.map(async (unit) => {
-        const project = await ctx.db.get(unit.projectId);
-        if (!project) return null;
-
-        const tasks = await ctx.db
-          .query("tasks")
-          .withIndex("by_unit", (q) => q.eq("unitId", unit._id))
-          .collect();
-
-        return {
-          ...unit,
-          project: project.name,
-          location: project.location,
-          taskCount: tasks.length,
-          completedTasks: tasks.filter((t) => t.status === "APPROVED").length,
-        };
-      })
-    );
-
-    return unitsWithDetails.filter(Boolean);
-  },
-});
-
-export const createProject = mutation({
-  args: {
-    name: v.string(),
-    location: v.string(),
-    totalBudget: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    return await ctx.db.insert("projects", {
-      name: args.name,
-      location: args.location,
-      totalBudget: args.totalBudget,
-      status: "ACTIVE",
-      leadId: userId,
-    });
-  },
-});
-
-export const getProjects = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const projects = await ctx.db.query("projects").collect();
-
-    const projectsWithStats = await Promise.all(
-      projects.map(async (project) => {
-        // Get all units for this project
-        const units = await ctx.db
-          .query("units")
-          .withIndex("by_project", q => q.eq("projectId", project._id))
-          .collect();
-
-        const unitIds = units.map(u => u._id);
-
-        // Get all tasks for these units (inefficient but works for MVP)
-        const allTasks = await ctx.db.query("tasks").collect();
-        const projectTasks = allTasks.filter(t => unitIds.some(uid => uid === t.unitId));
-
-        const completedTasks = projectTasks.filter(t => t.status === "APPROVED");
-        const budgetSpent = completedTasks.reduce((sum, t) => sum + t.amount, 0);
-
-        return {
-          ...project,
-          completedTasksCount: completedTasks.length,
-          totalTasksCount: projectTasks.length,
-          budgetSpent,
-          unitCount: units.length
-        };
-      })
-    );
-
-    return projectsWithStats;
-  },
-});
-
 // ============================================
 // STATS
 // ============================================
@@ -881,8 +514,7 @@ export const getProjects = query({
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    await requireAuth(ctx);
 
     const allTasks = await ctx.db.query("tasks").collect();
 

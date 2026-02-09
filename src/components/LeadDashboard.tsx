@@ -50,9 +50,9 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
     const currentUser = useQuery(api.auth.loggedInUser);
 
     const tasksForReview = useQuery(api.tasks.getTasksForReview) || [];
-    const allTasks = useQuery(api.tasks.getAllTasks) || [];
-    const engineers = useQuery(api.tasks.getMyEngineers) || [];
-    const units = useQuery(api.tasks.getAllUnits) || [];
+    const allTasks = useQuery(api.tasks.getAllTasks, {}) || [];
+    const engineers = useQuery(api.engineers.getMyEngineers) || [];
+    const units = useQuery(api.units.getAllUnits) || [];
 
     const reviewTask = useMutation(api.tasks.reviewTask);
 
@@ -129,54 +129,54 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                                     </span>
                                 </header>
                                 <div className="dashboard-section__body pt-0">
-                                <TableContainer>
-                                    <DataTable>
-                                        <TableHeader>
-                                            <TableRow className="border-b border-slate-100">
-                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهمة' : 'Task'}</TableHead>
-                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهندس' : 'Engineer'}</TableHead>
-                                                <TableHead className="pb-3 px-4">{language === 'ar' ? 'المشروع' : 'Project'}</TableHead>
-                                                <TableHead className="pb-3 px-4 text-end">{language === 'ar' ? 'المبلغ' : 'Amount'}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody className="divide-y divide-slate-50">
-                                            {tasksForReview.length === 0 ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} className="py-8 text-center text-slate-500 text-sm">
-                                                        {language === 'ar' ? 'لا توجد مهام للمراجعة' : 'No tasks waiting for review'}
-                                                    </TableCell>
+                                    <TableContainer>
+                                        <DataTable>
+                                            <TableHeader>
+                                                <TableRow className="border-b border-slate-100">
+                                                    <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهمة' : 'Task'}</TableHead>
+                                                    <TableHead className="pb-3 px-4">{language === 'ar' ? 'المهندس' : 'Engineer'}</TableHead>
+                                                    <TableHead className="pb-3 px-4">{language === 'ar' ? 'المشروع' : 'Project'}</TableHead>
+                                                    <TableHead className="pb-3 px-4 text-end">{language === 'ar' ? 'المبلغ' : 'Amount'}</TableHead>
                                                 </TableRow>
-                                            ) : (
-                                                tasksForReview.map((task: any) => (
-                                                    <TableRow
-                                                        key={task._id}
-                                                        className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
-                                                        onClick={() => setSelectedTask(task)}
-                                                    >
-                                                        <TableCell className="py-3 px-4 min-w-0">
-                                                            <p className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors truncate">{task.title}</p>
-                                                            <p className="text-[10px] text-slate-400">{new Date(task.submittedAt || Date.now()).toLocaleDateString()}</p>
-                                                        </TableCell>
-                                                        <TableCell className="py-3 px-4">
-                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600 flex-shrink-0">
-                                                                    {task.engineerName?.charAt(0)}
-                                                                </div>
-                                                                <span className="text-xs text-slate-600 truncate">{task.engineerName}</span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="py-3 px-4">
-                                                            <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{task.project}</span>
-                                                        </TableCell>
-                                                        <TableCell className="py-3 px-4 text-end">
-                                                            <span className="text-sm font-bold text-slate-900">${task.amount.toLocaleString()}</span>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-slate-50">
+                                                {tasksForReview.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} className="py-8 text-center text-slate-500 text-sm">
+                                                            {language === 'ar' ? 'لا توجد مهام للمراجعة' : 'No tasks waiting for review'}
                                                         </TableCell>
                                                     </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </DataTable>
-                                </TableContainer>
+                                                ) : (
+                                                    tasksForReview.map((task: any) => (
+                                                        <TableRow
+                                                            key={task._id}
+                                                            className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+                                                            onClick={() => setSelectedTask(task)}
+                                                        >
+                                                            <TableCell className="py-3 px-4 min-w-0">
+                                                                <p className="text-sm font-semibold text-slate-700 group-hover:text-emerald-600 transition-colors truncate">{task.title}</p>
+                                                                <p className="text-[10px] text-slate-400">{new Date(task.submittedAt || Date.now()).toLocaleDateString()}</p>
+                                                            </TableCell>
+                                                            <TableCell className="py-3 px-4">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600 flex-shrink-0">
+                                                                        {task.engineerName?.charAt(0)}
+                                                                    </div>
+                                                                    <span className="text-xs text-slate-600 truncate">{task.engineerName}</span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="py-3 px-4">
+                                                                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{task.project}</span>
+                                                            </TableCell>
+                                                            <TableCell className="py-3 px-4 text-end">
+                                                                <span className="text-sm font-bold text-slate-900">${task.amount.toLocaleString()}</span>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </DataTable>
+                                    </TableContainer>
                                 </div>
                             </MotionCard>
 
@@ -193,36 +193,36 @@ export function LeadDashboard({ showHeader = true }: { showHeader?: boolean }) {
                                                 <p className="text-sm font-medium text-slate-500">{language === 'ar' ? 'لا يوجد نشاط بعد' : 'No activity yet'}</p>
                                             </div>
                                         ) : (
-                                        <ul className="divide-y divide-slate-100">
-                                            {allTasks.slice(0, 5).map((task: any) => (
-                                                <li key={task._id} className="flex gap-3 items-center py-3 px-4 hover:bg-slate-50/50 transition-colors min-w-0">
-                                                    <div className={cn(
-                                                        "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
-                                                        task.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
-                                                            task.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
-                                                                "bg-slate-100 text-slate-600"
-                                                    )}>
-                                                        {task.status === 'APPROVED' ? <CheckCircle2 size={18} /> :
-                                                            task.status === 'REJECTED' ? <X size={18} /> :
-                                                                <Clock size={18} />}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-semibold text-slate-800 truncate">{task.title}</p>
-                                                        <p className="text-xs text-slate-500 truncate">
-                                                            {task.engineerName} · {new Date(task.updatedAt || Date.now()).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                        </p>
-                                                    </div>
-                                                    <span className={cn(
-                                                        "px-2 py-0.5 rounded-full text-xs font-semibold uppercase shrink-0",
-                                                        task.status === 'APPROVED' ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
-                                                            task.status === 'REJECTED' ? "bg-rose-100 text-rose-700 border border-rose-200" :
-                                                                "bg-slate-100 text-slate-600 border border-slate-200"
-                                                    )}>
-                                                        {task.status}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                            <ul className="divide-y divide-slate-100">
+                                                {allTasks.slice(0, 5).map((task: any) => (
+                                                    <li key={task._id} className="flex gap-3 items-center py-3 px-4 hover:bg-slate-50/50 transition-colors min-w-0">
+                                                        <div className={cn(
+                                                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                                                            task.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
+                                                                task.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
+                                                                    "bg-slate-100 text-slate-600"
+                                                        )}>
+                                                            {task.status === 'APPROVED' ? <CheckCircle2 size={18} /> :
+                                                                task.status === 'REJECTED' ? <X size={18} /> :
+                                                                    <Clock size={18} />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-semibold text-slate-800 truncate">{task.title}</p>
+                                                            <p className="text-xs text-slate-500 truncate">
+                                                                {task.engineerName} · {new Date(task.updatedAt || Date.now()).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
+                                                        </div>
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-full text-xs font-semibold uppercase shrink-0",
+                                                            task.status === 'APPROVED' ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                                                                task.status === 'REJECTED' ? "bg-rose-100 text-rose-700 border border-rose-200" :
+                                                                    "bg-slate-100 text-slate-600 border border-slate-200"
+                                                        )}>
+                                                            {task.status}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         )}
                                     </div>
                                 </MotionCard>

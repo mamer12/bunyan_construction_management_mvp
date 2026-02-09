@@ -8,7 +8,7 @@ import { ProjectDetailsView } from "./ProjectDetailsView";
 import { ProjectCard, BentoGrid, StaggerContainer, StaggerItem, MotionButton } from "./ui/motion";
 
 export function ProjectsView() {
-    const projects = useQuery(api.tasks.getProjects) || [];
+    const projects = useQuery(api.projects.getProjects) || [];
     const { t } = useLanguage();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<any>(null);

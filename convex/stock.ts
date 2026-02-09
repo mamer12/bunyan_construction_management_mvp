@@ -1,37 +1,33 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAuth, requireRole } from "./lib/auth";
+import { materialRequestStatus } from "./lib/validators";
 
 // === QUERIES ===
 
 export const getInventory = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
-
-        // In real app, check permission (Admin, Stock, Lead, Engineer can view)
+        await requireAuth(ctx);
         return await ctx.db.query("materials").collect();
     },
 });
 
 export const getMaterialRequests = query({
     args: {
-        status: v.optional(v.string()), // "PENDING", etc.
+        status: v.optional(materialRequestStatus),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return [];
-
-        // TODO: Filter based on role (Engineer sees own, Stock sees all)
-        const q = ctx.db.query("material_requests");
+        await requireAuth(ctx);
 
         if (args.status) {
-            const status = args.status;
-            return await q.withIndex("by_status", (q) => q.eq("status", status)).collect();
+            return await ctx.db
+                .query("material_requests")
+                .withIndex("by_status", (q) => q.eq("status", args.status!))
+                .collect();
         }
 
-        return await q.collect();
+        return await ctx.db.query("material_requests").collect();
     },
 });
 
@@ -48,8 +44,7 @@ export const requestMaterial = mutation({
         notes: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        const userId = await requireAuth(ctx);
 
         await ctx.db.insert("material_requests", {
             projectId: args.projectId,
@@ -66,37 +61,40 @@ export const requestMaterial = mutation({
 export const processRequest = mutation({
     args: {
         requestId: v.id("material_requests"),
-        action: v.string(), // "APPROVE", "REJECT", "FULFILL"
+        action: v.union(
+            v.literal("APPROVE"),
+            v.literal("REJECT"),
+            v.literal("FULFILL")
+        ),
         notes: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        await requireRole(ctx, ["admin", "stock"]);
 
         const request = await ctx.db.get(args.requestId);
         if (!request) throw new Error("Request not found");
 
-        // TODO: Verify user role is Stock Manager or Admin
+        let newStatus: "APPROVED" | "REJECTED" | "FULFILLED" = request.status as "APPROVED" | "REJECTED" | "FULFILLED";
 
-        let newStatus = request.status;
-
-        if (args.action === "APPROVE") newStatus = "APPROVED";
-        else if (args.action === "REJECT") newStatus = "REJECTED";
-        else if (args.action === "FULFILL") {
+        if (args.action === "APPROVE") {
+            newStatus = "APPROVED";
+        } else if (args.action === "REJECT") {
+            newStatus = "REJECTED";
+        } else if (args.action === "FULFILL") {
             newStatus = "FULFILLED";
-            // Deduct from inventory
             for (const item of request.items) {
                 const material = await ctx.db.get(item.materialId);
                 if (material) {
                     const newStock = Math.max(0, material.currentStock - item.quantity);
                     await ctx.db.patch(item.materialId, {
                         currentStock: newStock,
-                        lastUpdated: Date.now()
+                        lastUpdated: Date.now(),
                     });
                 }
             }
         }
 
+        const userId = await requireAuth(ctx);
         await ctx.db.patch(args.requestId, {
             status: newStatus,
             handledBy: userId,
@@ -111,18 +109,14 @@ export const processRequest = mutation({
 export const addMaterial = mutation({
     args: {
         name: v.string(),
-        unit: v.string(), // "kg", "pcs", "bags", "m", "m2", "m3"
+        unit: v.string(),
         currentStock: v.number(),
         minimumStock: v.optional(v.number()),
         pricePerUnit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        await requireRole(ctx, ["admin", "stock"]);
 
-        // TODO: Verify user role is Stock Manager or Admin
-
-        // Check if material with same name exists
         const existing = await ctx.db
             .query("materials")
             .withIndex("by_name", (q) => q.eq("name", args.name))
@@ -153,16 +147,20 @@ export const updateMaterial = mutation({
         pricePerUnit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
-
-        // TODO: Verify user role is Stock Manager or Admin
+        await requireRole(ctx, ["admin", "stock"]);
 
         const material = await ctx.db.get(args.materialId);
         if (!material) throw new Error("Material not found");
 
-        // Build update object
-        const updates: any = { lastUpdated: Date.now() };
+        const updates: {
+            lastUpdated: number;
+            name?: string;
+            unit?: string;
+            currentStock?: number;
+            minimumStock?: number;
+            pricePerUnit?: number;
+        } = { lastUpdated: Date.now() };
+
         if (args.name !== undefined) updates.name = args.name;
         if (args.unit !== undefined) updates.unit = args.unit;
         if (args.currentStock !== undefined) updates.currentStock = args.currentStock;
@@ -178,15 +176,11 @@ export const deleteMaterial = mutation({
         materialId: v.id("materials"),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
-
-        // TODO: Verify user role is Stock Manager or Admin
+        await requireRole(ctx, ["admin", "stock"]);
 
         const material = await ctx.db.get(args.materialId);
         if (!material) throw new Error("Material not found");
 
-        // Check if material is referenced in any pending requests
         const pendingRequests = await ctx.db
             .query("material_requests")
             .withIndex("by_status", (q) => q.eq("status", "PENDING"))
@@ -207,12 +201,11 @@ export const deleteMaterial = mutation({
 export const adjustStock = mutation({
     args: {
         materialId: v.id("materials"),
-        adjustment: v.number(), // positive to add, negative to remove
+        adjustment: v.number(),
         reason: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) throw new Error("Not authenticated");
+        await requireRole(ctx, ["admin", "stock"]);
 
         const material = await ctx.db.get(args.materialId);
         if (!material) throw new Error("Material not found");
@@ -231,8 +224,7 @@ export const adjustStock = mutation({
 export const getStockStats = query({
     args: {},
     handler: async (ctx) => {
-        const userId = await getAuthUserId(ctx);
-        if (!userId) return null;
+        await requireAuth(ctx);
 
         const materials = await ctx.db.query("materials").collect();
         const requests = await ctx.db.query("material_requests").collect();

@@ -14,6 +14,8 @@ import { StockDashboard } from "./components/StockDashboard";
 import { FinanceDashboard } from "./components/FinanceDashboard";
 import { PublicDealViewer } from "./components/Portal/PublicDealViewer";
 
+import LandingPage from "./components/LandingPage";
+
 export default function App() {
   const { user: authUser } = useAuth();
   const ensureUser = useMutation(api.users.ensureUser);
@@ -46,6 +48,10 @@ export default function App() {
             <Routes>
               {/* Public portal route — no auth required */}
               <Route path="/view/*" element={<PublicDealViewer />} />
+              {/* SaaS Landing Page */}
+              <Route path="/" element={<LandingPage />} />
+              {/* Login Explicit Route (to prevent dead ends for automated scripts if they hit /login directly, although Content component implicitly wraps it) */}
+              <Route path="/login" element={<Content />} />
               {/* All other routes require auth */}
               <Route path="/*" element={<Content />} />
             </Routes>

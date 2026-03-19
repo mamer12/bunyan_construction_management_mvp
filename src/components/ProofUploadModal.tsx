@@ -18,11 +18,15 @@ export function ProofUploadModal({ task, onClose }: ProofUploadModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const generateUploadUrl = useMutation(api.tasks.generateUploadUrl);
-  const submitProof = useMutation(api.tasks.submitProof);
+  const submitProof = useMutation(api.tasks.submitTask);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5 MB
+        toast.error("File size must be less than 5 MB");
+        return;
+      }
       setSelectedFile(file);
     }
   };

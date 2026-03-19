@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
+import { projectStatus } from "./lib/validators";
 
 // ============================================
 // PROJECT MANAGEMENT
@@ -22,6 +23,55 @@ export const createProject = mutation({
             status: "ACTIVE",
             leadId: userId,
         });
+    },
+});
+
+export const updateProject = mutation({
+    args: {
+        projectId: v.id("projects"),
+        name: v.optional(v.string()),
+        location: v.optional(v.string()),
+        totalBudget: v.optional(v.number()),
+        status: v.optional(projectStatus),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, ["admin", "acting_manager"]);
+
+        const updates: {
+            name?: string;
+            location?: string;
+            totalBudget?: number;
+            status?: "ACTIVE" | "COMPLETED";
+        } = {};
+
+        if (args.name !== undefined) updates.name = args.name;
+        if (args.location !== undefined) updates.location = args.location;
+        if (args.totalBudget !== undefined) updates.totalBudget = args.totalBudget;
+        if (args.status !== undefined) updates.status = args.status;
+
+        await ctx.db.patch(args.projectId, updates);
+        return { success: true };
+    },
+});
+
+export const deleteProject = mutation({
+    args: {
+        projectId: v.id("projects"),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, ["admin", "acting_manager"]);
+
+        const units = await ctx.db
+            .query("units")
+            .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+            .collect();
+
+        if (units.length > 0) {
+            throw new Error("Cannot delete project with active units or villas. Please delete or migrate units first.");
+        }
+
+        await ctx.db.delete(args.projectId);
+        return { success: true };
     },
 });
 

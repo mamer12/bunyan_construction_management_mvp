@@ -27,7 +27,14 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setAttachments((prev) => [...prev, ...files].slice(0, 5));
+        const validFiles = files.filter(file => {
+             if (file.size > 10 * 1024 * 1024) { // 10MB as requested by UI hint
+                  toast.error(`File ${file.name} is too large (max 10MB)`);
+                  return false;
+             }
+             return true;
+        });
+        setAttachments((prev) => [...prev, ...validFiles].slice(0, 5));
     };
 
     const removeAttachment = (index: number) => {

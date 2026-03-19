@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Modal } from "./ui/modal";
@@ -16,7 +16,8 @@ import {
     UserCheck,
     UserX,
     Search,
-    ChevronDown
+    ChevronDown,
+    User
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,15 +39,32 @@ const ROLES = [
 export function SettingsView() {
     const { t, language, setLanguage } = useLanguage();
     const { theme, setTheme, isDark } = useTheme();
-    const [activeSection, setActiveSection] = useState<"general" | "users" | "access">("general");
+    const [activeSection, setActiveSection] = useState<"profile" | "general" | "users" | "access">("profile");
     const [searchQuery, setSearchQuery] = useState("");
     const [editingUser, setEditingUser] = useState<any>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
+    // Profile State
+    const [profileName, setProfileName] = useState("");
+    const [profilePhone, setProfilePhone] = useState("");
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+
     // Data
+    const role = useQuery(api.roles.getMyRole);
+    const myProfile = useQuery(api.users.getMyProfile);
     const users = useQuery(api.users.getUsers) || [];
 
+    const isAdmin = role === "admin";
+
+    useEffect(() => {
+        if (myProfile) {
+            setProfileName(myProfile.name || "");
+            setProfilePhone(myProfile.phone || "");
+        }
+    }, [myProfile]);
+
     // Mutations
+    const updateProfile = useMutation(api.users.updateProfile);
     const updateUserRole = useMutation(api.users.updateUserRole);
     const updateUserStatus = useMutation(api.users.updateUserStatus);
     const deleteUser = useMutation(api.users.deleteUser);
@@ -98,6 +116,22 @@ export function SettingsView() {
         return language === 'ar' ? roleObj?.labelAr : roleObj?.label;
     };
 
+    const handleProfileSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingProfile(true);
+        try {
+            await updateProfile({
+                name: profileName || undefined,
+                phone: profilePhone || undefined,
+            });
+            toast.success(language === 'ar' ? "تم تحديث الملف الشخصي" : "Profile updated successfully");
+        } catch (error) {
+            toast.error(error.message || "Failed to update profile");
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
     return (
         <div>
             {/* Section Tabs */}
@@ -106,30 +140,124 @@ export function SettingsView() {
                 gap: "0.5rem",
                 marginBottom: "1.5rem",
                 borderBottom: "1px solid var(--border)",
-                paddingBottom: "1rem"
+                paddingBottom: "1rem",
+                overflowX: "auto"
             }}>
+                <MotionButton
+                    className={activeSection === "profile" ? "btn-primary" : "btn-ghost"}
+                    onClick={() => setActiveSection("profile")}
+                >
+                    <User size={18} />
+                    {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
+                </MotionButton>
                 <MotionButton
                     className={activeSection === "general" ? "btn-primary" : "btn-ghost"}
                     onClick={() => setActiveSection("general")}
                 >
-                    <SettingsIcon size={18} />
+                    <Globe size={18} />
                     {t("generalSettings")}
                 </MotionButton>
-                <MotionButton
-                    className={activeSection === "users" ? "btn-primary" : "btn-ghost"}
-                    onClick={() => setActiveSection("users")}
-                >
-                    <Users size={18} />
-                    {t("userManagement")}
-                </MotionButton>
-                <MotionButton
-                    className={activeSection === "access" ? "btn-primary" : "btn-ghost"}
-                    onClick={() => setActiveSection("access")}
-                >
-                    <Shield size={18} />
-                    {language === 'ar' ? 'صلاحيات الأدوار' : 'Role Access'}
-                </MotionButton>
+                {isAdmin && (
+                    <>
+                        <MotionButton
+                            className={activeSection === "users" ? "btn-primary" : "btn-ghost"}
+                            onClick={() => setActiveSection("users")}
+                        >
+                            <Users size={18} />
+                            {t("userManagement")}
+                        </MotionButton>
+                        <MotionButton
+                            className={activeSection === "access" ? "btn-primary" : "btn-ghost"}
+                            onClick={() => setActiveSection("access")}
+                        >
+                            <Shield size={18} />
+                            {language === 'ar' ? 'صلاحيات الأدوار' : 'Role Access'}
+                        </MotionButton>
+                    </>
+                )}
             </div>
+
+            {/* Profile Section */}
+            {activeSection === "profile" && myProfile && (
+                <StaggerContainer>
+                    <StaggerItem>
+                        <MotionCard className="dashboard-card" style={{ maxWidth: "600px" }}>
+                            <div className="card-header">
+                                <div className="card-header__title">
+                                    <User size={20} />
+                                    <h3>{language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}</h3>
+                                </div>
+                            </div>
+                            <div className="card-body">
+                                <form onSubmit={handleProfileSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+                                        <div style={{
+                                            width: 80,
+                                            height: 80,
+                                            borderRadius: "20px",
+                                            background: "linear-gradient(135deg, #34D399 0%, #10B981 100%)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "1.75rem",
+                                            fontWeight: 700,
+                                            color: "white",
+                                            boxShadow: "0 10px 25px rgba(16, 185, 129, 0.2)"
+                                        }}>
+                                            {profileName ? profileName.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().substring(0, 2) : "U"}
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="label">{t("name")}</label>
+                                        <input
+                                            type="text"
+                                            className="input"
+                                            value={profileName}
+                                            onChange={(e) => setProfileName(e.target.value)}
+                                            required
+                                            style={{ background: "var(--bg-primary)" }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="label">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</label>
+                                        <input
+                                            type="text"
+                                            className="input"
+                                            value={profilePhone}
+                                            onChange={(e) => setProfilePhone(e.target.value)}
+                                            placeholder="07xxxxxxxx"
+                                            style={{ background: "var(--bg-primary)" }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="label">{t("email")}</label>
+                                        <input
+                                            type="email"
+                                            className="input"
+                                            value={myProfile.email || ""}
+                                            disabled
+                                            style={{ background: "var(--bg-secondary)", opacity: 0.7, cursor: "not-allowed" }}
+                                            title="Email cannot be changed"
+                                        />
+                                    </div>
+
+                                    <MotionButton
+                                        className="btn-primary"
+                                        type="submit"
+                                        disabled={isSavingProfile}
+                                        style={{ marginTop: "0.5rem", alignSelf: "flex-end" }}
+                                    >
+                                        {isSavingProfile ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t("save")}
+                                    </MotionButton>
+                                </form>
+                            </div>
+                        </MotionCard>
+                    </StaggerItem>
+                </StaggerContainer>
+            )}
 
             {/* General Settings */}
             {activeSection === "general" && (

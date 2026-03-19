@@ -85,6 +85,48 @@ export const ensureUser = mutation({
     },
 });
 
+export const updateProfile = mutation({
+    args: {
+        name: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        company: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const userId = await requireAuth(ctx);
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+
+        if (!user) throw new Error("User not found");
+
+        const updates: {
+            name?: string;
+            phone?: string;
+            company?: string;
+        } = {};
+
+        if (args.name !== undefined) updates.name = args.name;
+        if (args.phone !== undefined) updates.phone = args.phone;
+        if (args.company !== undefined) updates.company = args.company;
+
+        await ctx.db.patch(user._id, updates);
+        return { success: true };
+    },
+});
+
+export const getMyProfile = query({
+    args: {},
+    handler: async (ctx) => {
+        const userId = await requireAuth(ctx);
+        return await ctx.db
+            .query("users")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+    },
+});
+
 export const setUserRole = mutation({
     args: {
         userId: v.id("users"),

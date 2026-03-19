@@ -45,14 +45,14 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
 // Define which menu items each role can see
 const ROLE_MENU_ACCESS: Record<string, string[]> = {
     admin: ["dashboard", "management", "projects", "sales", "finance", "team", "stock", "settings"],
-    acting_manager: ["dashboard", "management", "projects", "sales", "finance", "team"],
-    lead: ["dashboard", "projects", "finance", "team"],
-    engineer: ["dashboard", "projects"],
-    finance: ["dashboard", "finance"],
-    stock: ["dashboard", "stock"],
-    sales_agent: ["dashboard", "sales"],
-    broker: ["dashboard", "sales"],
-    guest: ["dashboard"],
+    acting_manager: ["dashboard", "management", "projects", "sales", "finance", "team", "settings"],
+    lead: ["dashboard", "projects", "finance", "team", "settings"],
+    engineer: ["dashboard", "projects", "settings"],
+    finance: ["dashboard", "finance", "settings"],
+    stock: ["dashboard", "stock", "settings"],
+    sales_agent: ["dashboard", "sales", "settings"],
+    broker: ["dashboard", "sales", "settings"],
+    guest: ["dashboard", "settings"],
 };
 
 export function Sidebar({ activeTab: activeTabProp, onTabChange: onTabChangeProp, isOpen = true, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) {
@@ -391,7 +391,9 @@ export function Sidebar({ activeTab: activeTabProp, onTabChange: onTabChangeProp
                                 fontSize: "0.9rem",
                                 fontWeight: 700
                             }}>
-                                AA
+                                {currentUser?.name
+                                    ? currentUser.name.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().substring(0, 2)
+                                    : "UU"}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{

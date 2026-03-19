@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Authentication & Core Navigation', () => {
     test('User can sign in as Guest and access dashboard', async ({ page }) => {
         // Navigate to the app root
-        await page.goto('/');
+        await page.goto('/login');
         
         // Wait for landing
         const guestBtn = page.locator('button:has-text("Continue as Guest")');
@@ -21,7 +21,7 @@ test.describe('Authentication & Core Navigation', () => {
     });
 
     test('Sidebar renders accessible sections for guest', async ({ page }) => {
-        await page.goto('/');
+        await page.goto('/login');
         await page.locator('button:has-text("Continue as Guest")').click();
         await page.waitForURL('**/dashboard');
 

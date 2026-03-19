@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -8,6 +9,7 @@ import { ContractorMobile } from "./components/ContractorMobile";
 import { FinanceDashboard } from "./components/FinanceDashboard";
 import { StockDashboard } from "./components/StockDashboard";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { LandingPage } from "./components/LandingPage";
 import React from "react";
 
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -37,6 +39,7 @@ export default function App() {
 
 function Content() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const [showLanding, setShowLanding] = useState(true);
 
   if (loggedInUser === undefined) {
     return (
@@ -52,7 +55,11 @@ function Content() {
         <MainApp />
       </Authenticated>
       <Unauthenticated>
-        <SignInForm />
+        {showLanding ? (
+          <LandingPage onGetStarted={() => setShowLanding(false)} />
+        ) : (
+          <SignInForm onBack={() => setShowLanding(true)} />
+        )}
       </Unauthenticated>
     </>
   );

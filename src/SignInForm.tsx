@@ -1,10 +1,14 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { LogIn, UserPlus, User, Building2, Sparkles } from "lucide-react";
+import { LogIn, UserPlus, User, Building2, Sparkles, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
-export function SignInForm() {
+interface SignInFormProps {
+  onBack?: () => void;
+}
+
+export function SignInForm({ onBack }: SignInFormProps) {
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +64,20 @@ export function SignInForm() {
           }}
         >
           <div className="p-8">
+            {/* Back Button */}
+            {onBack && (
+              <motion.button
+                onClick={onBack}
+                className="flex items-center gap-2 mb-6 text-sm font-medium transition-colors"
+                style={{ color: "var(--text-secondary)" }}
+                whileHover={{ x: -4, color: "var(--brand-primary)" }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <ArrowLeft size={16} />
+                Back to Home
+              </motion.button>
+            )}
             {/* Logo Section */}
             <motion.div 
               className="flex flex-col items-center mb-8"

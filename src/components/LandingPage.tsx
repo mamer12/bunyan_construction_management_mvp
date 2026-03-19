@@ -15,6 +15,10 @@ import {
     Check
 } from "lucide-react";
 
+import { Sparkles as SparklesComp } from "./ui/sparkles";
+import { TimelineContent } from "./ui/timeline-animation";
+import { VerticalCutReveal } from "./ui/vertical-cut-reveal";
+
 const translations = {
     en: {
         ecosystem: "Ecosystem",
@@ -402,10 +406,38 @@ export default function LandingPage() {
                 </section>
 
                 {/* Pricing Section */}
-                <section id="pricing" className="py-24 bg-[#faf8ff]">
-                    <div className="max-w-7xl mx-auto px-8">
+                <section id="pricing" className="py-24 bg-[#faf8ff] relative overflow-hidden">
+                    <TimelineContent
+                        animationNum={4}
+                        customVariants={{
+                            visible: { opacity: 1 },
+                            hidden: { opacity: 0 }
+                        }}
+                        className="absolute inset-0 pointer-events-none"
+                    >
+                        <SparklesComp
+                            density={1200}
+                            direction="bottom"
+                            speed={0.5}
+                            color="#006948"
+                            opacity={0.15}
+                            className="absolute inset-0"
+                        />
+                    </TimelineContent>
+
+                    <div className="max-w-7xl mx-auto px-8 relative z-10 border border-transparent">
                         <div className="text-center mb-16">
-                            <h2 className="text-3xl font-black mb-2">{t.tailored}</h2>
+                            <h2 className="text-3xl font-black mb-2 flex justify-center">
+                                <VerticalCutReveal
+                                    splitBy="words"
+                                    staggerDuration={0.15}
+                                    staggerFrom="first"
+                                    reverse={true}
+                                    containerClassName="justify-center"
+                                >
+                                    {t.tailored}
+                                </VerticalCutReveal>
+                            </h2>
                             <p className="text-slate-500 font-medium">{t.priceDesc}</p>
                         </div>
 

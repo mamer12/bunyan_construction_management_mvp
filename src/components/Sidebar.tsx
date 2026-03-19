@@ -6,7 +6,7 @@ import {
     LogOut,
     Sparkles
 } from "lucide-react";
-import { useAuthActions } from "@convex-dev/auth/react";
+import { useMockData } from "../mocks/MockDataContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useIsMobile } from "../hooks/use-mobile";
@@ -19,7 +19,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: SidebarProps) {
-    const { signOut } = useAuthActions();
+    const { logout } = useMockData();
     const { t } = useLanguage();
     const isMobile = useIsMobile();
 
@@ -296,7 +296,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen = true, onClose }: Side
                     {/* Sign Out Button */}
                     <motion.button
                         className="sidebar-link"
-                        onClick={() => void signOut()}
+                        onClick={() => logout()}
                         style={{
                             width: "100%",
                             background: "rgba(239, 68, 68, 0.1)",

@@ -1,25 +1,25 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import { useMockData } from "../mocks/MockDataContext";
 import { ArrowLeft, Plus, MapPin, Home, Layers, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { CreateUnitModal } from "./CreateUnitModal";
 import { motion } from "framer-motion";
 
 interface ProjectDetailsViewProps {
-    projectId: Id<"projects">;
+    projectId: string;
     onBack: () => void;
 }
 
 export function ProjectDetailsView({ projectId, onBack }: ProjectDetailsViewProps) {
-    // We need a way to get a single project. 
-    // Ideally we'd have getProject(id), but for now we filter from getProjects or we assume we passed the project object.
-    // Let's rely on the lists for now or add a getProject query later. 
-    // Actually, let's just use getProjects and find it to save adding more queries unless needed.
-    const projects = useQuery(api.tasks.getProjects) || [];
+    const { projects, units: allUnits, tasks } = useMockData();
     const project = projects.find(p => p._id === projectId);
-
-    const units = useQuery(api.tasks.getProjectUnits, { projectId }) || [];
+    const units = allUnits.filter(u => u.projectId === projectId).map(u => {
+        const unitTasks = tasks.filter(t => t.unitId === u._id);
+        return {
+            ...u,
+            totalTasksCount: unitTasks.length,
+            completedTasksCount: unitTasks.filter(t => t.status === "APPROVED").length,
+        };
+    });
     const [showCreateUnitModal, setShowCreateUnitModal] = useState(false);
 
     if (!project) {

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import {
     Banknote,
     TrendingUp,
@@ -34,25 +33,22 @@ export function FinanceDashboard() {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [selectedPayout, setSelectedPayout] = useState<any>(null);
 
-    // Queries
-    const stats = useQuery(api.tasks.getStats);
-    const pendingPayouts = useQuery(api.wallet.getPendingPayouts) || [];
-    const allPayouts = useQuery(api.wallet.getAllPayouts) || [];
-
-    // Mutations
-    const processPayout = useMutation(api.wallet.processPayout);
+    // Data from Mock Context
+    const { stats, payouts, approvePayout, rejectPayout } = useMockData();
+    const pendingPayouts = payouts.filter(p => p.status === "PENDING");
+    const allPayouts = payouts;
 
     const handleProcessPayout = async (payoutId: string, action: "PAID" | "REJECTED") => {
         try {
-            await processPayout({ 
-                payoutId: payoutId as any, 
-                action, 
-                notes: action === "REJECTED" ? "Rejected by finance manager" : undefined 
-            });
+            if (action === "PAID") {
+                approvePayout(payoutId);
+            } else {
+                rejectPayout(payoutId);
+            }
             toast.success(action === "PAID" ? "Payout processed!" : "Payout rejected");
             setSelectedPayout(null);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to process payout");
+        } catch {
+            toast.error("Failed to process payout");
         }
     };
 

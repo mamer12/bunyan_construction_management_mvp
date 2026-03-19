@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { SignInForm } from "./SignInForm";
 import { Toaster } from "sonner";
 import { LeadDashboard } from "./components/LeadDashboard";
 import { EngineerDashboard } from "./components/EngineerDashboard";
@@ -10,12 +7,12 @@ import { FinanceDashboard } from "./components/FinanceDashboard";
 import { StockDashboard } from "./components/StockDashboard";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { LandingPage } from "./components/LandingPage";
-import React from "react";
+import { SignInForm } from "./SignInForm";
 
 import { LanguageProvider } from "./contexts/LanguageContext";
-
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useIsMobile } from "./hooks/use-mobile";
+import { useMockData } from "./mocks/MockDataContext";
 
 export default function App() {
   return (
@@ -38,48 +35,31 @@ export default function App() {
 }
 
 function Content() {
-  const loggedInUser = useQuery(api.auth.loggedInUser);
+  const { isAuthenticated } = useMockData();
   const [showLanding, setShowLanding] = useState(true);
-
-  if (loggedInUser === undefined) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" style={{ width: 32, height: 32 }} />
-      </div>
-    );
-  }
 
   return (
     <>
-      <Authenticated>
+      {isAuthenticated ? (
         <MainApp />
-      </Authenticated>
-      <Unauthenticated>
-        {showLanding ? (
-          <LandingPage onGetStarted={() => setShowLanding(false)} />
-        ) : (
-          <SignInForm onBack={() => setShowLanding(true)} />
-        )}
-      </Unauthenticated>
+      ) : (
+        <>
+          {showLanding ? (
+            <LandingPage onGetStarted={() => setShowLanding(false)} />
+          ) : (
+            <SignInForm onBack={() => setShowLanding(true)} />
+          )}
+        </>
+      )}
     </>
   );
 }
 
 function MainApp() {
-  // Get the role with permissions from the backend
-  const roleData = useQuery(api.roles.getMyRoleWithPermissions);
+  const { user } = useMockData();
   const isMobile = useIsMobile();
 
-  // Loading state while role fetch is pending
-  if (roleData === undefined) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" style={{ width: 32, height: 32 }} />
-      </div>
-    );
-  }
-
-  const role = roleData?.role || "engineer";
+  const role = user?.role || "engineer";
 
   // Route based on role
   switch (role) {
@@ -87,7 +67,6 @@ function MainApp() {
       return <AdminDashboard />;
 
     case "acting_manager":
-      // Acting managers see the lead dashboard with full access
       return <LeadDashboard />;
 
     case "engineering_lead":
@@ -101,7 +80,6 @@ function MainApp() {
 
     case "engineer":
     default:
-      // Engineers on mobile get the optimized mobile view
       if (isMobile) {
         return <ContractorMobile />;
       }

@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { SignOutButton } from "../SignOutButton";
+import { useMockData } from "../mocks/MockDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Camera, MapPin, DollarSign, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Camera, MapPin, DollarSign, Clock, CheckCircle, XCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { ProofUploadModal } from "./ProofUploadModal";
 
 export function ContractorMobile() {
-  const tasks = useQuery(api.tasks.getMyTasks) || [];
+  const { tasks: allTasks, user, logout } = useMockData();
+  const tasks = allTasks.filter(t => t.createdBy === user?.id);
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
@@ -52,7 +51,9 @@ export function ContractorMobile() {
             <h1 className="text-xl font-bold">My Tasks</h1>
             <p className="text-slate-300 text-sm">Bunyan Construction</p>
           </div>
-          <SignOutButton />
+          <Button variant="ghost" size="sm" onClick={logout} className="text-white">
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </header>
 

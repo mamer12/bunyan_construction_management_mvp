@@ -1,5 +1,4 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { Wallet, TrendingUp, Clock, ArrowUpRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { AnimatedCounter, MotionButton } from "./ui/motion";
@@ -9,7 +8,20 @@ interface WalletCardProps {
 }
 
 export function WalletCard({ onRequestPayout }: WalletCardProps) {
-    const wallet = useQuery(api.wallet.getMyWallet);
+    const { tasks, payouts, user } = useMockData();
+    
+    // Calculate wallet data from tasks and payouts
+    const myTasks = tasks.filter(t => t.createdBy === user?.id);
+    const approvedAmount = myTasks.filter(t => t.status === "APPROVED").reduce((sum, t) => sum + t.amount, 0);
+    const pendingPayouts = payouts.filter(p => p.userId === user?.id && p.status === "PENDING").reduce((sum, p) => sum + p.amount, 0);
+    const paidPayouts = payouts.filter(p => p.userId === user?.id && p.status === "PAID").reduce((sum, p) => sum + p.amount, 0);
+    
+    const wallet = {
+        totalEarned: approvedAmount,
+        pendingBalance: approvedAmount - paidPayouts - pendingPayouts,
+        availableBalance: approvedAmount - paidPayouts - pendingPayouts,
+        pendingPayout: pendingPayouts,
+    };
 
     if (!wallet) {
         return (

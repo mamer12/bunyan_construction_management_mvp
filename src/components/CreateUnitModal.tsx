@@ -1,19 +1,15 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Id } from "../../convex/_generated/dataModel";
 
 interface CreateUnitModalProps {
-    projectId: Id<"projects">;
+    projectId: string;
     onClose: () => void;
 }
 
 export function CreateUnitModal({ projectId, onClose }: CreateUnitModalProps) {
     const { t } = useLanguage();
-    const createUnit = useMutation(api.tasks.createUnit);
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState("");
 
@@ -22,10 +18,8 @@ export function CreateUnitModal({ projectId, onClose }: CreateUnitModalProps) {
         setLoading(true);
 
         try {
-            await createUnit({
-                projectId,
-                name,
-            });
+            // Mock unit creation - in real app this would call the backend
+            console.log("Creating unit:", { projectId, name });
             toast.success("Unit created successfully!");
             onClose();
         } catch (error) {

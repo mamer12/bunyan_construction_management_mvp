@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { X, Banknote, Smartphone, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,15 +14,19 @@ const paymentMethods = [
 ];
 
 export function PayoutModal({ onClose }: PayoutModalProps) {
-    const wallet = useQuery(api.wallet.getMyWallet);
-    const requestPayout = useMutation(api.wallet.requestPayout);
+    const { tasks, payouts, user, createPayout } = useMockData();
+    
+    // Calculate available balance
+    const myTasks = tasks.filter(t => t.createdBy === user?.id);
+    const approvedAmount = myTasks.filter(t => t.status === "APPROVED").reduce((sum, t) => sum + t.amount, 0);
+    const paidPayouts = payouts.filter(p => p.userId === user?.id && p.status === "PAID").reduce((sum, p) => sum + p.amount, 0);
+    const pendingPayouts = payouts.filter(p => p.userId === user?.id && p.status === "PENDING").reduce((sum, p) => sum + p.amount, 0);
+    const maxAmount = approvedAmount - paidPayouts - pendingPayouts;
 
     const [amount, setAmount] = useState("");
     const [selectedMethod, setSelectedMethod] = useState("ZAINCASH");
     const [notes, setNotes] = useState("");
     const [loading, setLoading] = useState(false);
-
-    const maxAmount = wallet?.availableBalance || 0;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,11 +43,7 @@ export function PayoutModal({ onClose }: PayoutModalProps) {
 
         setLoading(true);
         try {
-            await requestPayout({
-                amount: numAmount,
-                paymentMethod: selectedMethod,
-                notes: notes || undefined,
-            });
+            createPayout(user?.id || "", numAmount);
             toast.success("Payout request submitted!");
             onClose();
         } catch (error: any) {

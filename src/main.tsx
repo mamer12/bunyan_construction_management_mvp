@@ -1,13 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { ConvexReactClient } from "convex/react";
 import "./index.css";
 import App from "./App";
+import { MockDataProvider } from "./mocks/MockDataContext";
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
-
+// Bypassing Convex for now - using mock data
 createRoot(document.getElementById("root")!).render(
-  <ConvexAuthProvider client={convex}>
+  <MockDataProvider>
     <App />
-  </ConvexAuthProvider>,
+  </MockDataProvider>,
 );

@@ -1,5 +1,4 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { MapPin, Building2, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -9,7 +8,20 @@ import { CreateProjectModal } from "./CreateProjectModal";
 import { ProjectDetailsView } from "./ProjectDetailsView";
 
 export function ProjectsView() {
-    const projects = useQuery(api.tasks.getProjects) || [];
+    const { projects: rawProjects, tasks, units } = useMockData();
+    
+    // Enrich projects with task counts
+    const projects = rawProjects.map(p => {
+        const projectTasks = tasks.filter(t => t.projectId === p._id);
+        const projectUnits = units.filter(u => u.projectId === p._id);
+        return {
+            ...p,
+            totalTasksCount: projectTasks.length,
+            completedTasksCount: projectTasks.filter(t => t.status === "APPROVED").length,
+            pendingTasksCount: projectTasks.filter(t => t.status === "PENDING").length,
+            unitsCount: projectUnits.length,
+        };
+    });
     const { t } = useLanguage();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<any>(null);

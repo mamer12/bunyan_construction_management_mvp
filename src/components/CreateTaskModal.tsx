@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +10,7 @@ interface CreateTaskModalProps {
 }
 
 export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalProps) {
+    const { createTask: mockCreateTask, user } = useMockData();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
@@ -20,9 +20,6 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
     const [uploading, setUploading] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const generateUploadUrl = useMutation(api.tasks.generateUploadUrl);
-    const createTask = useMutation(api.tasks.createTask);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -44,32 +41,26 @@ export function CreateTaskModal({ units, engineers, onClose }: CreateTaskModalPr
         setUploading(true);
 
         try {
-            // Upload attachments
-            const storageIds: any[] = [];
-            for (const file of attachments) {
-                const uploadUrl = await generateUploadUrl();
-                const result = await fetch(uploadUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": file.type },
-                    body: file,
-                });
-                const { storageId } = await result.json();
-                storageIds.push(storageId);
-            }
+            // Get project ID from unit
+            const selectedUnit = units.find(u => u._id === unitId);
+            const assignedUser = engineers.find(e => e.id === assignedTo);
 
-            // Create task
-            await createTask({
-                unitId: unitId as any,
+            // Create task using mock data
+            mockCreateTask({
+                _id: `task_${Date.now()}`,
+                unitId: unitId,
+                projectId: selectedUnit?.projectId || "",
                 title,
                 description: description || undefined,
                 amount: parseFloat(amount),
-                assignedTo,
-                attachments: storageIds.length > 0 ? storageIds : undefined,
+                status: "PENDING",
+                createdBy: assignedTo,
+                createdByName: assignedUser?.name || "Unknown",
             });
 
             toast.success("Task created successfully!");
             onClose();
-        } catch (error) {
+        } catch {
             toast.error("Failed to create task");
         } finally {
             setUploading(false);

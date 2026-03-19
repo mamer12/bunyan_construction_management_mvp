@@ -1,7 +1,5 @@
 import { useState, useRef } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { useAuthActions } from "@convex-dev/auth/react";
+import { useMockData } from "../mocks/MockDataContext";
 import {
     ClipboardList,
     CheckCircle2,
@@ -33,11 +31,15 @@ import {
 } from "./ui/motion";
 
 export function EngineerDashboard() {
-    const { signOut } = useAuthActions();
-    const tasks = useQuery(api.tasks.getMyTasks) || [];
+    const { tasks: allTasks, user, logout } = useMockData();
+    const tasks = allTasks.filter(t => t.createdBy === user?.id);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [showPayoutModal, setShowPayoutModal] = useState(false);
     const { t, language } = useLanguage();
+
+    const handleSignOut = () => {
+        logout();
+    };
 
     const pendingTasks = tasks.filter((t: any) => t.status === "PENDING");
     const inProgressTasks = tasks.filter((t: any) => t.status === "IN_PROGRESS");

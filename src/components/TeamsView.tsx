@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { Mail, Phone, MapPin, Building2, Plus, Users, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
 
 export function TeamsView() {
-    const engineers = useQuery(api.tasks.getMyEngineers) || [];
+    const { users } = useMockData();
+    const engineers = users.filter(u => u.role === "engineer");
     const { t } = useLanguage();
     const [showInviteModal, setShowInviteModal] = useState(false);
 

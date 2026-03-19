@@ -1,6 +1,4 @@
 import { useState, useRef } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Camera, MapPin, Upload, X } from "lucide-react";
@@ -16,9 +14,6 @@ export function ProofUploadModal({ task, onClose }: ProofUploadModalProps) {
   const [uploading, setUploading] = useState(false);
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const generateUploadUrl = useMutation(api.tasks.generateUploadUrl);
-  const submitProof = useMutation(api.tasks.submitProof);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

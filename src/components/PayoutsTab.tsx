@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { generatePayoutInvoice } from "../utils/pdfGenerator";
 import { Download, Banknote, Clock, CheckCircle2, XCircle, Smartphone, Building2, Filter } from "lucide-react";
 import { toast } from "sonner";
@@ -9,17 +8,28 @@ export function PayoutsTab() {
     const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const stats = useQuery(api.wallet.getPayoutStats);
-    const payouts = useQuery(api.wallet.getAllPayouts, { status: statusFilter });
-    const processPayout = useMutation(api.wallet.processPayout);
+    const { payouts: allPayouts, approvePayout, rejectPayout } = useMockData();
+    const payouts = statusFilter 
+        ? allPayouts.filter(p => p.status === statusFilter)
+        : allPayouts;
+    
+    const stats = {
+        pending: allPayouts.filter(p => p.status === "PENDING").reduce((sum, p) => sum + p.amount, 0),
+        paid: allPayouts.filter(p => p.status === "PAID").reduce((sum, p) => sum + p.amount, 0),
+        rejected: allPayouts.filter(p => p.status === "REJECTED").reduce((sum, p) => sum + p.amount, 0),
+    };
 
     const handleProcess = async (payoutId: string, action: "pay" | "reject") => {
         setProcessingId(payoutId);
         try {
-            await processPayout({ payoutId: payoutId as any, action });
+            if (action === "pay") {
+                approvePayout(payoutId);
+            } else {
+                rejectPayout(payoutId);
+            }
             toast.success(action === "pay" ? "Payout marked as paid!" : "Payout rejected");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to process payout");
+        } catch {
+            toast.error("Failed to process payout");
         } finally {
             setProcessingId(null);
         }

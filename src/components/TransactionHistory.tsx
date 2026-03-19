@@ -1,11 +1,11 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import { TrendingUp, ArrowDownLeft, ArrowUpRight, CheckCircle2, History } from "lucide-react";
 import { motion } from "framer-motion";
 import { MotionListItem } from "./ui/motion";
 
 export function TransactionHistory() {
-    const transactions = useQuery(api.wallet.getMyTransactions, { limit: 10 });
+    const { transactions: allTransactions, user } = useMockData();
+    const transactions = allTransactions.filter(t => t.userId === user?.id).slice(0, 10);
 
     if (!transactions) {
         return (

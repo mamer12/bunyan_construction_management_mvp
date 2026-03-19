@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import {
     Package,
     PackagePlus,
@@ -54,53 +53,55 @@ export function StockDashboard() {
     const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
     const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
-    // Queries
-    const materials = useQuery(api.stock.getAllMaterials) || [];
-    const stockStats = useQuery(api.stock.getStockStats);
-    const pendingRequests = useQuery(api.stock.getMaterialRequests, { status: "PENDING" }) || [];
-    const approvedRequests = useQuery(api.stock.getMaterialRequests, { status: "APPROVED" }) || [];
-    const lowStockMaterials = useQuery(api.stock.getLowStockMaterials) || [];
-
-    // Mutations
-    const addMaterial = useMutation(api.stock.addMaterial);
-    const updateStock = useMutation(api.stock.updateStock);
-    const approveRequest = useMutation(api.stock.approveMaterialRequest);
-    const rejectRequest = useMutation(api.stock.rejectMaterialRequest);
-    const deliverRequest = useMutation(api.stock.deliverMaterialRequest);
+    // Data from Mock Context
+    const { 
+        materials, 
+        materialRequests, 
+        addMaterial: mockAddMaterial, 
+        updateMaterialStock,
+        approveMaterialRequest,
+        rejectMaterialRequest 
+    } = useMockData();
+    
+    const pendingRequests = materialRequests.filter(r => r.status === "PENDING");
+    const approvedRequests = materialRequests.filter(r => r.status === "APPROVED");
+    const lowStockMaterials = materials.filter(m => m.currentStock <= m.minStock);
+    
+    const stockStats = {
+        totalMaterials: materials.length,
+        lowStockCount: lowStockMaterials.length,
+        totalValue: materials.reduce((sum, m) => sum + m.currentStock * m.unitPrice, 0),
+        pendingRequests: pendingRequests.length,
+    };
 
     const handleAddMaterial = async (data: any) => {
         try {
-            await addMaterial(data);
+            mockAddMaterial(data);
             toast.success("Material added successfully");
             setShowAddMaterialModal(false);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to add material");
+        } catch {
+            toast.error("Failed to add material");
         }
     };
 
-    const handleUpdateStock = async (type: "IN" | "OUT" | "ADJUSTMENT", quantity: number, notes?: string) => {
+    const handleUpdateStock = async (_type: "IN" | "OUT" | "ADJUSTMENT", quantity: number, _notes?: string) => {
         if (!selectedMaterial) return;
         try {
-            await updateStock({
-                materialId: selectedMaterial._id,
-                type,
-                quantity,
-                notes
-            });
+            updateMaterialStock(selectedMaterial._id, quantity);
             toast.success("Stock updated");
             setShowStockModal(false);
             setSelectedMaterial(null);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to update stock");
+        } catch {
+            toast.error("Failed to update stock");
         }
     };
 
     const handleApproveRequest = async (requestId: string) => {
         try {
-            await approveRequest({ requestId: requestId as any });
+            approveMaterialRequest(requestId);
             toast.success("Request approved");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to approve request");
+        } catch {
+            toast.error("Failed to approve request");
         }
     };
 

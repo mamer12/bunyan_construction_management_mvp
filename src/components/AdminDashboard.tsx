@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import {
     Users,
     Shield,
@@ -45,15 +44,17 @@ export function AdminDashboard() {
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [showRoleModal, setShowRoleModal] = useState(false);
 
-    const users = useQuery(api.roles.getAllUsers) || [];
-    const stats = useQuery(api.tasks.getStats);
-    const stockStats = useQuery(api.stock.getStockStats);
-
-    const assignRole = useMutation(api.roles.assignRole);
+    const { users, stats, materials, assignRole: mockAssignRole } = useMockData();
+    const lowStockCount = materials.filter(m => m.currentStock <= m.minStock).length;
+    const stockStats = {
+        totalMaterials: materials.length,
+        lowStockCount,
+        totalValue: materials.reduce((sum, m) => sum + m.currentStock * m.unitPrice, 0),
+    };
 
     const handleAssignRole = async (userId: string, role: string) => {
         try {
-            await assignRole({ targetUserId: userId, role: role as any });
+            mockAssignRole(userId, role as any);
             toast.success("Role assigned successfully");
             setShowRoleModal(false);
             setSelectedUser(null);

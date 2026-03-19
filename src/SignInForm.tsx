@@ -1,17 +1,50 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { LogIn, UserPlus, User, Building2, Sparkles, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMockData } from "./mocks/MockDataContext";
 
 interface SignInFormProps {
   onBack?: () => void;
 }
 
 export function SignInForm({ onBack }: SignInFormProps) {
-  const { signIn } = useAuthActions();
+  const { login } = useMockData();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const success = await login(email, password);
+      if (success) {
+        toast.success("Welcome to Bunyan!");
+      } else {
+        toast.error("Invalid credentials. Please try again.");
+      }
+    } catch {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setSubmitting(true);
+    try {
+      await login("guest@bunyan.iq", "guest");
+      toast.success("Welcome, Guest!");
+    } catch {
+      toast.error("An error occurred.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
@@ -112,25 +145,7 @@ export function SignInForm({ onBack }: SignInFormProps) {
 
             <form
               className="space-y-5"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSubmitting(true);
-                const formData = new FormData(e.target as HTMLFormElement);
-                formData.set("flow", flow);
-                void signIn("password", formData).catch((error) => {
-                  let toastTitle = "";
-                  if (error.message.includes("Invalid password")) {
-                    toastTitle = "Invalid password. Please try again.";
-                  } else {
-                    toastTitle =
-                      flow === "signIn"
-                        ? "Could not sign in, did you mean to sign up?"
-                        : "Could not sign up, did you mean to sign in?";
-                  }
-                  toast.error(toastTitle);
-                  setSubmitting(false);
-                });
-              }}
+              onSubmit={handleSubmit}
             >
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -274,7 +289,7 @@ export function SignInForm({ onBack }: SignInFormProps) {
                   border: "1px solid var(--border)",
                   color: "var(--text-primary)"
                 }}
-                onClick={() => void signIn("anonymous")}
+                onClick={handleGuestLogin}
                 whileHover={{ 
                   background: "var(--bg-mint)",
                   borderColor: "var(--border-emerald)"
@@ -295,7 +310,7 @@ export function SignInForm({ onBack }: SignInFormProps) {
             }}
           >
             <p className="text-xs" style={{ color: "var(--brand-primary-dark)" }}>
-              <strong>Tip:</strong> Use "lead" in email for Lead Dashboard.
+              <strong>Demo Mode:</strong> Any email/password will work. Try different emails to see role-based dashboards.
             </p>
           </div>
         </div>

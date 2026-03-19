@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -11,7 +9,6 @@ interface CreateProjectModalProps {
 
 export function CreateProjectModal({ onClose }: CreateProjectModalProps) {
     const { t, language } = useLanguage();
-    const createProject = useMutation(api.tasks.createProject);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -25,7 +22,8 @@ export function CreateProjectModal({ onClose }: CreateProjectModalProps) {
         setLoading(true);
 
         try {
-            await createProject({
+            // Mock project creation - in real app this would call the backend
+            console.log("Creating project:", {
                 name: formData.name,
                 location: formData.location,
                 totalBudget: Number(formData.totalBudget),

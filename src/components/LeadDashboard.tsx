@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useMockData } from "../mocks/MockDataContext";
 import {
     ClipboardList,
     Users,
@@ -48,21 +47,22 @@ export function LeadDashboard() {
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-    // Data Queries
-    const stats = useQuery(api.tasks.getStats);
-    const tasksForReview = useQuery(api.tasks.getTasksForReview) || [];
-    const allTasks = useQuery(api.tasks.getAllTasks) || [];
-    const engineers = useQuery(api.tasks.getMyEngineers) || [];
-    const units = useQuery(api.tasks.getAllUnits) || [];
+    // Data from Mock Context
+    const { tasks, units, users, stats, approveTask, rejectTask } = useMockData();
+    const tasksForReview = tasks.filter(t => t.status === "PENDING");
+    const allTasks = tasks;
+    const engineers = users.filter(u => u.role === "engineer");
 
-    const reviewTask = useMutation(api.tasks.reviewTask);
-
-    const handleReview = async (taskId: string, action: "approve" | "reject", comment?: string) => {
+    const handleReview = async (taskId: string, action: "approve" | "reject", _comment?: string) => {
         try {
-            await reviewTask({ taskId: taskId as any, action, comment });
+            if (action === "approve") {
+                approveTask(taskId);
+            } else {
+                rejectTask(taskId);
+            }
             toast.success(action === "approve" ? "Task approved!" : "Task rejected");
             setSelectedTask(null);
-        } catch (error) {
+        } catch {
             toast.error("Failed to review task");
         }
     };

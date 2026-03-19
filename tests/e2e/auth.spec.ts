@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication & Core Navigation', () => {
+    test.beforeEach(async ({}, testInfo) => {
+        if (process.env.CI) {
+            test.skip(true, 'Requires a live backend to test authentication flow interactively');
+        }
+    });
+
     test('User can sign in as Guest and access dashboard', async ({ page }) => {
         // Navigate to the app root
         await page.goto('/login');
